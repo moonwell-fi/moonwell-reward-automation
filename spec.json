@@ -1,0 +1,101 @@
+[
+  {
+    "MOONBEAM": {
+      "transferFrom": {
+        "target": "WELL",
+        "source": "MGLIMMER_MULTISIG",
+        "calls": [
+          {
+            "destination": "MULTICHAIN_GOVERNOR_PROXY",
+            "amount": 1000e18
+          },
+          {
+            "destination": "UNITROLLER",
+            "amount": 2000e18
+          },
+          {
+            "destination": "ECOSYSTEM_RESERVE_PROXY",
+            "amount": 3000e18
+          }
+        ]
+      },
+      "bridgeOut": [
+        {
+          "network": 30,
+          "target": "TEMPORAL_GOVERNOR",
+          "amount": 5000e18
+        },
+        {
+          "network": 24,
+          "target": "TEMPORAL_GOVERNOR",
+          "amount": 6000e18
+        }
+      ],
+      "addRewardInfo": {
+        "target": "STELLASWAP_REWARDER",
+        "pid": 15,
+        "endTimestamp": 1723174200,
+        "rewardPerSec": 0.5e18,
+        "amount": 4000e18
+      },
+      "safetyModule": {
+        "emissionsPerSecond": 0.65e18
+      },
+      "setRewardSpeeds": {
+        "target": "UNITROLLER",
+        "rewardSpeeds": [
+          {
+            "market": "mxcDOT",
+            "rewardType": 0,
+            "newSupplySpeed": 0.54e18,
+            "newBorrowSpeed": 1
+          },
+          {
+            "market": "mxcDOT",
+            "rewardType": 1,
+            "newSupplySpeed": 0.23e18,
+            "newBorrowSpeed": 1
+          }
+        ]
+      }
+    },
+    "BASE": {
+      "transfer": [
+        {
+          "token": "xWELL_PROXY",
+          "to": "MULTI_REWARD_DISTRIBUTOR",
+          "amount": 5000e18
+        },
+        {
+          "token": "xWELL_PROXY",
+          "to": "ECOSYSTEM_RESERVE_PROXY",
+          "amount": 6000e18
+        },
+        {
+          "token": "xWELL_PROXY",
+          "to": "AERODROME_RELAYER",
+          "amount": 7000e18
+        }
+      ],
+      "setMRDSpeeds": [
+        {
+          "market": "MOONWELL_USDC",
+          "emissionToken": "xWELL_PROXY",
+          "newSupplySpeed": 0.54e18,
+          "newBorrowSpeed": 1,
+          "newEndTime": 1723174200
+        },
+        {
+          "market": "MOONWELL_AERO",
+          "emissionToken": "xWELL_PROXY",
+          "newSupplySpeed": 0.54e18,
+          "newBorrowSpeed": 1,
+          "newEndTime": 1723174200
+        }
+      ],
+      "safetyModule": {
+        "emissionsPerSecond": 0.65e18
+      }
+    }
+  }
+]
