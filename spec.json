@@ -1,101 +1,99 @@
-[
-  {
-    "MOONBEAM": {
-      "transferFrom": {
-        "target": "WELL",
-        "source": "MGLIMMER_MULTISIG",
-        "calls": [
-          {
-            "destination": "MULTICHAIN_GOVERNOR_PROXY",
-            "amount": 1000e18
-          },
-          {
-            "destination": "UNITROLLER",
-            "amount": 2000e18
-          },
-          {
-            "destination": "ECOSYSTEM_RESERVE_PROXY",
-            "amount": 3000e18
-          }
-        ]
-      },
-      "bridgeOut": [
-        {
-          "network": 30,
-          "target": "TEMPORAL_GOVERNOR",
-          "amount": 5000e18
-        },
-        {
-          "network": 24,
-          "target": "TEMPORAL_GOVERNOR",
-          "amount": 6000e18
-        }
-      ],
-      "addRewardInfo": {
-        "target": "STELLASWAP_REWARDER",
-        "pid": 15,
-        "endTimestamp": 1723174200,
-        "rewardPerSec": 0.5e18,
-        "amount": 4000e18
-      },
-      "safetyModule": {
-        "emissionsPerSecond": 0.65e18
-      },
-      "setRewardSpeeds": {
-        "target": "UNITROLLER",
-        "rewardSpeeds": [
-          {
-            "market": "mxcDOT",
-            "rewardType": 0,
-            "newSupplySpeed": 0.54e18,
-            "newBorrowSpeed": 1
-          },
-          {
-            "market": "mxcDOT",
-            "rewardType": 1,
-            "newSupplySpeed": 0.23e18,
-            "newBorrowSpeed": 1
-          }
-        ]
-      }
+{
+  "1284": {
+    "addRewardInfo": {
+      "amount": 4000e18,
+      "endTimestamp": 1723174200,
+      "pid": 15,
+      "rewardPerSec": 0.5e18,
+      "target": "STELLASWAP_REWARDER"
     },
-    "BASE": {
-      "transfer": [
-        {
-          "token": "xWELL_PROXY",
-          "to": "MULTI_REWARD_DISTRIBUTOR",
-          "amount": 5000e18
-        },
-        {
-          "token": "xWELL_PROXY",
-          "to": "ECOSYSTEM_RESERVE_PROXY",
-          "amount": 6000e18
-        },
-        {
-          "token": "xWELL_PROXY",
-          "to": "AERODROME_RELAYER",
-          "amount": 7000e18
-        }
-      ],
-      "setMRDSpeeds": [
-        {
-          "market": "MOONWELL_USDC",
-          "emissionToken": "xWELL_PROXY",
-          "newSupplySpeed": 0.54e18,
-          "newBorrowSpeed": 1,
-          "newEndTime": 1723174200
-        },
-        {
-          "market": "MOONWELL_AERO",
-          "emissionToken": "xWELL_PROXY",
-          "newSupplySpeed": 0.54e18,
-          "newBorrowSpeed": 1,
-          "newEndTime": 1723174200
-        }
-      ],
-      "safetyModule": {
-        "emissionsPerSecond": 0.65e18
+    "bridgeToRecipient": [
+      {
+        "amount": 5000e18,
+        "network": 8453,
+        "target": "TEMPORAL_GOVERNOR"
+      },
+      {
+        "amount": 6000e18,
+        "network": 10,
+        "target": "TEMPORAL_GOVERNOR"
       }
-    }
+    ],
+    "setRewardSpeed": [
+      {
+        "market": "mxcDOT",
+        "newBorrowSpeed": 1,
+        "newSupplySpeed": 0.54e18,
+        "rewardType": 0,
+        "target": "UNITROLLER"
+      },
+      {
+        "market": "mxcDOT",
+        "newBorrowSpeed": 1,
+        "newSupplySpeed": 0.23e18,
+        "rewardType": 1,
+        "target": "UNITROLLER"
+      }
+    ],
+    "stkWellEmissionsPerSecond": 0.65e18,
+    "transferFrom": [
+      {
+        "amount": 1000e18,
+        "from": "MGLIMMER_MULTISIG",
+        "to": "MULTICHAIN_GOVERNOR_PROXY",
+        "token": "WELL"
+      },
+      {
+        "amount": 2000e18,
+        "from": "MGLIMMER_MULTISIG",
+        "to": "UNITROLLER",
+        "token": "WELL"
+      },
+      {
+        "amount": 3000e18,
+        "from": "MGLIMMER_MULTISIG",
+        "to": "ECOSYSTEM_RESERVE_PROXY",
+        "token": "WELL"
+      }
+    ]
+  },
+  "8453": {
+    "setMRDSpeeds": [
+      {
+        "emissionToken": "xWELL_PROXY",
+        "market": "MOONWELL_USDC",
+        "newBorrowSpeed": 1,
+        "newEndTime": 1723174200,
+        "newSupplySpeed": 0.54e18
+      },
+      {
+        "emissionToken": "xWELL_PROXY",
+        "market": "MOONWELL_AERO",
+        "newBorrowSpeed": 1,
+        "newEndTime": 1723174200,
+        "newSupplySpeed": 0.54e18
+      }
+    ],
+    "stkWellEmissionsPerSecond": 0.65e18,
+    "transferFrom": [
+      {
+        "amount": 5000e18,
+        "from": "TEMPORAL_GOVERNOR",
+        "to": "MULTI_REWARD_DISTRIBUTOR",
+        "token": "xWELL_PROXY"
+      },
+      {
+        "amount": 6000e18,
+        "from": "TEMPORAL_GOVERNOR",
+        "to": "UNITROLLER",
+        "token": "xWELL_PROXY"
+      },
+      {
+        "amount": 7000e18,
+        "from": "TEMPORAL_GOVERNOR",
+        "to": "AERODROME_RELAYER",
+        "token": "xWELL_PROXY"
+      }
+    ]
   }
-]
+}
