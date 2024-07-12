@@ -1,15 +1,5 @@
-export const comptrollers = [
-  {
-    address: "0xfBb21d0380beE3312B33c4353c8936a0F13EF26C",
-    chainId: 8453,
-    name: "Base",
-  },
-  {
-    address: "0x8E00D5e02E65A19337Cdba98bbA9F84d4186a180",
-    chainId: 1284,
-    name: "Moonbeam",
-  },
-]
+export const moonbeamComptroller = '0x8E00D5e02E65A19337Cdba98bbA9F84d4186a180';
+export const baseComptroller = '0xfBb21d0380beE3312B33c4353c8936a0F13EF26C';
 
 export const excludedMarkets = [
   {

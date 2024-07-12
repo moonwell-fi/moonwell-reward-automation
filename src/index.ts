@@ -11,8 +11,16 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
+import { getMarkets } from "./utils";
+
 export default {
-	async fetch(request, env, ctx): Promise<Response> {
-		return new Response('Hello World!');
+	async fetch(request: Request, env: Record<string, any>, ctx: ExecutionContext): Promise<Response> {
+		try {
+			console.log(await getMarkets());
+			return new Response('Hello World!');
+		} catch (error) {
+			console.error('Error:', error);
+			return new Response('Internal Server Error', { status: 500 });
+		}
 	},
 } satisfies ExportedHandler<Env>;
