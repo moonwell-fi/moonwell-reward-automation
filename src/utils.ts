@@ -1,8 +1,18 @@
 import { moonbeam, base } from "viem/chains";
 import { createPublicClient, http } from "viem";
 
-import { moonbeamComptroller, baseComptroller, excludedMarkets } from "./config";
-import { comptrollerv1ABI, comptrollerv2ABI } from "./constants";
+import {
+  moonbeamComptroller,
+  baseComptroller,
+  moonbeamOracleContract,
+  baseOracleContract,
+  excludedMarkets
+} from "./config";
+
+import {
+  comptrollerv1ABI,
+  comptrollerv2ABI,
+} from "./constants";
 
 const moonbeamClient = createPublicClient({
   chain: moonbeam,
@@ -39,12 +49,38 @@ async function getBaseMarkets() {
   return await filterExcludedMarkets(markets as string[], 8453);
 }
 
-export async function getMarkets() {
+export async function getMarketsAndPrices() {
   const moonbeamMarkets = await getMoonbeamMarkets();
   const baseMarkets = await getBaseMarkets();
-  let response = {
-    1284: moonbeamMarkets,
-    8453: baseMarkets,
+
+  if (!moonbeamMarkets.length || !baseMarkets.length) {
+    throw new Error("No markets found");
+  }
+
+  const moonbeamPrices = (await moonbeamClient.multicall({
+    contracts: moonbeamMarkets.map(market => ({
+      ...moonbeamOracleContract,
+      functionName: "getUnderlyingPrice",
+      args: [market],
+    })),
+  })).map((price) => price.result);
+
+  const basePrices = (await baseClient.multicall({
+    contracts: baseMarkets.map(market => ({
+      ...baseOracleContract,
+      functionName: "getUnderlyingPrice",
+      args: [market],
+    })),
+  })).map((price) => price.result);
+
+  const formatResults = (markets: string[], prices: any) => 
+    markets.map((market, index) => ({
+      market,
+      underlyingPrice: prices[index],
+    }));
+
+  return {
+    1284: formatResults(moonbeamMarkets, moonbeamPrices),
+    8453: formatResults(baseMarkets, basePrices),
   };
-  return response;
-};
+}

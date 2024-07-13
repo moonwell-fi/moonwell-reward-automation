@@ -11,12 +11,13 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
-import { getMarkets } from "./utils";
+import { getMarketsAndPrices } from "./utils";
 
 export default {
 	async fetch(request: Request, env: Record<string, any>, ctx: ExecutionContext): Promise<Response> {
 		try {
-			console.log(await getMarkets());
+			// console.log(await getMarkets());
+			console.log(await getMarketsAndPrices());
 			return new Response('Hello World!');
 		} catch (error) {
 			console.error('Error:', error);
