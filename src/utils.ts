@@ -1,12 +1,14 @@
-import { moonbeam, base } from "viem/chains";
+import { moonbeam, base, optimism } from "viem/chains";
 import { createPublicClient, http, formatUnits } from "viem";
 import { marketConfigs } from "./config";
 
 import {
   moonbeamComptroller,
   baseComptroller,
+  optimismComptroller,
   moonbeamOracleContract,
   baseOracleContract,
+  optimismOracleContract,
   excludedMarkets
 } from "./config";
 
@@ -19,6 +21,11 @@ const moonbeamClient = createPublicClient({
 
 const baseClient = createPublicClient({
   chain: base,
+  transport: http(),
+});
+
+const optimismClient = createPublicClient({
+  chain: optimism,
   transport: http(),
 });
 
@@ -45,11 +52,20 @@ async function getBaseMarkets() {
   return await filterExcludedMarkets(markets as string[], 8453);
 }
 
+async function getOptimismMarkets() {
+  const markets = await optimismClient.readContract({
+    ...optimismComptroller,
+    functionName: "getAllMarkets",
+  });
+  return await filterExcludedMarkets(markets as string[], 10);
+}
+
 export async function getMarketData() {
   const moonbeamMarkets = await getMoonbeamMarkets();
   const baseMarkets = await getBaseMarkets();
+  const optimismMarkets = await getOptimismMarkets();
 
-  if (!moonbeamMarkets.length || !baseMarkets.length) {
+  if (!moonbeamMarkets.length || !baseMarkets.length || !optimismMarkets.length) {
     throw new Error("No markets found");
   }
 
@@ -63,6 +79,11 @@ export async function getMarketData() {
     return config ? config.nameOverride : null;
   });
 
+  const optimismNames = optimismMarkets.map(market => {
+    const config = marketConfigs[10].find(config => config.address === market);
+    return config ? config.nameOverride : null;
+  });
+
   const moonbeamDigits = moonbeamMarkets.map(market => {
     const config = marketConfigs[1284].find(config => config.address === market);
     return config ? config.digits : null;
@@ -70,6 +91,11 @@ export async function getMarketData() {
 
   const baseDigits = baseMarkets.map(market => {
     const config = marketConfigs[8453].find(config => config.address === market);
+    return config ? config.digits : null;
+  });
+
+  const optimismDigits = optimismMarkets.map(market => {
+    const config = marketConfigs[10].find(config => config.address === market);
     return config ? config.digits : null;
   });
 
@@ -83,6 +109,11 @@ export async function getMarketData() {
     return config ? config.boost : null;
   });
 
+  const optimismBoosts = optimismMarkets.map(market => {
+    const config = marketConfigs[10].find(config => config.address === market);
+    return config ? config.boost : null;
+  });
+
   const moonbeamDeboosts = moonbeamMarkets.map(market => {
     const config = marketConfigs[1284].find(config => config.address === market);
     return config ? config.deboost : null;
@@ -93,6 +124,11 @@ export async function getMarketData() {
     return config ? config.deboost : null;
   });
 
+  const optimismDeboosts = optimismMarkets.map(market => {
+    const config = marketConfigs[10].find(config => config.address === market);
+    return config ? config.deboost : null;
+  });
+
   const moonbeamEnabled = moonbeamMarkets.map(market => {
     const config = marketConfigs[1284].find(config => config.address === market);
     return config ? config.enabled : null;
@@ -100,6 +136,11 @@ export async function getMarketData() {
 
   const baseEnabled = baseMarkets.map(market => {
     const config = marketConfigs[8453].find(config => config.address === market);
+    return config ? config.enabled : null;
+  });
+
+  const optimismEnabled = optimismMarkets.map(market => {
+    const config = marketConfigs[10].find(config => config.address === market);
     return config ? config.enabled : null;
   });
 
@@ -119,6 +160,14 @@ export async function getMarketData() {
     })),
   })).map((price) => BigInt(price.result ?? 0));
 
+  const optimismPrices = (await optimismClient.multicall({
+    contracts: optimismMarkets.map(market => ({
+      ...optimismOracleContract,
+      functionName: "getUnderlyingPrice",
+      args: [market],
+    })),
+  })).map((price) => BigInt(price.result ?? 0));
+
   const moonbeamSupplies = (await moonbeamClient.multicall({
     contracts: moonbeamMarkets.map(market => ({
       address: market as `0x${string}`,
@@ -129,6 +178,14 @@ export async function getMarketData() {
 
   const baseSupplies = (await baseClient.multicall({
     contracts: baseMarkets.map(market => ({
+      address: market as `0x${string}`,
+      abi: mTokenv2ABI,
+      functionName: "totalSupply",
+    })),
+  })).map((supply) => supply.result as bigint);
+
+  const optimismSupplies = (await optimismClient.multicall({
+    contracts: optimismMarkets.map(market => ({
       address: market as `0x${string}`,
       abi: mTokenv2ABI,
       functionName: "totalSupply",
@@ -151,6 +208,14 @@ export async function getMarketData() {
     })),
   })).map((borrow) => BigInt(borrow.result ?? 0));
 
+  const optimismBorrows = (await optimismClient.multicall({
+    contracts: optimismMarkets.map(market => ({
+      address: market as `0x${string}`,
+      abi: mTokenv2ABI,
+      functionName: "totalBorrows",
+    })),
+  })).map((borrow) => BigInt(borrow.result ?? 0));
+
   const moonbeamExchangeRates = (await moonbeamClient.multicall({
     contracts: moonbeamMarkets.map(market => ({
       address: market as `0x${string}`,
@@ -161,6 +226,14 @@ export async function getMarketData() {
 
   const baseExchangeRates = (await baseClient.multicall({
     contracts: baseMarkets.map(market => ({
+      address: market as `0x${string}`,
+      abi: mTokenv2ABI,
+      functionName: "exchangeRateStored",
+    })),
+  })).map((exchangeRate) => exchangeRate.result as bigint);
+
+  const optimismExchangeRates = (await optimismClient.multicall({
+    contracts: optimismMarkets.map(market => ({
       address: market as `0x${string}`,
       abi: mTokenv2ABI,
       functionName: "exchangeRateStored",
@@ -219,6 +292,18 @@ export async function getMarketData() {
   }));
 
   return {
+    10: formatResults(
+      optimismMarkets,
+      optimismNames,
+      optimismDigits.filter((digit): digit is number => digit !== null),
+      optimismBoosts,
+      optimismDeboosts,
+      optimismEnabled,
+      optimismPrices,
+      optimismSupplies,
+      optimismBorrows,
+      optimismExchangeRates
+    ),
     1284: formatResults(
       moonbeamMarkets,
       moonbeamNames,
