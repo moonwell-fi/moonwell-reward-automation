@@ -9,10 +9,22 @@ import {
   moonbeamOracleContract,
   baseOracleContract,
   optimismOracleContract,
+  baseMultiRewardDistributor,
+  optimismMultiRewardDistributor,
+  xWellToken,
+  baseNativeToken,
+  optimismNativeToken,
   excludedMarkets
 } from "./config";
 
 import { mTokenv1ABI, mTokenv2ABI } from "./constants";
+
+interface ContractCall {
+  address: `0x${string}`;
+  abi: any;
+  functionName: string;
+  args: readonly any[];
+}
 
 const moonbeamClient = createPublicClient({
   chain: moonbeam,
@@ -40,7 +52,8 @@ async function getMoonbeamMarkets() {
   const markets = await moonbeamClient.readContract({
     ...moonbeamComptroller,
     functionName: "getAllMarkets",
-  });
+    args: [],
+  } as ContractCall);
   return await filterExcludedMarkets(markets as string[], 1284);
 }
 
@@ -48,7 +61,8 @@ async function getBaseMarkets() {
   const markets = await baseClient.readContract({
     ...baseComptroller,
     functionName: "getAllMarkets",
-  });
+    args: [],
+  } as ContractCall);
   return await filterExcludedMarkets(markets as string[], 8453);
 }
 
@@ -56,7 +70,8 @@ async function getOptimismMarkets() {
   const markets = await optimismClient.readContract({
     ...optimismComptroller,
     functionName: "getAllMarkets",
-  });
+    args: [],
+  } as ContractCall);
   return await filterExcludedMarkets(markets as string[], 10);
 }
 
@@ -149,24 +164,24 @@ export async function getMarketData() {
       ...moonbeamOracleContract,
       functionName: "getUnderlyingPrice",
       args: [market],
-    })),
-  })).map((price) => BigInt(price.result ?? 0));
+    } as ContractCall)),
+  })).map((price) => price.result as bigint);
 
   const basePrices = (await baseClient.multicall({
     contracts: baseMarkets.map(market => ({
       ...baseOracleContract,
       functionName: "getUnderlyingPrice",
       args: [market],
-    })),
-  })).map((price) => BigInt(price.result ?? 0));
+    } as ContractCall)),
+  })).map((price) => price.result as bigint);
 
   const optimismPrices = (await optimismClient.multicall({
     contracts: optimismMarkets.map(market => ({
       ...optimismOracleContract,
       functionName: "getUnderlyingPrice",
       args: [market],
-    })),
-  })).map((price) => BigInt(price.result ?? 0));
+    } as ContractCall)),
+  })).map((price) =>price.result as bigint);
 
   const moonbeamSupplies = (await moonbeamClient.multicall({
     contracts: moonbeamMarkets.map(market => ({
@@ -181,7 +196,7 @@ export async function getMarketData() {
       address: market as `0x${string}`,
       abi: mTokenv2ABI,
       functionName: "totalSupply",
-    })),
+    } as ContractCall)),
   })).map((supply) => supply.result as bigint);
 
   const optimismSupplies = (await optimismClient.multicall({
@@ -189,7 +204,7 @@ export async function getMarketData() {
       address: market as `0x${string}`,
       abi: mTokenv2ABI,
       functionName: "totalSupply",
-    })),
+    } as ContractCall)),
   })).map((supply) => supply.result as bigint);
 
   const moonbeamBorrows = (await moonbeamClient.multicall({
@@ -197,31 +212,31 @@ export async function getMarketData() {
       address: market as `0x${string}`,
       abi: mTokenv1ABI,
       functionName: "totalBorrows",
-    })),
-  })).map((borrow) => BigInt(borrow.result ?? 0));
+    } as ContractCall)),
+  })).map((borrow) => borrow.result as bigint);
 
   const baseBorrows = (await baseClient.multicall({
     contracts: baseMarkets.map(market => ({
       address: market as `0x${string}`,
       abi: mTokenv2ABI,
       functionName: "totalBorrows",
-    })),
-  })).map((borrow) => BigInt(borrow.result ?? 0));
+    } as ContractCall)),
+  })).map((borrow) => borrow.result as bigint);
 
   const optimismBorrows = (await optimismClient.multicall({
     contracts: optimismMarkets.map(market => ({
       address: market as `0x${string}`,
       abi: mTokenv2ABI,
       functionName: "totalBorrows",
-    })),
-  })).map((borrow) => BigInt(borrow.result ?? 0));
+    } as ContractCall)),
+  })).map((borrow) => borrow.result as bigint);
 
   const moonbeamExchangeRates = (await moonbeamClient.multicall({
     contracts: moonbeamMarkets.map(market => ({
       address: market as `0x${string}`,
       abi: mTokenv1ABI,
       functionName: "exchangeRateStored",
-    })),
+    } as ContractCall)),
   })).map((exchangeRate) => exchangeRate.result as bigint);
 
   const baseExchangeRates = (await baseClient.multicall({
@@ -229,7 +244,7 @@ export async function getMarketData() {
       address: market as `0x${string}`,
       abi: mTokenv2ABI,
       functionName: "exchangeRateStored",
-    })),
+    } as ContractCall)),
   })).map((exchangeRate) => exchangeRate.result as bigint);
 
   const optimismExchangeRates = (await optimismClient.multicall({
@@ -237,8 +252,140 @@ export async function getMarketData() {
       address: market as `0x${string}`,
       abi: mTokenv2ABI,
       functionName: "exchangeRateStored",
-    })),
+    } as ContractCall)),
   })).map((exchangeRate) => exchangeRate.result as bigint);
+
+  const moonbeamWellSupplySpeeds = (await moonbeamClient.multicall({
+    contracts: moonbeamMarkets.map(market => ({
+      address: moonbeamComptroller.address,
+      abi: moonbeamComptroller.abi,
+      functionName: "supplyRewardSpeeds",
+      args: [0, market], // 0 = WELL
+    } as ContractCall)),
+  })).map((supplyRewardSpeed) => supplyRewardSpeed.result as bigint);
+
+  const moonbeamWellBorrowSpeeds = (await moonbeamClient.multicall({
+    contracts: moonbeamMarkets.map(market => ({
+      address: moonbeamComptroller.address,
+      abi: moonbeamComptroller.abi,
+      functionName: "borrowRewardSpeeds",
+      args: [0, market], // 0 = WELL
+    } as ContractCall)),
+  })).map((borrowRewardSpeed) => borrowRewardSpeed.result as bigint);
+
+  const baseWellSupplySpeeds = (await baseClient.multicall({
+    contracts: baseMarkets.map(market => ({
+      address: baseMultiRewardDistributor.address,
+      abi: baseMultiRewardDistributor.abi,
+      functionName: "getConfigForMarket",
+      args: [market, xWellToken.address],
+    } as ContractCall)),
+  })).map((supplyRewardSpeed) => {
+    const result = supplyRewardSpeed.result as { supplyEmissionsPerSec: bigint } | undefined;
+    return result ? result.supplyEmissionsPerSec : BigInt(0);
+  });
+
+  const baseWellBorrowSpeeds = (await baseClient.multicall({
+    contracts: baseMarkets.map(market => ({
+      address: baseMultiRewardDistributor.address,
+      abi: baseMultiRewardDistributor.abi,
+      functionName: "getConfigForMarket",
+      args: [market, xWellToken.address],
+    } as ContractCall)),
+  })).map((borrowRewardSpeed) => {
+    const result = borrowRewardSpeed.result as { borrowEmissionsPerSec: bigint } | undefined;
+    return result ? result.borrowEmissionsPerSec : BigInt(0);
+  });
+
+  const optimismWellSupplySpeeds = (await optimismClient.multicall({
+    contracts: optimismMarkets.map(market => ({
+      address: optimismMultiRewardDistributor.address,
+      abi: optimismMultiRewardDistributor.abi,
+      functionName: "getConfigForMarket",
+      args: [market, xWellToken.address],
+    } as ContractCall)),
+  })).map((supplyRewardSpeed) => {
+    const result = supplyRewardSpeed.result as { supplyEmissionsPerSec: bigint } | undefined;
+    return result ? result.supplyEmissionsPerSec : BigInt(0);
+  });
+
+  const optimismWellBorrowSpeeds = (await optimismClient.multicall({
+    contracts: optimismMarkets.map(market => ({
+      address: optimismMultiRewardDistributor.address,
+      abi: optimismMultiRewardDistributor.abi,
+      functionName: "getConfigForMarket",
+      args: [market, xWellToken.address],
+    } as ContractCall)),
+  })).map((borrowRewardSpeed) => {
+    const result = borrowRewardSpeed.result as { borrowEmissionsPerSec: bigint } | undefined;
+    return result ? result.borrowEmissionsPerSec : BigInt(0);
+  });
+
+  const moonbeamNativeSupplySpeeds = (await moonbeamClient.multicall({
+    contracts: moonbeamMarkets.map(market => ({
+      address: moonbeamComptroller.address,
+      abi: moonbeamComptroller.abi,
+      functionName: "supplyRewardSpeeds",
+      args: [1, market], // 1 = GLMR (native token)
+    } as ContractCall)),
+  })).map((supplyRewardSpeed) => supplyRewardSpeed.result as bigint);
+
+  const baseNativeSupplySpeeds = (await baseClient.multicall({
+    contracts: baseMarkets.map(market => ({
+      address: baseMultiRewardDistributor.address,
+      abi: baseMultiRewardDistributor.abi,
+      functionName: "getConfigForMarket",
+      args: [market, baseNativeToken],
+    } as ContractCall)),
+  })).map((supplyRewardSpeed) => {
+    const result = supplyRewardSpeed.result as { supplyEmissionsPerSec: bigint } | undefined;
+    return result ? result.supplyEmissionsPerSec : BigInt(0);
+  });
+
+  const optimismNativeSupplySpeeds = (await optimismClient.multicall({
+    contracts: optimismMarkets.map(market => ({
+      address: optimismMultiRewardDistributor.address,
+      abi: optimismMultiRewardDistributor.abi,
+      functionName: "getConfigForMarket",
+      args: [market, optimismNativeToken],
+    } as ContractCall)),
+  })).map((supplyRewardSpeed) => {
+    const result = supplyRewardSpeed.result as { supplyEmissionsPerSec: bigint } | undefined;
+    return result ? result.supplyEmissionsPerSec : BigInt(0);
+  });
+
+  const moonbeamNativeBorrowSpeeds = (await moonbeamClient.multicall({
+    contracts: moonbeamMarkets.map(market => ({
+      address: moonbeamComptroller.address,
+      abi: moonbeamComptroller.abi,
+      functionName: "borrowRewardSpeeds",
+      args: [1, market], // 1 = GLMR (native token)
+    } as ContractCall)),
+  })).map((borrowRewardSpeed) => borrowRewardSpeed.result as bigint);
+
+  const baseNativeBorrowSpeeds = (await baseClient.multicall({
+    contracts: baseMarkets.map(market => ({
+      address: baseMultiRewardDistributor.address,
+      abi: baseMultiRewardDistributor.abi,
+      functionName: "getConfigForMarket",
+      args: [market, baseNativeToken],
+    } as ContractCall)),
+  })).map((borrowRewardSpeed) => {
+    const result = borrowRewardSpeed.result as { borrowEmissionsPerSec: bigint } | undefined;
+    return result ? result.borrowEmissionsPerSec : BigInt(0);
+  });
+
+  const optimismNativeBorrowSpeeds = (await optimismClient.multicall({
+    contracts: optimismMarkets.map(market => ({
+      address: optimismMultiRewardDistributor.address,
+      abi: optimismMultiRewardDistributor.abi,
+      functionName: "getConfigForMarket",
+      args: [market, optimismNativeToken],
+    } as ContractCall)),
+  })).map((borrowRewardSpeed) => {
+    const result = borrowRewardSpeed.result as { borrowEmissionsPerSec: bigint } | undefined;
+    return result ? result.borrowEmissionsPerSec : BigInt(0);
+  });
 
   const formatResults = (
     markets: any,
@@ -250,7 +397,11 @@ export async function getMarketData() {
     prices: bigint[],
     supplies: bigint[],
     borrows: bigint[],
-    exchangeRates: any
+    exchangeRates: any,
+    wellSupplySpeeds: bigint[],
+    wellBorrowSpeeds: bigint[],
+    nativeSupplySpeeds: bigint[],
+    nativeBorrowSpeeds: bigint[],
   ) => markets.map((market: any, index: any) => ({
       market,
       name: names[index],
@@ -289,6 +440,10 @@ export async function getMarketData() {
             digits[index] as number
           )) *
         Number(formatUnits(prices[index] as bigint, 36 - digits[index] as number)),
+        wellSupplySpeeds: wellSupplySpeeds[index],
+        wellBorrowSpeeds: wellBorrowSpeeds[index],
+        nativeSupplySpeeds: nativeSupplySpeeds[index],
+        nativeBorrowSpeeds: nativeBorrowSpeeds[index],
   }));
 
   return {
@@ -302,7 +457,11 @@ export async function getMarketData() {
       optimismPrices,
       optimismSupplies,
       optimismBorrows,
-      optimismExchangeRates
+      optimismExchangeRates,
+      optimismWellSupplySpeeds,
+      optimismWellBorrowSpeeds,
+      optimismNativeSupplySpeeds,
+      optimismNativeBorrowSpeeds,
     ),
     1284: formatResults(
       moonbeamMarkets,
@@ -314,7 +473,11 @@ export async function getMarketData() {
       moonbeamPrices,
       moonbeamSupplies,
       moonbeamBorrows,
-      moonbeamExchangeRates
+      moonbeamExchangeRates,
+      moonbeamWellSupplySpeeds,
+      moonbeamWellBorrowSpeeds,
+      moonbeamNativeSupplySpeeds,
+      moonbeamNativeBorrowSpeeds,
     ),
     8453: formatResults(
       baseMarkets,
@@ -326,7 +489,11 @@ export async function getMarketData() {
       basePrices,
       baseSupplies,
       baseBorrows,
-      baseExchangeRates
+      baseExchangeRates,
+      baseWellSupplySpeeds,
+      baseWellBorrowSpeeds,
+      baseNativeSupplySpeeds,
+      baseNativeBorrowSpeeds,
     ),
   };
 }
