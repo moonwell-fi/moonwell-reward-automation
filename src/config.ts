@@ -9952,6 +9952,41 @@ export const xWellToken = {
   ],
 } as const;
 
+export const aeroMarketContract = {
+  address: '0x89D0F320ac73dd7d9513FFC5bc58D1161452a657' as `0x${string}`,
+  abi: [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "tokenIn",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amountIn",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "granularity",
+          "type": "uint256"
+        }
+      ],
+      "name": "quote",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "amountOut",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+  ], // we only need the quote function
+} as const;
+
 export const baseNativeToken = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' // USDC since there is no native token on Base
 
 export const optimismNativeToken = '0x4200000000000000000000000000000000000042' // OP

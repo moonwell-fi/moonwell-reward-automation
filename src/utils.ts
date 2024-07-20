@@ -14,6 +14,7 @@ import {
   xWellToken,
   baseNativeToken,
   optimismNativeToken,
+  aeroMarketContract,
   excludedMarkets
 } from "./config";
 
@@ -182,6 +183,16 @@ export async function getMarketData() {
       args: [market],
     } as ContractCall)),
   })).map((price) =>price.result as bigint);
+
+  const ethPrice = basePrices.find(
+    (price, index) => baseMarkets[index] === marketConfigs[8453].find(config => config.nameOverride === 'ETH')?.address
+  ) || 0;
+
+  const wellPrice = (await baseClient.readContract({
+    ...aeroMarketContract,
+    functionName: "quote",
+    args: [xWellToken.address, BigInt(1e18), BigInt(1)],
+  })) * BigInt(ethPrice) as bigint;
 
   const moonbeamSupplies = (await moonbeamClient.multicall({
     contracts: moonbeamMarkets.map(market => ({
@@ -531,5 +542,6 @@ export async function getMarketData() {
       baseNativeSupplySpeeds,
       baseNativeBorrowSpeeds,
     ),
+    wellPrice: formatUnits(wellPrice, 36), 
   };
 }
