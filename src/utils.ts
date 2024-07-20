@@ -389,6 +389,7 @@ export async function getMarketData() {
 
   const formatResults = (
     markets: any,
+    chainId: number,
     names: any,
     digits: number[],
     boosts: any,
@@ -440,15 +441,48 @@ export async function getMarketData() {
             digits[index] as number
           )) *
         Number(formatUnits(prices[index] as bigint, 36 - digits[index] as number)),
-        wellSupplySpeeds: wellSupplySpeeds[index],
-        wellBorrowSpeeds: wellBorrowSpeeds[index],
-        nativeSupplySpeeds: nativeSupplySpeeds[index],
-        nativeBorrowSpeeds: nativeBorrowSpeeds[index],
+        wellSupplySpeeds:
+          Number(
+            formatUnits(
+              wellSupplySpeeds[index] as bigint,
+              18 // WELL is 18 decimals
+          )),
+        wellBorrowSpeeds:
+          Number(
+            formatUnits(
+              wellBorrowSpeeds[index],
+              18 // WELL is 18 decimals
+          )),
+        nativeSupplySpeeds:
+          chainId === 1284 // Moonbeam
+          ? Number(
+              formatUnits(
+                nativeSupplySpeeds[index],
+                18 // GLMR is 18 decimals
+            ))
+          : Number(
+              formatUnits(
+                nativeSupplySpeeds[index],
+                digits[index] as number
+            )),
+          nativeBorrowSpeeds:
+            chainId === 1284 // Moonbeam
+            ? Number(
+                formatUnits(
+                  nativeBorrowSpeeds[index],
+                  18 // GLMR is 18 decimals
+              ))
+            : Number(
+                formatUnits(
+                  nativeBorrowSpeeds[index],
+                  digits[index] as number
+              )),
   }));
 
   return {
     10: formatResults(
       optimismMarkets,
+      10,
       optimismNames,
       optimismDigits.filter((digit): digit is number => digit !== null),
       optimismBoosts,
@@ -465,6 +499,7 @@ export async function getMarketData() {
     ),
     1284: formatResults(
       moonbeamMarkets,
+      1284,
       moonbeamNames,
       moonbeamDigits.filter((digit): digit is number => digit !== null),
       moonbeamBoosts,
@@ -481,6 +516,7 @@ export async function getMarketData() {
     ),
     8453: formatResults(
       baseMarkets,
+      8453,
       baseNames,
       baseDigits.filter((digit): digit is number => digit !== null),
       baseBoosts,
