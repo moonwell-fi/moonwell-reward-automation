@@ -9987,6 +9987,1996 @@ export const aeroMarketContract = {
   ], // we only need the quote function
 } as const;
 
+export const moonbeamViewsContract = {
+  address: '0xe76C8B8706faC85a8Fbdcac3C42e3E7823c73994' as `0x${string}`,
+  abi: [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint8",
+          "name": "version",
+          "type": "uint8"
+        }
+      ],
+      "name": "Initialized",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "comptroller",
+      "outputs": [
+        {
+          "internalType": "contract Comptroller",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getAllMarketsInfo",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "market",
+              "type": "address"
+            },
+            {
+              "internalType": "bool",
+              "name": "isListed",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint256",
+              "name": "borrowCap",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "supplyCap",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bool",
+              "name": "mintPaused",
+              "type": "bool"
+            },
+            {
+              "internalType": "bool",
+              "name": "borrowPaused",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint256",
+              "name": "collateralFactor",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "underlyingPrice",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "totalSupply",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "totalBorrows",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "totalReserves",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cash",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "exchangeRate",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "borrowIndex",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "reserveFactor",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "borrowRate",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "supplyRate",
+              "type": "uint256"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "address",
+                  "name": "token",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "supplyIncentivesPerSec",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "borrowIncentivesPerSec",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct BaseMoonwellViews.MarketIncentives[]",
+              "name": "incentives",
+              "type": "tuple[]"
+            }
+          ],
+          "internalType": "struct BaseMoonwellViews.Market[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getGovernanceTokenPrice",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "_result",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract MToken",
+          "name": "market",
+          "type": "address"
+        }
+      ],
+      "name": "getMarketIncentives",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "supplyIncentivesPerSec",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "borrowIncentivesPerSec",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct BaseMoonwellViews.MarketIncentives[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract MToken",
+          "name": "_mToken",
+          "type": "address"
+        }
+      ],
+      "name": "getMarketInfo",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "market",
+              "type": "address"
+            },
+            {
+              "internalType": "bool",
+              "name": "isListed",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint256",
+              "name": "borrowCap",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "supplyCap",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bool",
+              "name": "mintPaused",
+              "type": "bool"
+            },
+            {
+              "internalType": "bool",
+              "name": "borrowPaused",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint256",
+              "name": "collateralFactor",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "underlyingPrice",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "totalSupply",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "totalBorrows",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "totalReserves",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cash",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "exchangeRate",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "borrowIndex",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "reserveFactor",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "borrowRate",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "supplyRate",
+              "type": "uint256"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "address",
+                  "name": "token",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "supplyIncentivesPerSec",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "borrowIncentivesPerSec",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct BaseMoonwellViews.MarketIncentives[]",
+              "name": "incentives",
+              "type": "tuple[]"
+            }
+          ],
+          "internalType": "struct BaseMoonwellViews.Market",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract MToken[]",
+          "name": "_mTokens",
+          "type": "address[]"
+        }
+      ],
+      "name": "getMarketsInfo",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "market",
+              "type": "address"
+            },
+            {
+              "internalType": "bool",
+              "name": "isListed",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint256",
+              "name": "borrowCap",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "supplyCap",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bool",
+              "name": "mintPaused",
+              "type": "bool"
+            },
+            {
+              "internalType": "bool",
+              "name": "borrowPaused",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint256",
+              "name": "collateralFactor",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "underlyingPrice",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "totalSupply",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "totalBorrows",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "totalReserves",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cash",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "exchangeRate",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "borrowIndex",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "reserveFactor",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "borrowRate",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "supplyRate",
+              "type": "uint256"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "address",
+                  "name": "token",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "supplyIncentivesPerSec",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "borrowIncentivesPerSec",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct BaseMoonwellViews.MarketIncentives[]",
+              "name": "incentives",
+              "type": "tuple[]"
+            }
+          ],
+          "internalType": "struct BaseMoonwellViews.Market[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getNativeTokenPrice",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "_result",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getProtocolInfo",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "bool",
+              "name": "seizePaused",
+              "type": "bool"
+            },
+            {
+              "internalType": "bool",
+              "name": "transferPaused",
+              "type": "bool"
+            }
+          ],
+          "internalType": "struct BaseMoonwellViews.ProtocolInfo",
+          "name": "_result",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getStakingInfo",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "cooldown",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "unstakeWindow",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "distributionEnd",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "totalSupply",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "emissionPerSecond",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "lastUpdateTimestamp",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "index",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct BaseMoonwellViews.StakingInfo",
+          "name": "_result",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address[]",
+          "name": "_tokens",
+          "type": "address[]"
+        },
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getTokensBalances",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct BaseMoonwellViews.Balances[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getUserBalances",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct BaseMoonwellViews.Balances[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getUserBorrowsBalances",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct BaseMoonwellViews.Balances[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getUserClaimsVotingPower",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "delegatedVotingPower",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "votingPower",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "delegates",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct BaseMoonwellViews.Votes",
+          "name": "_result",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getUserMarketsMemberships",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "bool",
+              "name": "membership",
+              "type": "bool"
+            },
+            {
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct BaseMoonwellViews.Memberships[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getUserRewards",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "market",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "rewardToken",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "supplyRewardsAmount",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "borrowRewardsAmount",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct BaseMoonwellViews.Rewards[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getUserStakingInfo",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "cooldown",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "pendingRewards",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "totalStaked",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct BaseMoonwellViews.UserStakingInfo",
+          "name": "_result",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getUserStakingVotingPower",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "delegatedVotingPower",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "votingPower",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "delegates",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct BaseMoonwellViews.Votes",
+          "name": "_result",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getUserTokensVotingPower",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "delegatedVotingPower",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "votingPower",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "delegates",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct BaseMoonwellViews.Votes",
+          "name": "_result",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getUserVotingPower",
+      "outputs": [
+        {
+          "components": [
+            {
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "delegatedVotingPower",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "votingPower",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "address",
+                  "name": "delegates",
+                  "type": "address"
+                }
+              ],
+              "internalType": "struct BaseMoonwellViews.Votes",
+              "name": "claimsVotes",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "delegatedVotingPower",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "votingPower",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "address",
+                  "name": "delegates",
+                  "type": "address"
+                }
+              ],
+              "internalType": "struct BaseMoonwellViews.Votes",
+              "name": "stakingVotes",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "delegatedVotingPower",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "votingPower",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "address",
+                  "name": "delegates",
+                  "type": "address"
+                }
+              ],
+              "internalType": "struct BaseMoonwellViews.Votes",
+              "name": "tokenVotes",
+              "type": "tuple"
+            }
+          ],
+          "internalType": "struct BaseMoonwellViews.UserVotes",
+          "name": "_result",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_comptroller",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "tokenSaleDistributor",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "safetyModule",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "governanceToken",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "nativeMarket",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "governanceTokenLP",
+          "type": "address"
+        }
+      ],
+      "name": "initialize",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+} as const;
+
+export const baseViewsContract = {
+  address: '0x6834770ABA6c2028f448E3259DDEE4BCB879d459' as `0x${string}`,
+  abi: [
+    {
+      "type": "constructor",
+      "inputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "comptroller",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "contract Comptroller"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getAllMarketsInfo",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "tuple[]",
+          "internalType": "struct BaseMoonwellViews.Market[]",
+          "components": [
+            {
+              "name": "market",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "isListed",
+              "type": "bool",
+              "internalType": "bool"
+            },
+            {
+              "name": "borrowCap",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "supplyCap",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "mintPaused",
+              "type": "bool",
+              "internalType": "bool"
+            },
+            {
+              "name": "borrowPaused",
+              "type": "bool",
+              "internalType": "bool"
+            },
+            {
+              "name": "collateralFactor",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "underlyingPrice",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "totalSupply",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "totalBorrows",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "totalReserves",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "cash",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "exchangeRate",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "borrowIndex",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "reserveFactor",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "borrowRate",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "supplyRate",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "incentives",
+              "type": "tuple[]",
+              "internalType": "struct BaseMoonwellViews.MarketIncentives[]",
+              "components": [
+                {
+                  "name": "token",
+                  "type": "address",
+                  "internalType": "address"
+                },
+                {
+                  "name": "supplyIncentivesPerSec",
+                  "type": "uint256",
+                  "internalType": "uint256"
+                },
+                {
+                  "name": "borrowIncentivesPerSec",
+                  "type": "uint256",
+                  "internalType": "uint256"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getGovernanceTokenPrice",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "_result",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getMarketIncentives",
+      "inputs": [
+        {
+          "name": "market",
+          "type": "address",
+          "internalType": "contract MToken"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "tuple[]",
+          "internalType": "struct BaseMoonwellViews.MarketIncentives[]",
+          "components": [
+            {
+              "name": "token",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "supplyIncentivesPerSec",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "borrowIncentivesPerSec",
+              "type": "uint256",
+              "internalType": "uint256"
+            }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getMarketInfo",
+      "inputs": [
+        {
+          "name": "_mToken",
+          "type": "address",
+          "internalType": "contract MToken"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "tuple",
+          "internalType": "struct BaseMoonwellViews.Market",
+          "components": [
+            {
+              "name": "market",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "isListed",
+              "type": "bool",
+              "internalType": "bool"
+            },
+            {
+              "name": "borrowCap",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "supplyCap",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "mintPaused",
+              "type": "bool",
+              "internalType": "bool"
+            },
+            {
+              "name": "borrowPaused",
+              "type": "bool",
+              "internalType": "bool"
+            },
+            {
+              "name": "collateralFactor",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "underlyingPrice",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "totalSupply",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "totalBorrows",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "totalReserves",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "cash",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "exchangeRate",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "borrowIndex",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "reserveFactor",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "borrowRate",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "supplyRate",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "incentives",
+              "type": "tuple[]",
+              "internalType": "struct BaseMoonwellViews.MarketIncentives[]",
+              "components": [
+                {
+                  "name": "token",
+                  "type": "address",
+                  "internalType": "address"
+                },
+                {
+                  "name": "supplyIncentivesPerSec",
+                  "type": "uint256",
+                  "internalType": "uint256"
+                },
+                {
+                  "name": "borrowIncentivesPerSec",
+                  "type": "uint256",
+                  "internalType": "uint256"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getMarketsInfo",
+      "inputs": [
+        {
+          "name": "_mTokens",
+          "type": "address[]",
+          "internalType": "contract MToken[]"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "tuple[]",
+          "internalType": "struct BaseMoonwellViews.Market[]",
+          "components": [
+            {
+              "name": "market",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "isListed",
+              "type": "bool",
+              "internalType": "bool"
+            },
+            {
+              "name": "borrowCap",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "supplyCap",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "mintPaused",
+              "type": "bool",
+              "internalType": "bool"
+            },
+            {
+              "name": "borrowPaused",
+              "type": "bool",
+              "internalType": "bool"
+            },
+            {
+              "name": "collateralFactor",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "underlyingPrice",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "totalSupply",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "totalBorrows",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "totalReserves",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "cash",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "exchangeRate",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "borrowIndex",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "reserveFactor",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "borrowRate",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "supplyRate",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "incentives",
+              "type": "tuple[]",
+              "internalType": "struct BaseMoonwellViews.MarketIncentives[]",
+              "components": [
+                {
+                  "name": "token",
+                  "type": "address",
+                  "internalType": "address"
+                },
+                {
+                  "name": "supplyIncentivesPerSec",
+                  "type": "uint256",
+                  "internalType": "uint256"
+                },
+                {
+                  "name": "borrowIncentivesPerSec",
+                  "type": "uint256",
+                  "internalType": "uint256"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getNativeTokenPrice",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "_result",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getProtocolInfo",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "_result",
+          "type": "tuple",
+          "internalType": "struct BaseMoonwellViews.ProtocolInfo",
+          "components": [
+            {
+              "name": "seizePaused",
+              "type": "bool",
+              "internalType": "bool"
+            },
+            {
+              "name": "transferPaused",
+              "type": "bool",
+              "internalType": "bool"
+            }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getStakingInfo",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "_result",
+          "type": "tuple",
+          "internalType": "struct BaseMoonwellViews.StakingInfo",
+          "components": [
+            {
+              "name": "cooldown",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "unstakeWindow",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "distributionEnd",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "totalSupply",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "emissionPerSecond",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "lastUpdateTimestamp",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "index",
+              "type": "uint256",
+              "internalType": "uint256"
+            }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getTokensBalances",
+      "inputs": [
+        {
+          "name": "_tokens",
+          "type": "address[]",
+          "internalType": "address[]"
+        },
+        {
+          "name": "_user",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "tuple[]",
+          "internalType": "struct BaseMoonwellViews.Balances[]",
+          "components": [
+            {
+              "name": "amount",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "token",
+              "type": "address",
+              "internalType": "address"
+            }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getUserBalances",
+      "inputs": [
+        {
+          "name": "_user",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "tuple[]",
+          "internalType": "struct BaseMoonwellViews.Balances[]",
+          "components": [
+            {
+              "name": "amount",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "token",
+              "type": "address",
+              "internalType": "address"
+            }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getUserBorrowsBalances",
+      "inputs": [
+        {
+          "name": "_user",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "tuple[]",
+          "internalType": "struct BaseMoonwellViews.Balances[]",
+          "components": [
+            {
+              "name": "amount",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "token",
+              "type": "address",
+              "internalType": "address"
+            }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getUserClaimsVotingPower",
+      "inputs": [
+        {
+          "name": "_user",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "_result",
+          "type": "tuple",
+          "internalType": "struct BaseMoonwellViews.Votes",
+          "components": [
+            {
+              "name": "delegatedVotingPower",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "votingPower",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "delegates",
+              "type": "address",
+              "internalType": "address"
+            }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getUserMarketsMemberships",
+      "inputs": [
+        {
+          "name": "_user",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "tuple[]",
+          "internalType": "struct BaseMoonwellViews.Memberships[]",
+          "components": [
+            {
+              "name": "membership",
+              "type": "bool",
+              "internalType": "bool"
+            },
+            {
+              "name": "token",
+              "type": "address",
+              "internalType": "address"
+            }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getUserRewards",
+      "inputs": [
+        {
+          "name": "_user",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "tuple[]",
+          "internalType": "struct BaseMoonwellViews.Rewards[]",
+          "components": [
+            {
+              "name": "market",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "rewardToken",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "supplyRewardsAmount",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "borrowRewardsAmount",
+              "type": "uint256",
+              "internalType": "uint256"
+            }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getUserStakingInfo",
+      "inputs": [
+        {
+          "name": "_user",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "_result",
+          "type": "tuple",
+          "internalType": "struct BaseMoonwellViews.UserStakingInfo",
+          "components": [
+            {
+              "name": "cooldown",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "pendingRewards",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "totalStaked",
+              "type": "uint256",
+              "internalType": "uint256"
+            }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getUserStakingVotingPower",
+      "inputs": [
+        {
+          "name": "_user",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "_result",
+          "type": "tuple",
+          "internalType": "struct BaseMoonwellViews.Votes",
+          "components": [
+            {
+              "name": "delegatedVotingPower",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "votingPower",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "delegates",
+              "type": "address",
+              "internalType": "address"
+            }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getUserTokensVotingPower",
+      "inputs": [
+        {
+          "name": "_user",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "_result",
+          "type": "tuple",
+          "internalType": "struct BaseMoonwellViews.Votes",
+          "components": [
+            {
+              "name": "delegatedVotingPower",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "votingPower",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "delegates",
+              "type": "address",
+              "internalType": "address"
+            }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getUserVotingPower",
+      "inputs": [
+        {
+          "name": "_user",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "_result",
+          "type": "tuple",
+          "internalType": "struct BaseMoonwellViews.UserVotes",
+          "components": [
+            {
+              "name": "claimsVotes",
+              "type": "tuple",
+              "internalType": "struct BaseMoonwellViews.Votes",
+              "components": [
+                {
+                  "name": "delegatedVotingPower",
+                  "type": "uint256",
+                  "internalType": "uint256"
+                },
+                {
+                  "name": "votingPower",
+                  "type": "uint256",
+                  "internalType": "uint256"
+                },
+                {
+                  "name": "delegates",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ]
+            },
+            {
+              "name": "stakingVotes",
+              "type": "tuple",
+              "internalType": "struct BaseMoonwellViews.Votes",
+              "components": [
+                {
+                  "name": "delegatedVotingPower",
+                  "type": "uint256",
+                  "internalType": "uint256"
+                },
+                {
+                  "name": "votingPower",
+                  "type": "uint256",
+                  "internalType": "uint256"
+                },
+                {
+                  "name": "delegates",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ]
+            },
+            {
+              "name": "tokenVotes",
+              "type": "tuple",
+              "internalType": "struct BaseMoonwellViews.Votes",
+              "components": [
+                {
+                  "name": "delegatedVotingPower",
+                  "type": "uint256",
+                  "internalType": "uint256"
+                },
+                {
+                  "name": "votingPower",
+                  "type": "uint256",
+                  "internalType": "uint256"
+                },
+                {
+                  "name": "delegates",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "governanceToken",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "contract Well"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "initialize",
+      "inputs": [
+        {
+          "name": "_comptroller",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "tokenSaleDistributor",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "safetyModule",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "_governanceToken",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "nativeMarket",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "governanceTokenLP",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "event",
+      "name": "Initialized",
+      "inputs": [
+        {
+          "name": "version",
+          "type": "uint8",
+          "indexed": false,
+          "internalType": "uint8"
+        }
+      ],
+      "anonymous": false
+    }
+  ],
+} as const;
+
 export const baseNativeToken = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' // USDC since there is no native token on Base
 
 export const optimismNativeToken = '0x4200000000000000000000000000000000000042' // OP
