@@ -45,7 +45,7 @@ const optimismClient = createPublicClient({
   transport: http(),
 });
 
-function convertApy(apy: bigint) {
+/* function convertApy(apy: bigint) {
   const SECONDS_PER_DAY = 86400;
   const DAYS_PER_YEAR = 365;
 
@@ -59,7 +59,7 @@ function convertApy(apy: bigint) {
     .times(100);
 
   return finalApy.toFixed(2);
-}
+} */
 
 async function filterExcludedMarkets(markets: string[], chainId: number): Promise < string[] > {
   const excludedAddresses = excludedMarkets
@@ -441,6 +441,138 @@ export async function getMarketData() {
     return result ? (result.borrowEmissionsPerSec * BigInt(86400)) : BigInt(0);
   });
 
+  const moonbeamWellSupplyPerDayUsd = moonbeamWellSupplyPerDay.map(
+    (supplyPerDay) =>
+      Number(formatUnits(supplyPerDay, 18)) * Number(formatUnits(wellPrice, 36))
+  );
+
+  const moonbeamWellBorrowPerDayUsd = moonbeamWellBorrowPerDay.map(
+    (borrowPerDay) =>
+      Number(formatUnits(borrowPerDay, 18)) * Number(formatUnits(wellPrice, 36))
+  );
+
+  const baseWellSupplyPerDayUsd = baseWellSupplyPerDay.map(
+    (supplyPerDay) =>
+      Number(formatUnits(supplyPerDay, 18)) * Number(formatUnits(wellPrice, 36))
+  );
+
+  const baseWellBorrowPerDayUsd = baseWellBorrowPerDay.map(
+    (borrowPerDay) =>
+      Number(formatUnits(borrowPerDay, 18)) * Number(formatUnits(wellPrice, 36))
+  );
+
+  const optimismWellSupplyPerDayUsd = optimismWellSupplyPerDay.map(
+    (supplyPerDay) =>
+      Number(formatUnits(supplyPerDay, 18)) * Number(formatUnits(wellPrice, 36))
+  );
+
+  const optimismWellBorrowPerDayUsd = optimismWellBorrowPerDay.map(
+    (borrowPerDay) =>
+      Number(formatUnits(borrowPerDay, 18)) * Number(formatUnits(wellPrice, 36))
+  );
+
+  const moonbeamNativeSupplyPerDayUsd = moonbeamNativeSupplyPerDay.map(
+    (supplyPerDay) =>
+      Number(formatUnits(supplyPerDay, 18)) * Number(moonbeamNativePrice)
+  );
+
+  const moonbeamNativeBorrowPerDayUsd = moonbeamNativeBorrowPerDay.map(
+    (borrowPerDay) =>
+      Number(formatUnits(borrowPerDay, 18)) * Number(moonbeamNativePrice)
+  );
+
+  const baseNativeSupplyPerDayUsd = baseNativeSupplyPerDay.map(
+    (supplyPerDay) =>
+      Number(formatUnits(supplyPerDay, 18)) * Number(baseNativePrice)
+  );
+
+  const baseNativeBorrowPerDayUsd = baseNativeBorrowPerDay.map(
+    (borrowPerDay) =>
+      Number(formatUnits(borrowPerDay, 18)) * Number(baseNativePrice)
+  );
+
+  const optimismNativeSupplyPerDayUsd = optimismNativeSupplyPerDay.map(
+    (supplyPerDay) =>
+      Number(formatUnits(supplyPerDay, 18)) * Number(optimismNativePrice)
+  );
+
+  const optimismNativeBorrowPerDayUsd = optimismNativeBorrowPerDay.map(
+    (borrowPerDay) =>
+      Number(formatUnits(borrowPerDay, 18)) * Number(optimismNativePrice)
+  );
+
+  const moonbeamTotalSupplyUsd = moonbeamMarkets.map((market, index) => {
+    const supply = moonbeamSupplies[index];
+    const exchangeRate = moonbeamExchangeRates[index];
+    const price = moonbeamPrices[index];
+    const digit = moonbeamDigits.filter((digit): digit is number => digit !== null)[index];
+  
+    return (
+      Number(formatUnits(supply, 8)) *
+      Number(formatUnits(exchangeRate, 18 + digit - 8)) *
+      Number(formatUnits(price, 36 - digit))
+    );
+  });
+  
+  const baseTotalSupplyUsd = baseMarkets.map((market, index) => {
+    const supply = baseSupplies[index];
+    const exchangeRate = baseExchangeRates[index];
+    const price = basePrices[index];
+    const digit = baseDigits.filter((digit): digit is number => digit !== null)[index];
+  
+    return (
+      Number(formatUnits(supply, 8)) *
+      Number(formatUnits(exchangeRate, 18 + digit - 8)) *
+      Number(formatUnits(price, 36 - digit))
+    );
+  });
+
+  const optimismTotalSupplyUsd = optimismMarkets.map((market, index) => {
+    const supply = optimismSupplies[index];
+    const exchangeRate = optimismExchangeRates[index];
+    const price = optimismPrices[index];
+    const digit = optimismDigits.filter((digit): digit is number => digit !== null)[index];
+  
+    return (
+      Number(formatUnits(supply, 8)) *
+      Number(formatUnits(exchangeRate, 18 + digit - 8)) *
+      Number(formatUnits(price, 36 - digit))
+    );
+  });
+
+  const moonbeamTotalBorrowsUsd = moonbeamMarkets.map((market, index) => {
+    const borrow = moonbeamBorrows[index];
+    const price = moonbeamPrices[index];
+    const digit = moonbeamDigits.filter((digit): digit is number => digit !== null)[index];
+  
+    return (
+      Number(formatUnits(borrow, digit)) *
+      Number(formatUnits(price, 36 - digit))
+    );
+  });
+
+  const baseTotalBorrowsUsd = baseMarkets.map((market, index) => {
+    const borrow = baseBorrows[index];
+    const price = basePrices[index];
+    const digit = baseDigits.filter((digit): digit is number => digit !== null)[index];
+  
+    return (
+      Number(formatUnits(borrow, digit)) *
+      Number(formatUnits(price, 36 - digit))
+    );
+  });
+
+  const optimismTotalBorrowsUsd = optimismMarkets.map((market, index) => {
+    const borrow = optimismBorrows[index];
+    const price = optimismPrices[index];
+    const digit = optimismDigits.filter((digit): digit is number => digit !== null)[index];
+  
+    return (
+      Number(formatUnits(borrow, digit)) *
+      Number(formatUnits(price, 36 - digit))
+    );
+  });
+
   // TODO: Fix Base APYs
   /* const moonbeamSupplyApys = (await moonbeamClient.multicall({
     contracts: moonbeamMarkets.map(market => ({
@@ -493,6 +625,8 @@ export async function getMarketData() {
     prices: bigint[],
     supplies: bigint[],
     borrows: bigint[],
+    suppliesUsd: number[],
+    borrowsUsd: number[],
     exchangeRates: any,
     // supplyApys: string[],
     // borrowApys: string[],
@@ -500,6 +634,10 @@ export async function getMarketData() {
     wellBorrowPerDay: bigint[],
     nativeSupplyPerDay: bigint[],
     nativeBorrowPerDay: bigint[],
+    wellSupplyPerDayUsd: number[],
+    wellBorrowPerDayUsd: number[],
+    nativeSupplyPerDayUsd: number[],
+    nativeBorrowPerDayUsd: number[],
   ) => markets.map((market: any, index: any) => ({
       market,
       name: names[index],
@@ -507,13 +645,14 @@ export async function getMarketData() {
       boost: boosts[index],
       deboost: deboosts[index],
       enabled: enabled[index],
-      underlyingPrice: formatUnits(prices[index] as bigint, 36 - digits[index] as number),
-      totalSupply: formatUnits(supplies[index] as bigint, 8),
-      exchangeRate:
+      underlyingPrice: Number(formatUnits(prices[index] as bigint, 36 - digits[index] as number)),
+      totalSupply: Number(formatUnits(supplies[index] as bigint, 8)),
+      exchangeRate: Number(
         formatUnits(
           exchangeRates[index] as bigint,
           18 + digits[index] as number - 8
         ), // 18 + market digits - mToken digits (8)
+      ),
       totalSupplyUnderlying:
         Number(formatUnits(supplies[index], 8)) *
         Number(formatUnits(exchangeRates[index] as bigint,
@@ -525,57 +664,70 @@ export async function getMarketData() {
             borrows[index] as bigint,
             digits[index] as number
         )),
-      totalSupplyUSD:
-        Number(formatUnits(supplies[index], 8)) *
-        Number(formatUnits(exchangeRates[index] as bigint,
-          18 + digits[index] as number - 8
-        )) *
-        Number(formatUnits(prices[index] as bigint, 36 - digits[index] as number)),
-      totalBorrowsUSD:
+      totalSupplyUSD: Number(suppliesUsd[index].toFixed(2)),
+      totalBorrowsUSD: Number(borrowsUsd[index].toFixed(2)),
+      // supplyApy: supplyApys[index],
+      // borrowApy: borrowApys[index],
+      wellSupplyPerDay:
         Number(
           formatUnits(
-            borrows[index] as bigint,
-            digits[index] as number
-          )) *
-        Number(formatUnits(prices[index] as bigint, 36 - digits[index] as number)),
-        // supplyApy: supplyApys[index],
-        // borrowApy: borrowApys[index],
-        wellSupplyPerDay:
-          Number(
+            wellSupplyPerDay[index] as bigint,
+            18 // WELL is 18 decimals
+        )).toFixed(18),
+      wellBorrowPerDay:
+        Number(
+          formatUnits(
+            wellBorrowPerDay[index],
+            18 // WELL is 18 decimals
+        )).toFixed(18),
+      nativeSupplyPerDay:
+        chainId === 1284 // Moonbeam
+        ? Number(
             formatUnits(
-              wellSupplyPerDay[index] as bigint,
-              18 // WELL is 18 decimals
-          )).toFixed(18),
-        wellBorrowPerDay:
-          Number(
+              nativeSupplyPerDay[index],
+              18 // GLMR is 18 decimals
+          )).toFixed(18)
+        : Number(
             formatUnits(
-              wellBorrowPerDay[index],
-              18 // WELL is 18 decimals
+              nativeSupplyPerDay[index],
+              digits[index] as number
           )).toFixed(18),
-        nativeSupplyPerDay:
-          chainId === 1284 // Moonbeam
-          ? Number(
-              formatUnits(
-                nativeSupplyPerDay[index],
-                18 // GLMR is 18 decimals
-            )).toFixed(18)
-          : Number(
-              formatUnits(
-                nativeSupplyPerDay[index],
-                digits[index] as number
-            )).toFixed(18),
-          nativeBorrowPerDay:
-            chainId === 1284 // Moonbeam
-            ? Number(
-                formatUnits(
-                  nativeBorrowPerDay[index],
-                  18 // GLMR is 18 decimals
-              )).toFixed(18)
-            : Number(
-                formatUnits(
-                  nativeBorrowPerDay[index],
-                  digits[index] as number
-              )).toFixed(18),
+      nativeBorrowPerDay:
+        chainId === 1284 // Moonbeam
+        ? Number(
+            formatUnits(
+              nativeBorrowPerDay[index],
+              18 // GLMR is 18 decimals
+          )).toFixed(18)
+        : Number(
+            formatUnits(
+              nativeBorrowPerDay[index],
+              digits[index] as number
+          )).toFixed(18),
+      wellSupplyPerDayUsd: Number(wellSupplyPerDayUsd[index].toFixed(2)),
+      wellBorrowPerDayUsd: Number(wellBorrowPerDayUsd[index].toFixed(2)),
+      nativeSupplyPerDayUsd: Number(nativeSupplyPerDayUsd[index].toFixed(2)),
+      nativeBorrowPerDayUsd: Number(nativeBorrowPerDayUsd[index].toFixed(2)),
+      wellSupplyApr: Number((
+        wellSupplyPerDayUsd[index] 
+        / suppliesUsd[index]
+        * 365 * 100).toFixed(2)
+      ),
+      wellBorrowApr: Number((
+        wellBorrowPerDayUsd[index]
+        / borrowsUsd[index]
+        * 365 * 100).toFixed(2),
+      ),
+      nativeSupplyApr: Number((
+        nativeSupplyPerDayUsd[index]
+        / suppliesUsd[index]
+        * 365 * 100).toFixed(2),
+      ),
+      nativeBorrowApr: Number((
+        nativeBorrowPerDayUsd[index]
+        / borrowsUsd[index]
+        * 365 * 100).toFixed(2),
+      ),
   }));
 
   return {
@@ -590,6 +742,8 @@ export async function getMarketData() {
       optimismPrices,
       optimismSupplies,
       optimismBorrows,
+      optimismTotalSupplyUsd,
+      optimismTotalBorrowsUsd,
       optimismExchangeRates,
       // optimismSupplyApys,
       // optimismBorrowApys,
@@ -597,6 +751,10 @@ export async function getMarketData() {
       optimismWellBorrowPerDay,
       optimismNativeSupplyPerDay,
       optimismNativeBorrowPerDay,
+      optimismWellSupplyPerDayUsd,
+      optimismWellBorrowPerDayUsd,
+      optimismNativeSupplyPerDayUsd,
+      optimismNativeBorrowPerDayUsd,
     ),
     1284: formatResults(
       moonbeamMarkets,
@@ -609,6 +767,8 @@ export async function getMarketData() {
       moonbeamPrices,
       moonbeamSupplies,
       moonbeamBorrows,
+      moonbeamTotalSupplyUsd,
+      moonbeamTotalBorrowsUsd,
       moonbeamExchangeRates,
       // moonbeamSupplyApys,
       // moonbeamBorrowApys,
@@ -616,6 +776,10 @@ export async function getMarketData() {
       moonbeamWellBorrowPerDay,
       moonbeamNativeSupplyPerDay,
       moonbeamNativeBorrowPerDay,
+      moonbeamWellSupplyPerDayUsd,
+      moonbeamWellBorrowPerDayUsd,
+      moonbeamNativeSupplyPerDayUsd,
+      moonbeamNativeBorrowPerDayUsd,
     ),
     8453: formatResults(
       baseMarkets,
@@ -628,6 +792,8 @@ export async function getMarketData() {
       basePrices,
       baseSupplies,
       baseBorrows,
+      baseTotalSupplyUsd,
+      baseTotalBorrowsUsd,
       baseExchangeRates,
       // baseSupplyApys,
       // baseBorrowApys,
@@ -635,6 +801,10 @@ export async function getMarketData() {
       baseWellBorrowPerDay,
       baseNativeSupplyPerDay,
       baseNativeBorrowPerDay,
+      baseWellSupplyPerDayUsd,
+      baseWellBorrowPerDayUsd,
+      baseNativeSupplyPerDayUsd,
+      baseNativeBorrowPerDayUsd,
     ),
     wellPrice: formatUnits(wellPrice, 36),
     usdcPrice: baseNativePrice,
