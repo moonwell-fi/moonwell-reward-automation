@@ -11,7 +11,7 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
-import { getMarketData } from "./utils";
+import { getMarketData } from "./markets";
 
 export default {
 	async fetch(request: Request, env: Record<string, any>, ctx: ExecutionContext): Promise<Response> {

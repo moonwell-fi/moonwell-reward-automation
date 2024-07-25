@@ -1,3 +1,31 @@
+import { BigNumber } from "bignumber.js"
+
+export const mainConfig = {
+  totalWellPerEpoch: new BigNumber(750_000_000) // 750 million
+    .div(4) // 4 years emission schedule
+    .div(13) // 13 epochs per year (4 weeks per epoch)
+    .integerValue(BigNumber.ROUND_DOWN)
+    .toNumber(),
+  moonbeam: {
+    nativePerEpoch: 187_500, // 1,125,000 GLMR / 6 months (extra 2 weeks from Dec. 1 to Dec. 14th to fund out of treasury)
+    markets: 0.48,
+    safetyModule: 0.47,
+    dex: 0.05,
+  },
+  base: {
+    nativePerEpoch: 0,
+    markets: 0.48,
+    safetyModule: 0.47,
+    dex: 0.05,
+  },
+  optimism: {
+    nativePerEpoch: 0,
+    markets: 0.48,
+    safetyModule: 0.47,
+    dex: 0.05,
+  },
+};
+
 export const moonbeamComptroller = {
   address: '0x8E00D5e02E65A19337Cdba98bbA9F84d4186a180' as `0x${string}`,
   abi: [
@@ -11989,6 +12017,8 @@ export const marketConfigs = {
       digits: 6,
       boost: 0,
       deboost: 0,
+      supply: 0.5,
+      borrow: 0.5,
       enabled: true,
     },
     {
@@ -11997,6 +12027,8 @@ export const marketConfigs = {
       digits: 6,
       boost: 0,
       deboost: 0,
+      supply: 0.5,
+      borrow: 0.5,
       enabled: true,
     },
     {
@@ -12005,6 +12037,8 @@ export const marketConfigs = {
       digits: 18,
       boost: 0,
       deboost: 0,
+      supply: 0.5,
+      borrow: 0.5,
       enabled: true,
     },
     {
@@ -12013,6 +12047,8 @@ export const marketConfigs = {
       digits: 8,
       boost: 0,
       deboost: 0,
+      supply: 1,
+      borrow: 0,
       enabled: true,
     },
     {
@@ -12021,6 +12057,8 @@ export const marketConfigs = {
       digits: 18,
       boost: 0,
       deboost: 0,
+      supply: 0.5,
+      borrow: 0.5,
       enabled: true,
     },
     {
@@ -12029,6 +12067,8 @@ export const marketConfigs = {
       digits: 18,
       boost: 0,
       deboost: 0,
+      supply: 0.45,
+      borrow: 0.55,
       enabled: true,
     },
     {
@@ -12037,6 +12077,8 @@ export const marketConfigs = {
       digits: 18,
       boost: 0,
       deboost: 0,
+      supply: 0.45,
+      borrow: 0.55,
       enabled: true,
     },
     {
@@ -12045,6 +12087,8 @@ export const marketConfigs = {
       digits: 18,
       boost: 0,
       deboost: 0,
+      supply: 0.45,
+      borrow: 0.45,
       enabled: true,
     },
     {
@@ -12053,6 +12097,8 @@ export const marketConfigs = {
       digits: 18,
       boost: 0,
       deboost: 0,
+      supply: 0.25,
+      borrow: 0.75,
       enabled: true,
     },
     {
@@ -12061,6 +12107,8 @@ export const marketConfigs = {
       digits: 18,
       boost: 0,
       deboost: 0,
+      supply: 0.75,
+      borrow: 0.25,
       enabled: true,
     },
   ],
@@ -12071,6 +12119,8 @@ export const marketConfigs = {
       digits: 18,
       boost: 0,
       deboost: 0,
+      supply: 0.5,
+      borrow: 0.5,
       enabled: true,
     },
     {
@@ -12079,6 +12129,8 @@ export const marketConfigs = {
       digits: 10,
       boost: 0,
       deboost: 0,
+      supply: 0.5,
+      borrow: 0.5,
       enabled: true,
     },
     {
@@ -12087,6 +12139,8 @@ export const marketConfigs = {
       digits: 18,
       boost: 0,
       deboost: 0,
+      supply: 0.5,
+      borrow: 0.5,
       enabled: true,
     },
     {
@@ -12095,6 +12149,8 @@ export const marketConfigs = {
       digits: 18,
       boost: 0,
       deboost: 0,
+      supply: 0.5,
+      borrow: 0.5,
       enabled: true,
     },
     {
@@ -12103,6 +12159,8 @@ export const marketConfigs = {
       digits: 8,
       boost: 0,
       deboost: 0,
+      supply: 1,
+      borrow: 0,
       enabled: true,
     },
     {
@@ -12111,6 +12169,8 @@ export const marketConfigs = {
       digits: 6,
       boost: 0,
       deboost: 0,
+      supply: 0.50,
+      borrow: 0.50,
       enabled: true,
     },
     {
@@ -12119,6 +12179,8 @@ export const marketConfigs = {
       digits: 6,
       boost: 0,
       deboost: 0,
+      supply: 0.50,
+      borrow: 0.50,
       enabled: true,
     },
     {
@@ -12127,6 +12189,8 @@ export const marketConfigs = {
       digits: 6,
       boost: 0,
       deboost: 0,
+      supply: 0.50,
+      borrow: 0.50,
       enabled: true,
     },
   ],
@@ -12137,6 +12201,8 @@ export const marketConfigs = {
       digits: 6,
       boost: 0,
       deboost: 0,
+      supply: 0.50,
+      borrow: 0.50,
       enabled: false,
     },
     {
@@ -12145,6 +12211,8 @@ export const marketConfigs = {
       digits: 18,
       boost: 0,
       deboost: 0,
+      supply: 0.50,
+      borrow: 0.50,
       enabled: true,
     },
     {
@@ -12153,6 +12221,8 @@ export const marketConfigs = {
       digits: 18,
       boost: 0,
       deboost: 0,
+      supply: 0.45,
+      borrow: 0.55,
       enabled: true,
     },
     {
@@ -12161,7 +12231,9 @@ export const marketConfigs = {
       digits: 18,
       boost: 0,
       deboost: 0,
-      enabled: true,
+      supply: 0.50,
+      borrow: 0.50,
+      enabled: false,
     },
     {
       address: '0xEdc817A28E8B93B03976FBd4a3dDBc9f7D176c22',
@@ -12169,6 +12241,8 @@ export const marketConfigs = {
       digits: 6,
       boost: 0,
       deboost: 0,
+      supply: 0.50,
+      borrow: 0.50,
       enabled: true,
     },
     {
@@ -12177,6 +12251,8 @@ export const marketConfigs = {
       digits: 18,
       boost: 0,
       deboost: 0,
+      supply: 0.45,
+      borrow: 0.55,
       enabled: true,
     },
     {
@@ -12185,6 +12261,8 @@ export const marketConfigs = {
       digits: 18,
       boost: 0,
       deboost: 0,
+      supply: 0.45,
+      borrow: 0.55,
       enabled: true,
     },
     {
@@ -12193,6 +12271,8 @@ export const marketConfigs = {
       digits: 18,
       boost: 0,
       deboost: 0,
+      supply: 0.45,
+      borrow: 0.55,
       enabled: true,
     },
   ],
