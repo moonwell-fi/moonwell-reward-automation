@@ -548,6 +548,15 @@ export async function getMarketData() {
     );
   });
 
+  function calculatePercentages(totalSupplyUsd: number[]) {
+    const total = totalSupplyUsd.reduce((sum, value) => sum + value, 0);
+    return totalSupplyUsd.map(value => value / total);
+  }
+  
+  const moonbeamPercentages = calculatePercentages(moonbeamTotalSupplyUsd);
+  const basePercentages = calculatePercentages(baseTotalSupplyUsd);
+  const optimismPercentages = calculatePercentages(optimismTotalSupplyUsd);
+
   const moonbeamTotalBorrowsUsd = moonbeamMarkets.map((market, index) => {
     const borrow = moonbeamBorrows[index];
     const price = moonbeamPrices[index];
@@ -622,6 +631,89 @@ export async function getMarketData() {
   const optimismSupplyApys = Array.from({ length: optimismMarkets.length }, () => String(0));
   const optimismBorrowApys = Array.from({ length: optimismMarkets.length }, () => String(0)); */
 
+  function calculateNetworkTotalUSD(
+    markets: any[],
+    supplies: bigint[],
+    exchangeRates: bigint[],
+    prices: bigint[],
+    digits: number[],
+    boosts: number[],
+    deboosts: number[],
+    borrows: bigint[]
+  ) {
+    let totalSupplyUSD = 0;
+    let totalBorrowsUSD = 0;
+  
+    markets.forEach((market, index) => {
+      const supply = supplies[index];
+      const exchangeRate = exchangeRates[index];
+      const price = prices[index];
+      const digit = digits[index];
+      const boost = boosts[index];
+      const deboost = deboosts[index];
+      const borrow = borrows[index];
+  
+      const supplyUSD =
+        Number(formatUnits(supply, 8)) *
+        Number(formatUnits(exchangeRate, 18 + digit - 8)) *
+        Number(formatUnits(price, 36 - digit));
+  
+      const borrowUSD =
+        Number(formatUnits(borrow, digit)) *
+        Number(formatUnits(price, 36 - digit));
+  
+      totalSupplyUSD += supplyUSD + boost - deboost;
+      totalBorrowsUSD += borrowUSD;
+    });
+  
+    return totalSupplyUSD + totalBorrowsUSD;
+  }
+
+  const moonbeamNetworkTotalUsd = calculateNetworkTotalUSD(
+    moonbeamMarkets,
+    moonbeamSupplies,
+    moonbeamExchangeRates,
+    moonbeamPrices,
+    moonbeamDigits.filter((digit): digit is number => digit !== null),
+    moonbeamBoosts.filter((boost): boost is number => boost !== null),
+    moonbeamDeboosts.filter((deboost): deboost is number => deboost !== null),
+    moonbeamBorrows
+  );
+  
+  const baseNetworkTotalUsd = calculateNetworkTotalUSD(
+    baseMarkets,
+    baseSupplies,
+    baseExchangeRates,
+    basePrices,
+    baseDigits.filter((digit): digit is number => digit !== null),
+    baseBoosts.filter((boost): boost is number => boost !== null),
+    baseDeboosts.filter((deboost): deboost is number => deboost !== null),
+    baseBorrows
+  );
+  
+  const optimismNetworkTotalUsd = calculateNetworkTotalUSD(
+    optimismMarkets,
+    optimismSupplies,
+    optimismExchangeRates,
+    optimismPrices,
+    optimismDigits.filter((digit): digit is number => digit !== null),
+    optimismBoosts.filter((boost): boost is number => boost !== null),
+    optimismDeboosts.filter((deboost): deboost is number => deboost !== null),
+    optimismBorrows
+  );
+
+  const moonbeamTotalMarketPercentage = (
+    moonbeamNetworkTotalUsd / (moonbeamNetworkTotalUsd + baseNetworkTotalUsd + optimismNetworkTotalUsd)
+  );
+
+  const baseTotalMarketPercentage = (
+    baseNetworkTotalUsd / (moonbeamNetworkTotalUsd + baseNetworkTotalUsd + optimismNetworkTotalUsd)
+  );
+
+  const optimismTotalMarketPercentage = (
+    optimismNetworkTotalUsd / (moonbeamNetworkTotalUsd + baseNetworkTotalUsd + optimismNetworkTotalUsd)
+  );
+
   const formatResults = (
     markets: any,
     chainId: number,
@@ -648,6 +740,7 @@ export async function getMarketData() {
     wellBorrowPerDayUsd: number[],
     nativeSupplyPerDayUsd: number[],
     nativeBorrowPerDayUsd: number[],
+    percentages: number[],
   ) => markets.map((market: any, index: any) => ({
       market,
       name: names[index],
@@ -740,6 +833,7 @@ export async function getMarketData() {
         / borrowsUsd[index]
         * 365 * 100).toFixed(2),
       ),
+      percentage: percentages[index],
   }));
 
   return {
@@ -769,6 +863,7 @@ export async function getMarketData() {
       optimismWellBorrowPerDayUsd,
       optimismNativeSupplyPerDayUsd,
       optimismNativeBorrowPerDayUsd,
+      optimismPercentages,
     ),
     1284: formatResults(
       moonbeamMarkets,
@@ -796,6 +891,7 @@ export async function getMarketData() {
       moonbeamWellBorrowPerDayUsd,
       moonbeamNativeSupplyPerDayUsd,
       moonbeamNativeBorrowPerDayUsd,
+      moonbeamPercentages,
     ),
     8453: formatResults(
       baseMarkets,
@@ -823,14 +919,42 @@ export async function getMarketData() {
       baseWellBorrowPerDayUsd,
       baseNativeSupplyPerDayUsd,
       baseNativeBorrowPerDayUsd,
+      basePercentages,
     ),
     wellPrice: formatUnits(wellPrice, 36),
     glmrPrice: moonbeamNativePrice,
     usdcPrice: baseNativePrice,
     opPrice: optimismNativePrice,
     wellPerEpoch: mainConfig.totalWellPerEpoch,
-    moonbeam: mainConfig.moonbeam,
-    base: mainConfig.base,
-    optimism: mainConfig.optimism,
+    moonbeam: {
+      ...mainConfig.moonbeam,
+      networkTotalUsd: moonbeamNetworkTotalUsd,
+      totalMarketPercentage: moonbeamTotalMarketPercentage,
+      wellPerEpoch: mainConfig.totalWellPerEpoch * moonbeamTotalMarketPercentage,
+      nativePerEpoch: mainConfig.moonbeam.nativePerEpoch,
+      wellPerEpochMarkets: (mainConfig.totalWellPerEpoch * moonbeamTotalMarketPercentage) * mainConfig.moonbeam.markets,
+      wellPerEpochSafetyModule: (mainConfig.totalWellPerEpoch * moonbeamTotalMarketPercentage) * mainConfig.moonbeam.safetyModule,
+      wellPerEpochDex: (mainConfig.totalWellPerEpoch * moonbeamTotalMarketPercentage) * mainConfig.moonbeam.dex,
+    },
+    base: {
+      ...mainConfig.base,
+      networkTotalUsd: baseNetworkTotalUsd,
+      totalMarketPercentage: baseTotalMarketPercentage,
+      wellPerEpoch: mainConfig.totalWellPerEpoch * baseTotalMarketPercentage,
+      nativePerEpoch: mainConfig.base.nativePerEpoch,
+      wellPerEpochMarkets: (mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.markets,
+      wellPerEpochSafetyModule: (mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.safetyModule,
+      wellPerEpochDex: (mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.dex,
+    },
+    optimism: {
+      ...mainConfig.optimism,
+      networkTotalUsd: optimismNetworkTotalUsd,
+      totalMarketPercentage: optimismTotalMarketPercentage,
+      wellPerEpoch: mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage,
+      nativePerEpoch: mainConfig.optimism.nativePerEpoch,
+      wellPerEpochMarkets: (mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage) * mainConfig.optimism.markets,
+      wellPerEpochSafetyModule: (mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage) * mainConfig.optimism.safetyModule,
+      wellPerEpochDex: (mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage) * mainConfig.optimism.dex,
+    },
   };
 }

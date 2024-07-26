@@ -19,7 +19,7 @@ export const mainConfig = {
     dex: 0.05,
   },
   optimism: {
-    nativePerEpoch: 0,
+    nativePerEpoch: 29_322.61716,
     markets: 0.48,
     safetyModule: 0.47,
     dex: 0.05,
