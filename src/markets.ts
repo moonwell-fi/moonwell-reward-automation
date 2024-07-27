@@ -741,6 +741,7 @@ export async function getMarketData() {
     nativeSupplyPerDayUsd: number[],
     nativeBorrowPerDayUsd: number[],
     percentages: number[],
+    totalWellPerEpochMarkets: number,
   ) => markets.map((market: any, index: any) => ({
       market,
       name: names[index],
@@ -834,6 +835,9 @@ export async function getMarketData() {
         * 365 * 100).toFixed(2),
       ),
       percentage: percentages[index],
+      wellPerEpochMarket: totalWellPerEpochMarkets * percentages[index],
+      wellPerEpochMarketSupply: totalWellPerEpochMarkets * percentages[index] * supply[index],
+      wellPerEpochMarketBorrow: totalWellPerEpochMarkets * percentages[index] * borrow[index],
   }));
 
   return {
@@ -864,6 +868,7 @@ export async function getMarketData() {
       optimismNativeSupplyPerDayUsd,
       optimismNativeBorrowPerDayUsd,
       optimismPercentages,
+      mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage,
     ),
     1284: formatResults(
       moonbeamMarkets,
@@ -892,6 +897,7 @@ export async function getMarketData() {
       moonbeamNativeSupplyPerDayUsd,
       moonbeamNativeBorrowPerDayUsd,
       moonbeamPercentages,
+      mainConfig.totalWellPerEpoch * moonbeamTotalMarketPercentage,
     ),
     8453: formatResults(
       baseMarkets,
@@ -920,6 +926,7 @@ export async function getMarketData() {
       baseNativeSupplyPerDayUsd,
       baseNativeBorrowPerDayUsd,
       basePercentages,
+      mainConfig.totalWellPerEpoch * baseTotalMarketPercentage,
     ),
     wellPrice: formatUnits(wellPrice, 36),
     glmrPrice: moonbeamNativePrice,
