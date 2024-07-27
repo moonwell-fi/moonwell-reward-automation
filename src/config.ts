@@ -6,6 +6,8 @@ export const mainConfig = {
     .div(13) // 13 epochs per year (4 weeks per epoch)
     .integerValue(BigNumber.ROUND_DOWN)
     .toNumber(),
+  firstEpochTimestamp: 1723174200,
+  secondsPerEpoch: 60 * 60 * 24 * 7 * 4, // 4 weeks
   moonbeam: {
     nativePerEpoch: 187_500, // 1,125,000 GLMR / 6 months (extra 2 weeks from Dec. 1 to Dec. 14th to fund out of treasury)
     markets: 0.48,
@@ -19,7 +21,7 @@ export const mainConfig = {
     dex: 0.05,
   },
   optimism: {
-    nativePerEpoch: 29_322.61716,
+    nativePerEpoch: 29_329.70,
     markets: 0.48,
     safetyModule: 0.47,
     dex: 0.05,
