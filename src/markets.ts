@@ -588,11 +588,14 @@ const optimismNativeBorrowPerDay = optimismNativeBorrowSpeeds.map((speed) => spe
     const exchangeRate = moonbeamExchangeRates[index];
     const price = moonbeamPrices[index];
     const digit = moonbeamDigits.filter((digit): digit is number => digit !== null)[index];
+    const boost = moonbeamBoosts.filter((boost): boost is number => boost !== null)[index];
+    const deboost = moonbeamDeboosts.filter((deboost): deboost is number => deboost !== null)[index];
   
-    return (
+    return ((
       Number(formatUnits(supply, 8)) *
       Number(formatUnits(exchangeRate, 18 + digit - 8)) *
-      Number(formatUnits(price, 36 - digit))
+      Number(formatUnits(price, 36 - digit)))
+      + boost - deboost
     );
   });
   
@@ -601,11 +604,14 @@ const optimismNativeBorrowPerDay = optimismNativeBorrowSpeeds.map((speed) => spe
     const exchangeRate = baseExchangeRates[index];
     const price = basePrices[index];
     const digit = baseDigits.filter((digit): digit is number => digit !== null)[index];
+    const boost = baseBoosts.filter((boost): boost is number => boost !== null)[index];
+    const deboost = baseDeboosts.filter((deboost): deboost is number => deboost !== null)[index];
   
-    return (
+    return ((
       Number(formatUnits(supply, 8)) *
       Number(formatUnits(exchangeRate, 18 + digit - 8)) *
-      Number(formatUnits(price, 36 - digit))
+      Number(formatUnits(price, 36 - digit)))
+      + boost - deboost
     );
   });
 
@@ -614,11 +620,14 @@ const optimismNativeBorrowPerDay = optimismNativeBorrowSpeeds.map((speed) => spe
     const exchangeRate = optimismExchangeRates[index];
     const price = optimismPrices[index];
     const digit = optimismDigits.filter((digit): digit is number => digit !== null)[index];
+    const boost = optimismBoosts.filter((boost): boost is number => boost !== null)[index];
+    const deboost = optimismDeboosts.filter((deboost): deboost is number => deboost !== null)[index];
   
-    return (
+    return ((
       Number(formatUnits(supply, 8)) *
       Number(formatUnits(exchangeRate, 18 + digit - 8)) *
-      Number(formatUnits(price, 36 - digit))
+      Number(formatUnits(price, 36 - digit)))
+      + boost - deboost
     );
   });
 
