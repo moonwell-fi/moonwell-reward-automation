@@ -17,11 +17,12 @@ import {
   aeroMarketContract,
   moonbeamViewsContract,
   baseViewsContract,
+  optimismViewsContract,
   excludedMarkets
 } from "./config";
 
 import { mTokenv1ABI, mTokenv2ABI } from "./constants";
-import { base, moonbeam, optimism } from "viem/chains";
+import { optimism } from "viem/chains";
 
 export interface MarketType {
   market: string;
@@ -388,156 +389,191 @@ export async function getMarketData() {
   })).map((exchangeRate) => exchangeRate.result as bigint);
 
   // Functions to get emissions per second
-const moonbeamWellSupplySpeeds = (await moonbeamClient.multicall({
-  contracts: moonbeamMarkets.map(market => ({
-    address: moonbeamComptroller.address,
-    abi: moonbeamComptroller.abi,
-    functionName: "supplyRewardSpeeds",
-    args: [0, market], // 0 = WELL
-  } as ContractCall)),
-})).map((supplyRewardSpeed) => supplyRewardSpeed.result as bigint);
+  const moonbeamWellSupplySpeeds = (await moonbeamClient.multicall({
+    contracts: moonbeamMarkets.map(market => ({
+      address: moonbeamComptroller.address,
+      abi: moonbeamComptroller.abi,
+      functionName: "supplyRewardSpeeds",
+      args: [0, market], // 0 = WELL
+    } as ContractCall)),
+  })).map((supplyRewardSpeed) => supplyRewardSpeed.result as bigint);
 
-const moonbeamWellBorrowSpeeds = (await moonbeamClient.multicall({
-  contracts: moonbeamMarkets.map(market => ({
-    address: moonbeamComptroller.address,
-    abi: moonbeamComptroller.abi,
-    functionName: "borrowRewardSpeeds",
-    args: [0, market], // 0 = WELL
-  } as ContractCall)),
-})).map((borrowRewardSpeed) => borrowRewardSpeed.result as bigint);
+  const moonbeamWellBorrowSpeeds = (await moonbeamClient.multicall({
+    contracts: moonbeamMarkets.map(market => ({
+      address: moonbeamComptroller.address,
+      abi: moonbeamComptroller.abi,
+      functionName: "borrowRewardSpeeds",
+      args: [0, market], // 0 = WELL
+    } as ContractCall)),
+  })).map((borrowRewardSpeed) => borrowRewardSpeed.result as bigint);
 
-const baseWellSupplySpeeds = (await baseClient.multicall({
-  contracts: baseMarkets.map(market => ({
-    address: baseMultiRewardDistributor.address,
-    abi: baseMultiRewardDistributor.abi,
-    functionName: "getConfigForMarket",
-    args: [market, xWellToken.address],
-  } as ContractCall)),
-})).map((supplyRewardSpeed) => {
-  const result = supplyRewardSpeed.result as { supplyEmissionsPerSec: bigint } | undefined;
-  return result ? result.supplyEmissionsPerSec : BigInt(0);
-});
+  const baseWellSupplySpeeds = (await baseClient.multicall({
+    contracts: baseMarkets.map(market => ({
+      address: baseMultiRewardDistributor.address,
+      abi: baseMultiRewardDistributor.abi,
+      functionName: "getConfigForMarket",
+      args: [market, xWellToken.address],
+    } as ContractCall)),
+  })).map((supplyRewardSpeed) => {
+    const result = supplyRewardSpeed.result as { supplyEmissionsPerSec: bigint } | undefined;
+    return result ? result.supplyEmissionsPerSec : BigInt(0);
+  });
 
-const baseWellBorrowSpeeds = (await baseClient.multicall({
-  contracts: baseMarkets.map(market => ({
-    address: baseMultiRewardDistributor.address,
-    abi: baseMultiRewardDistributor.abi,
-    functionName: "getConfigForMarket",
-    args: [market, xWellToken.address],
-  } as ContractCall)),
-})).map((borrowRewardSpeed) => {
-  const result = borrowRewardSpeed.result as { borrowEmissionsPerSec: bigint } | undefined;
-  return result ? result.borrowEmissionsPerSec : BigInt(0);
-});
+  const baseWellBorrowSpeeds = (await baseClient.multicall({
+    contracts: baseMarkets.map(market => ({
+      address: baseMultiRewardDistributor.address,
+      abi: baseMultiRewardDistributor.abi,
+      functionName: "getConfigForMarket",
+      args: [market, xWellToken.address],
+    } as ContractCall)),
+  })).map((borrowRewardSpeed) => {
+    const result = borrowRewardSpeed.result as { borrowEmissionsPerSec: bigint } | undefined;
+    return result ? result.borrowEmissionsPerSec : BigInt(0);
+  });
 
-const optimismWellSupplySpeeds = (await optimismClient.multicall({
-  contracts: optimismMarkets.map(market => ({
-    address: optimismMultiRewardDistributor.address,
-    abi: optimismMultiRewardDistributor.abi,
-    functionName: "getConfigForMarket",
-    args: [market, xWellToken.address],
-  } as ContractCall)),
-})).map((supplyRewardSpeed) => {
-  const result = supplyRewardSpeed.result as { supplyEmissionsPerSec: bigint } | undefined;
-  return result ? result.supplyEmissionsPerSec : BigInt(0);
-});
+  const optimismWellSupplySpeeds = (await optimismClient.multicall({
+    contracts: optimismMarkets.map(market => ({
+      address: optimismMultiRewardDistributor.address,
+      abi: optimismMultiRewardDistributor.abi,
+      functionName: "getConfigForMarket",
+      args: [market, xWellToken.address],
+    } as ContractCall)),
+  })).map((supplyRewardSpeed) => {
+    const result = supplyRewardSpeed.result as { supplyEmissionsPerSec: bigint } | undefined;
+    return result ? result.supplyEmissionsPerSec : BigInt(0);
+  });
 
-const optimismWellBorrowSpeeds = (await optimismClient.multicall({
-  contracts: optimismMarkets.map(market => ({
-    address: optimismMultiRewardDistributor.address,
-    abi: optimismMultiRewardDistributor.abi,
-    functionName: "getConfigForMarket",
-    args: [market, xWellToken.address],
-  } as ContractCall)),
-})).map((borrowRewardSpeed) => {
-  const result = borrowRewardSpeed.result as { borrowEmissionsPerSec: bigint } | undefined;
-  return result ? result.borrowEmissionsPerSec : BigInt(0);
-});
+  const optimismWellBorrowSpeeds = (await optimismClient.multicall({
+    contracts: optimismMarkets.map(market => ({
+      address: optimismMultiRewardDistributor.address,
+      abi: optimismMultiRewardDistributor.abi,
+      functionName: "getConfigForMarket",
+      args: [market, xWellToken.address],
+    } as ContractCall)),
+  })).map((borrowRewardSpeed) => {
+    const result = borrowRewardSpeed.result as { borrowEmissionsPerSec: bigint } | undefined;
+    return result ? result.borrowEmissionsPerSec : BigInt(0);
+  });
 
-const moonbeamNativeSupplySpeeds = (await moonbeamClient.multicall({
-  contracts: moonbeamMarkets.map(market => ({
-    address: moonbeamComptroller.address,
-    abi: moonbeamComptroller.abi,
-    functionName: "supplyRewardSpeeds",
-    args: [1, market], // 1 = GLMR (native token)
-  } as ContractCall)),
-})).map((supplyRewardSpeed) => supplyRewardSpeed.result as bigint);
+  const moonbeamNativeSupplySpeeds = (await moonbeamClient.multicall({
+    contracts: moonbeamMarkets.map(market => ({
+      address: moonbeamComptroller.address,
+      abi: moonbeamComptroller.abi,
+      functionName: "supplyRewardSpeeds",
+      args: [1, market], // 1 = GLMR (native token)
+    } as ContractCall)),
+  })).map((supplyRewardSpeed) => supplyRewardSpeed.result as bigint);
 
-const baseNativeSupplySpeeds = (await baseClient.multicall({
-  contracts: baseMarkets.map(market => ({
-    address: baseMultiRewardDistributor.address,
-    abi: baseMultiRewardDistributor.abi,
-    functionName: "getConfigForMarket",
-    args: [market, baseNativeToken],
-  } as ContractCall)),
-})).map((supplyRewardSpeed) => {
-  const result = supplyRewardSpeed.result as { supplyEmissionsPerSec: bigint } | undefined;
-  return result ? result.supplyEmissionsPerSec : BigInt(0);
-});
+  const baseNativeSupplySpeeds = (await baseClient.multicall({
+    contracts: baseMarkets.map(market => ({
+      address: baseMultiRewardDistributor.address,
+      abi: baseMultiRewardDistributor.abi,
+      functionName: "getConfigForMarket",
+      args: [market, baseNativeToken],
+    } as ContractCall)),
+  })).map((supplyRewardSpeed) => {
+    const result = supplyRewardSpeed.result as { supplyEmissionsPerSec: bigint } | undefined;
+    return result ? result.supplyEmissionsPerSec : BigInt(0);
+  });
 
-const optimismNativeSupplySpeeds = (await optimismClient.multicall({
-  contracts: optimismMarkets.map(market => ({
-    address: optimismMultiRewardDistributor.address,
-    abi: optimismMultiRewardDistributor.abi,
-    functionName: "getConfigForMarket",
-    args: [market, optimismNativeToken],
-  } as ContractCall)),
-})).map((supplyRewardSpeed) => {
-  const result = supplyRewardSpeed.result as { supplyEmissionsPerSec: bigint } | undefined;
-  return result ? result.supplyEmissionsPerSec : BigInt(0);
-});
+  const optimismNativeSupplySpeeds = (await optimismClient.multicall({
+    contracts: optimismMarkets.map(market => ({
+      address: optimismMultiRewardDistributor.address,
+      abi: optimismMultiRewardDistributor.abi,
+      functionName: "getConfigForMarket",
+      args: [market, optimismNativeToken],
+    } as ContractCall)),
+  })).map((supplyRewardSpeed) => {
+    const result = supplyRewardSpeed.result as { supplyEmissionsPerSec: bigint } | undefined;
+    return result ? result.supplyEmissionsPerSec : BigInt(0);
+  });
 
-const moonbeamNativeBorrowSpeeds = (await moonbeamClient.multicall({
-  contracts: moonbeamMarkets.map(market => ({
-    address: moonbeamComptroller.address,
-    abi: moonbeamComptroller.abi,
-    functionName: "borrowRewardSpeeds",
-    args: [1, market], // 1 = GLMR (native token)
-  } as ContractCall)),
-})).map((borrowRewardSpeed) => borrowRewardSpeed.result as bigint);
+  const moonbeamNativeBorrowSpeeds = (await moonbeamClient.multicall({
+    contracts: moonbeamMarkets.map(market => ({
+      address: moonbeamComptroller.address,
+      abi: moonbeamComptroller.abi,
+      functionName: "borrowRewardSpeeds",
+      args: [1, market], // 1 = GLMR (native token)
+    } as ContractCall)),
+  })).map((borrowRewardSpeed) => borrowRewardSpeed.result as bigint);
 
-const baseNativeBorrowSpeeds = (await baseClient.multicall({
-  contracts: baseMarkets.map(market => ({
-    address: baseMultiRewardDistributor.address,
-    abi: baseMultiRewardDistributor.abi,
-    functionName: "getConfigForMarket",
-    args: [market, baseNativeToken],
-  } as ContractCall)),
-})).map((borrowRewardSpeed) => {
-  const result = borrowRewardSpeed.result as { borrowEmissionsPerSec: bigint } | undefined;
-  return result ? result.borrowEmissionsPerSec : BigInt(0);
-});
+  const baseNativeBorrowSpeeds = (await baseClient.multicall({
+    contracts: baseMarkets.map(market => ({
+      address: baseMultiRewardDistributor.address,
+      abi: baseMultiRewardDistributor.abi,
+      functionName: "getConfigForMarket",
+      args: [market, baseNativeToken],
+    } as ContractCall)),
+  })).map((borrowRewardSpeed) => {
+    const result = borrowRewardSpeed.result as { borrowEmissionsPerSec: bigint } | undefined;
+    return result ? result.borrowEmissionsPerSec : BigInt(0);
+  });
 
-const optimismNativeBorrowSpeeds = (await optimismClient.multicall({
-  contracts: optimismMarkets.map(market => ({
-    address: optimismMultiRewardDistributor.address,
-    abi: optimismMultiRewardDistributor.abi,
-    functionName: "getConfigForMarket",
-    args: [market, optimismNativeToken],
-  } as ContractCall)),
-})).map((borrowRewardSpeed) => {
-  const result = borrowRewardSpeed.result as { borrowEmissionsPerSec: bigint } | undefined;
-  return result ? result.borrowEmissionsPerSec : BigInt(0);
-});
+  const optimismNativeBorrowSpeeds = (await optimismClient.multicall({
+    contracts: optimismMarkets.map(market => ({
+      address: optimismMultiRewardDistributor.address,
+      abi: optimismMultiRewardDistributor.abi,
+      functionName: "getConfigForMarket",
+      args: [market, optimismNativeToken],
+    } as ContractCall)),
+  })).map((borrowRewardSpeed) => {
+    const result = borrowRewardSpeed.result as { borrowEmissionsPerSec: bigint } | undefined;
+    return result ? result.borrowEmissionsPerSec : BigInt(0);
+  });
 
-// Original functions to get emissions per day
-const moonbeamWellSupplyPerDay = moonbeamWellSupplySpeeds.map((speed) => speed * BigInt(86400));
-const moonbeamWellBorrowPerDay = moonbeamWellBorrowSpeeds.map((speed) => speed * BigInt(86400));
+  const moonbeamMarketInfo = (await moonbeamClient.multicall({
+    contracts: moonbeamMarkets.map(market => ({
+      address: moonbeamViewsContract.address,
+      abi: moonbeamViewsContract.abi,
+      functionName: "getMarketInfo",
+      args: [market],
+    } as ContractCall)),
+  }));
 
-const baseWellSupplyPerDay = baseWellSupplySpeeds.map((speed) => speed * BigInt(86400));
-const baseWellBorrowPerDay = baseWellBorrowSpeeds.map((speed) => speed * BigInt(86400));
+  const moonbeamSupplyRates = moonbeamMarketInfo.map((market) => (market.result as { supplyRate: bigint }).supplyRate);
+  const moonbeamBorrowRates = moonbeamMarketInfo.map((market) => (market.result as { borrowRate: bigint }).borrowRate);
 
-const optimismWellSupplyPerDay = optimismWellSupplySpeeds.map((speed) => speed * BigInt(86400));
-const optimismWellBorrowPerDay = optimismWellBorrowSpeeds.map((speed) => speed * BigInt(86400));
+  const baseMarketInfo = (await baseClient.multicall({
+    contracts: baseMarkets.map(market => ({
+      address: baseViewsContract.address,
+      abi: baseViewsContract.abi,
+      functionName: "getMarketInfo",
+      args: [market],
+    } as ContractCall)),
+  }));
 
-const moonbeamNativeSupplyPerDay = moonbeamNativeSupplySpeeds.map((speed) => speed * BigInt(86400));
-const moonbeamNativeBorrowPerDay = moonbeamNativeBorrowSpeeds.map((speed) => speed * BigInt(86400));
+  const baseSupplyRates = baseMarketInfo.map((market) => (market.result as { supplyRate: bigint }).supplyRate);
+  const baseBorrowRates = baseMarketInfo.map((market) => (market.result as { borrowRate: bigint }).borrowRate);
 
-const baseNativeSupplyPerDay = baseNativeSupplySpeeds.map((speed) => speed * BigInt(86400));
-const baseNativeBorrowPerDay = baseNativeBorrowSpeeds.map((speed) => speed * BigInt(86400));
+  const optimismMarketInfo = (await optimismClient.multicall({
+    contracts: optimismMarkets.map(market => ({
+      address: optimismViewsContract.address,
+      abi: optimismViewsContract.abi,
+      functionName: "getMarketInfo",
+      args: [market],
+    } as ContractCall)),
+  }));
 
-const optimismNativeSupplyPerDay = optimismNativeSupplySpeeds.map((speed) => speed * BigInt(86400));
-const optimismNativeBorrowPerDay = optimismNativeBorrowSpeeds.map((speed) => speed * BigInt(86400));
+  const optimismSupplyRates = optimismMarketInfo.map((market) => (market.result as { supplyRate: bigint }).supplyRate);
+  const optimismBorrowRates = optimismMarketInfo.map((market) => (market.result as { borrowRate: bigint }).borrowRate);
+
+  const moonbeamWellSupplyPerDay = moonbeamWellSupplySpeeds.map((speed) => speed * BigInt(86400));
+  const moonbeamWellBorrowPerDay = moonbeamWellBorrowSpeeds.map((speed) => speed * BigInt(86400));
+
+  const baseWellSupplyPerDay = baseWellSupplySpeeds.map((speed) => speed * BigInt(86400));
+  const baseWellBorrowPerDay = baseWellBorrowSpeeds.map((speed) => speed * BigInt(86400));
+
+  const optimismWellSupplyPerDay = optimismWellSupplySpeeds.map((speed) => speed * BigInt(86400));
+  const optimismWellBorrowPerDay = optimismWellBorrowSpeeds.map((speed) => speed * BigInt(86400));
+
+  const moonbeamNativeSupplyPerDay = moonbeamNativeSupplySpeeds.map((speed) => speed * BigInt(86400));
+  const moonbeamNativeBorrowPerDay = moonbeamNativeBorrowSpeeds.map((speed) => speed * BigInt(86400));
+
+  const baseNativeSupplyPerDay = baseNativeSupplySpeeds.map((speed) => speed * BigInt(86400));
+  const baseNativeBorrowPerDay = baseNativeBorrowSpeeds.map((speed) => speed * BigInt(86400));
+
+  const optimismNativeSupplyPerDay = optimismNativeSupplySpeeds.map((speed) => speed * BigInt(86400));
+  const optimismNativeBorrowPerDay = optimismNativeBorrowSpeeds.map((speed) => speed * BigInt(86400));
 
   const moonbeamWellSupplyPerDayUsd = moonbeamWellSupplyPerDay.map(
     (supplyPerDay) =>
@@ -688,47 +724,6 @@ const optimismNativeBorrowPerDay = optimismNativeBorrowSpeeds.map((speed) => spe
       Number(formatUnits(price, 36 - digit))
     );
   });
-
-  // TODO: Fix Base APYs
-  /* const moonbeamSupplyApys = (await moonbeamClient.multicall({
-    contracts: moonbeamMarkets.map(market => ({
-      address: moonbeamViewsContract.address,
-      abi: moonbeamViewsContract.abi,
-      functionName: "getMarketInfo",
-      args: [market],
-    } as ContractCall)),
-  })).map((supplyApy) => formatUnits((supplyApy.result as { supplyRate: bigint }).supplyRate, 18))
-
-  const baseSupplyApys = (await baseClient.multicall({
-    contracts: baseMarkets.map(market => ({
-      address: baseViewsContract.address,
-      abi: baseViewsContract.abi,
-      functionName: "getMarketInfo",
-      args: [market],
-    } as ContractCall)),
-  })).map((borrowApy) => formatUnits((borrowApy.result as { borrowRate: bigint }).borrowRate, 18))
-
-  const moonbeamBorrowApys = (await moonbeamClient.multicall({
-    contracts: moonbeamMarkets.map(market => ({
-      address: moonbeamViewsContract.address,
-      abi: moonbeamViewsContract.abi,
-      functionName: "getMarketInfo",
-      args: [market],
-    } as ContractCall)),
-  })).map((supplyApy) => formatUnits((supplyApy.result as { supplyRate: bigint }).supplyRate, 18))
-
-  const baseBorrowApys = (await baseClient.multicall({
-    contracts: baseMarkets.map(market => ({
-      address: baseViewsContract.address,
-      abi: baseViewsContract.abi,
-      functionName: "getMarketInfo",
-      args: [market],
-    } as ContractCall)),
-  })).map((borrowApy) => formatUnits((borrowApy.result as { borrowRate: bigint }).borrowRate, 18))
-
-  // TODO: Optimism APYs once views contract is deployed
-  const optimismSupplyApys = Array.from({ length: optimismMarkets.length }, () => String(0));
-  const optimismBorrowApys = Array.from({ length: optimismMarkets.length }, () => String(0)); */
 
   function calculateNetworkTotalUSD(
     markets: any[],
@@ -937,8 +932,8 @@ const optimismNativeBorrowPerDay = optimismNativeBorrowSpeeds.map((speed) => spe
     suppliesUsd: number[],
     borrowsUsd: number[],
     exchangeRates: any,
-    // supplyApys: string[],
-    // borrowApys: string[],
+    supplyRates: bigint[],
+    borrowRates: bigint[],
     currentWellSupplySpeed: bigint[],
     currentWellBorrowSpeed: bigint[],
     currentNativeSupplySpeed: bigint[],
@@ -990,8 +985,6 @@ const optimismNativeBorrowPerDay = optimismNativeBorrowSpeeds.map((speed) => spe
         )),
       totalSupplyUSD: Number(suppliesUsd[index].toFixed(2)),
       totalBorrowsUSD: Number(borrowsUsd[index].toFixed(2)),
-      // supplyApy: supplyApys[index],
-      // borrowApy: borrowApys[index],
       currentWellSupplySpeed: Number(formatUnits(currentWellSupplySpeed[index], 18)),
       currentWellBorrowSpeed: Number(formatUnits(currentWellBorrowSpeed[index], 18)),
       currentNativeSupplySpeed: Number(formatUnits(currentNativeSupplySpeed[index], 18)),
@@ -1036,6 +1029,8 @@ const optimismNativeBorrowPerDay = optimismNativeBorrowSpeeds.map((speed) => spe
       wellBorrowPerDayUsd: Number(wellBorrowPerDayUsd[index].toFixed(2)),
       nativeSupplyPerDayUsd: Number(nativeSupplyPerDayUsd[index].toFixed(2)),
       nativeBorrowPerDayUsd: Number(nativeBorrowPerDayUsd[index].toFixed(2)),
+      supplyApy: Number(parseFloat(formatUnits(supplyRates[index], 18)) * 60 * 60 * 24 * 365.25).toFixed(2),
+      borrowApy: Number(parseFloat(formatUnits(borrowRates[index], 18)) * 60 * 60 * 24 * 365.25).toFixed(2),
       wellSupplyApr: Number((
         wellSupplyPerDayUsd[index] 
         / suppliesUsd[index]
@@ -1124,8 +1119,8 @@ const optimismNativeBorrowPerDay = optimismNativeBorrowSpeeds.map((speed) => spe
       optimismTotalSupplyUsd,
       optimismTotalBorrowsUsd,
       optimismExchangeRates,
-      // optimismSupplyApys,
-      // optimismBorrowApys,
+      optimismSupplyRates,
+      optimismBorrowRates,
       optimismWellSupplySpeeds,
       optimismWellBorrowSpeeds,
       optimismNativeSupplySpeeds,
@@ -1164,8 +1159,8 @@ const optimismNativeBorrowPerDay = optimismNativeBorrowSpeeds.map((speed) => spe
       moonbeamTotalSupplyUsd,
       moonbeamTotalBorrowsUsd,
       moonbeamExchangeRates,
-      // moonbeamSupplyApys,
-      // moonbeamBorrowApys,
+      moonbeamSupplyRates,
+      moonbeamBorrowRates,
       moonbeamWellSupplySpeeds,
       moonbeamWellBorrowSpeeds,
       moonbeamNativeSupplySpeeds,
@@ -1204,8 +1199,8 @@ const optimismNativeBorrowPerDay = optimismNativeBorrowSpeeds.map((speed) => spe
       baseTotalSupplyUsd,
       baseTotalBorrowsUsd,
       baseExchangeRates,
-      // baseSupplyApys,
-      // baseBorrowApys,
+      baseSupplyRates,
+      baseBorrowRates,
       baseWellSupplySpeeds,
       baseWellBorrowSpeeds,
       baseNativeSupplySpeeds,
