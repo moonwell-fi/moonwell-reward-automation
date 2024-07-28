@@ -23,6 +23,60 @@ import {
 import { mTokenv1ABI, mTokenv2ABI } from "./constants";
 import { base, moonbeam, optimism } from "viem/chains";
 
+export interface MarketType {
+  market: string;
+  name: string;
+  digits: number;
+  boost: number;
+  deboost: number;
+  supplyRatio: number;
+  borrowRatio: number;
+  enabled: boolean;
+  underlyingPrice: number;
+  totalSupply: number;
+  exchangeRate: number;
+  totalSupplyUnderlying: number;
+  totalBorrowsUnderlying: number;
+  totalSupplyUSD: number;
+  totalBorrowsUSD: number;
+  currentWellSupplySpeed: number;
+  currentWellBorrowSpeed: number;
+  currentNativeSupplySpeed: number;
+  currentNativeBorrowSpeed: number;
+  wellSupplyPerDay: string;
+  wellBorrowPerDay: string;
+  nativeSupplyPerDay: string;
+  nativeBorrowPerDay: string;
+  wellSupplyPerDayUsd: number;
+  wellBorrowPerDayUsd: number;
+  nativeSupplyPerDayUsd: number;
+  nativeBorrowPerDayUsd: number;
+  wellSupplyApr: number;
+  wellBorrowApr: number;
+  nativeSupplyApr: number;
+  nativeBorrowApr: number;
+  percentage: number;
+  wellPerEpochMarket: number;
+  wellPerEpochMarketSupply: number;
+  wellPerEpochMarketBorrow: number;
+  newWellSupplySpeed: number;
+  newWellBorrowSpeed: number;
+  newNativeSupplySpeed: number;
+  newNativeBorrowSpeed: number;
+  newWellSupplyPerDay: number;
+  newWellBorrowPerDay: number;
+  newNativeSupplyPerDay: number;
+  newNativeBorrowPerDay: number;
+  newWellSupplyPerDayUsd: number;
+  newWellBorrowPerDayUsd: number;
+  newNativeSupplyPerDayUsd: number;
+  newNativeBorrowPerDayUsd: number;
+  wellChangeSupplySpeedPercentage: number;
+  wellChangeBorrowSpeedPercentage: number;
+  nativeChangeSupplySpeedPercentage: number;
+  nativeChangeBorrowSpeedPercentage: number;
+}
+
 /* function convertApy(apy: bigint) {
   const SECONDS_PER_DAY = 86400;
   const DAYS_PER_YEAR = 365;
@@ -979,10 +1033,10 @@ const optimismNativeBorrowPerDay = optimismNativeBorrowSpeeds.map((speed) => spe
       wellPerEpochMarket: totalWellPerEpochMarkets * percentages[index],
       wellPerEpochMarketSupply: totalWellPerEpochMarkets * percentages[index] * supply[index],
       wellPerEpochMarketBorrow: totalWellPerEpochMarkets * percentages[index] * borrow[index],
-      newWellSupplySpeeds: newWellSupplySpeed[index],
-      newWellBorrowSpeeds: newWellBorrowSpeed[index],
-      newNativeSupplySpeeds: newNativeSupplySpeed[index],
-      newNativeBorrowSpeeds: newNativeBorrowSpeed[index],
+      newWellSupplySpeed: newWellSupplySpeed[index],
+      newWellBorrowSpeed: newWellBorrowSpeed[index],
+      newNativeSupplySpeed: newNativeSupplySpeed[index],
+      newNativeBorrowSpeed: newNativeBorrowSpeed[index],
       newWellSupplyPerDay: Number(newWellSupplySpeed[index] * 86400),
       newWellBorrowPerDay: Number(newWellBorrowSpeed[index] * 86400),
       newNativeSupplyPerDay: Number(newNativeSupplySpeed[index] * 86400),

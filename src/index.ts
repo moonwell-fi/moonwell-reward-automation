@@ -11,14 +11,16 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
-import { getMarketData } from "./markets";
+import { returnJson } from "./generateJson";
 
 export default {
 	async fetch(request: Request, env: Record<string, any>, ctx: ExecutionContext): Promise<Response> {
 		try {
-			// console.log(await getMarkets());
-			console.log(await getMarketData());
-			return new Response('Hello World!');
+			return new Response(JSON.stringify(await returnJson()), {
+				headers: {
+						'content-type': 'application/json',
+				},
+			});
 		} catch (error) {
 			console.error('Error:', error);
 			return new Response('Internal Server Error', { status: 500 });
