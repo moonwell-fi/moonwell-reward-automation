@@ -1,4 +1,5 @@
 import { BigNumber } from "bignumber.js"
+import { a } from "vitest/dist/suite-ynYMzeLu.js";
 
 export const mainConfig = {
   totalWellPerEpoch: new BigNumber(750_000_000) // 750 million
@@ -12015,6 +12016,7 @@ export const marketConfigs = {
   10: [
     {
       address: '0x8E08617b0d66359D73Aa11E11017834C29155525',
+      alias: 'MOONWELL_USDC',
       nameOverride: 'USDC',
       digits: 6,
       boost: 5_000_000,
@@ -12026,6 +12028,7 @@ export const marketConfigs = {
     {
       address: '0xa3A53899EE8f9f6E963437C5B3f805FEc538BF84',
       nameOverride: 'USDT',
+      alias: 'MOONWELL_USDT',
       digits: 6,
       boost: 1_000_000,
       deboost: 0,
@@ -12036,6 +12039,7 @@ export const marketConfigs = {
     {
       address: '0x3FE782C2Fe7668C2F1Eb313ACf3022a31feaD6B2',
       nameOverride: 'DAI',
+      alias: 'MOONWELL_DAI',
       digits: 18,
       boost: 1_000_000,
       deboost: 0,
@@ -12046,8 +12050,9 @@ export const marketConfigs = {
     {
       address: '0x6e6CA598A06E609c913551B729a228B023f06fDB',
       nameOverride: 'WBTC',
+      alias: 'MOONWELL_WBTC',
       digits: 8,
-      boost: 5_000_000,
+      boost: 2_000_000,
       deboost: 0,
       supply: 1,
       borrow: 0,
@@ -12056,8 +12061,9 @@ export const marketConfigs = {
     {
       address: '0xb4104C02BBf4E9be85AAa41a62974E4e28D59A33',
       nameOverride: 'ETH',
+      alias: 'MOONWELL_WETH',
       digits: 18,
-      boost: 10_000_000,
+      boost: 5_000_000,
       deboost: 0,
       supply: 0.5,
       borrow: 0.5,
@@ -12066,6 +12072,7 @@ export const marketConfigs = {
     {
       address: '0xbb3b1aB66eFB43B10923b87460c0106643B83f9d',
       nameOverride: 'wstETH',
+      alias: 'MOONWELL_wstETH',
       digits: 18,
       boost: 2_000_000,
       deboost: 0,
@@ -12076,6 +12083,7 @@ export const marketConfigs = {
     {
       address: '0x95C84F369bd0251ca903052600A3C96838D78bA1',
       nameOverride: 'cbETH',
+      alias: 'MOONWELL_cbETH',
       digits: 18,
       boost: 2_000_000,
       deboost: 0,
@@ -12086,6 +12094,7 @@ export const marketConfigs = {
     {
       address: '0x4c2E35E3eC4A0C82849637BC04A4609Dbe53d321',
       nameOverride: 'rETH',
+      alias: 'MOONWELL_rETH',
       digits: 18,
       boost: 1_000_000,
       deboost: 0,
@@ -12096,8 +12105,9 @@ export const marketConfigs = {
     {
       address: '0x21d851585840942B0eF9f20d842C00C5f3735eaF',
       nameOverride: 'VELO',
+      alias: 'MOONWELL_VELO',
       digits: 18,
-      boost: 2_000_000,
+      boost: 1_000_000,
       deboost: 0,
       supply: 0.25,
       borrow: 0.75,
@@ -12106,8 +12116,9 @@ export const marketConfigs = {
     {
       address: '0x9fc345a20541Bf8773988515c5950eD69aF01847',
       nameOverride: 'OP',
+      alias: 'MOONWELL_OP',
       digits: 18,
-      boost: 2_000_000,
+      boost: 1_000_000,
       deboost: 0,
       supply: 0.75,
       borrow: 0.25,
@@ -12118,6 +12129,7 @@ export const marketConfigs = {
     {
       address: '0x091608f4e4a15335145be0A279483C0f8E4c7955',
       nameOverride: 'GLMR',
+      alias: 'mGLIMMER',
       digits: 18,
       boost: 0,
       deboost: 0,
@@ -12128,6 +12140,7 @@ export const marketConfigs = {
     {
       address: '0xD22Da948c0aB3A27f5570b604f3ADef5F68211C3',
       nameOverride: 'DOT',
+      alias: 'mxcDOT',
       digits: 10,
       boost: 0,
       deboost: 0,
@@ -12138,6 +12151,7 @@ export const marketConfigs = {
     {
       address: '0x1C55649f73CDA2f72CEf3DD6C5CA3d49EFcF484C',
       nameOverride: 'FRAX',
+      alias: 'mFRAX',
       digits: 18,
       boost: 0,
       deboost: 0,
@@ -12148,6 +12162,7 @@ export const marketConfigs = {
     {
       address: '0xb6c94b3A378537300387B57ab1cC0d2083f9AeaC',
       nameOverride: 'ETH.wh',
+      alias: 'mETHwh',
       digits: 18,
       boost: 0,
       deboost: 0,
@@ -12158,6 +12173,7 @@ export const marketConfigs = {
     {
       address: '0xaaa20c5a584a9fECdFEDD71E46DA7858B774A9ce',
       nameOverride: 'WBTC.wh',
+      alias: 'MOONWELL_mWBTC',
       digits: 8,
       boost: 0,
       deboost: 0,
@@ -12168,6 +12184,7 @@ export const marketConfigs = {
     {
       address: '0x744b1756e7651c6D57f5311767EAFE5E931D615b',
       nameOverride: 'USDC.wh',
+      alias: 'mUSDCwh',
       digits: 6,
       boost: 0,
       deboost: 0,
@@ -12178,6 +12195,7 @@ export const marketConfigs = {
     {
       address: '0x42A96C0681B74838eC525AdbD13c37f66388f289',
       nameOverride: 'xcUSDT',
+      alias: 'mxcUSDT',
       digits: 6,
       boost: 0,
       deboost: 0,
@@ -12188,6 +12206,7 @@ export const marketConfigs = {
     {
       address: '0x22b1a40e3178fe7C7109eFCc247C5bB2B34ABe32',
       nameOverride: 'xcUSDC',
+      alias: 'mxcUSDC',
       digits: 6,
       boost: 0,
       deboost: 0,
@@ -12200,6 +12219,7 @@ export const marketConfigs = {
     {
       address: '0x703843C3379b52F9FF486c9f5892218d2a065cC8',
       nameOverride: 'USDbC',
+      alias: 'MOONWELL_USDBC',
       digits: 6,
       boost: 0,
       deboost: 0,
@@ -12210,6 +12230,7 @@ export const marketConfigs = {
     {
       address: '0x628ff693426583D9a7FB391E54366292F509D457',
       nameOverride: 'ETH',
+      alias: 'MOONWELL_WETH',
       digits: 18,
       boost: 0,
       deboost: 0,
@@ -12220,6 +12241,7 @@ export const marketConfigs = {
     {
       address: '0x3bf93770f2d4a794c3d9EBEfBAeBAE2a8f09A5E5',
       nameOverride: 'cbETH',
+      alias: 'MOONWELL_cbETH',
       digits: 18,
       boost: 0,
       deboost: 0,
@@ -12230,6 +12252,7 @@ export const marketConfigs = {
     {
       address: '0x73b06D8d18De422E269645eaCe15400DE7462417',
       nameOverride: 'DAI',
+      alias: 'MOONWELL_DAI',
       digits: 18,
       boost: 0,
       deboost: 0,
@@ -12240,6 +12263,7 @@ export const marketConfigs = {
     {
       address: '0xEdc817A28E8B93B03976FBd4a3dDBc9f7D176c22',
       nameOverride: 'USDC',
+      alias: 'MOONWELL_USDC',
       digits: 6,
       boost: 0,
       deboost: 0,
@@ -12250,6 +12274,7 @@ export const marketConfigs = {
     {
       address: '0x627Fe393Bc6EdDA28e99AE648fD6fF362514304b',
       nameOverride: 'wstETH',
+      alias: 'MOONWELL_wstETH',
       digits: 18,
       boost: 0,
       deboost: 0,
@@ -12260,6 +12285,7 @@ export const marketConfigs = {
     {
       address: '0xCB1DaCd30638ae38F2B94eA64F066045B7D45f44',
       nameOverride: 'rETH',
+      alias: 'MOONWELL_rETH',
       digits: 18,
       boost: 0,
       deboost: 0,
@@ -12270,6 +12296,7 @@ export const marketConfigs = {
     {
       address: '0x73902f619CEB9B31FD8EFecf435CbDf89E369Ba6',
       nameOverride: 'AERO',
+      alias: 'MOONWELL_AERO',
       digits: 18,
       boost: 0,
       deboost: 0,

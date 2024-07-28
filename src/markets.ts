@@ -26,6 +26,7 @@ import { base, moonbeam, optimism } from "viem/chains";
 export interface MarketType {
   market: string;
   name: string;
+  alias: string;
   digits: number;
   boost: number;
   deboost: number;
@@ -149,6 +150,21 @@ export async function getMarketData() {
   const optimismNames = optimismMarkets.map(market => {
     const config = marketConfigs[10].find(config => config.address === market);
     return config ? config.nameOverride : null;
+  });
+
+  const moonbeamAliases = moonbeamMarkets.map(market => {
+    const config = marketConfigs[1284].find(config => config.address === market);
+    return config ? config.alias : null;
+  });
+
+  const baseAliases = baseMarkets.map(market => {
+    const config = marketConfigs[8453].find(config => config.address === market);
+    return config ? config.alias : null;
+  });
+
+  const optimismAliases = optimismMarkets.map(market => {
+    const config = marketConfigs[10].find(config => config.address === market);
+    return config ? config.alias : null;
   });
 
   const moonbeamDigits = moonbeamMarkets.map(market => {
@@ -884,8 +900,8 @@ const optimismNativeBorrowPerDay = optimismNativeBorrowSpeeds.map((speed) => spe
     const percentage = basePercentages[index];
     const borrowRatio = baseBorrowRatios[index] ?? 0;
     const speed = Number((totalNativePerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
-    // Special case: if speed is 0, return 1e-18 instead
-    return speed === 0 ? 1e-18 : speed;
+    // Special case: if speed is 0, return 1e-6 instead (USDC is 6 digits)
+    return speed === 0 ? 1e-6 : speed;
   });
 
   const optimismNewNativeSupplySpeeds = optimismMarkets.map((market, index) => {
@@ -908,6 +924,7 @@ const optimismNativeBorrowPerDay = optimismNativeBorrowSpeeds.map((speed) => spe
     markets: any,
     chainId: number,
     names: any,
+    aliases: any,
     digits: number[],
     boosts: any,
     deboosts: any,
@@ -945,6 +962,7 @@ const optimismNativeBorrowPerDay = optimismNativeBorrowSpeeds.map((speed) => spe
   ) => markets.map((market: any, index: any) => ({
       market,
       name: names[index],
+      alias: aliases[index],
       digits: digits[index],
       boost: boosts[index],
       deboost: deboosts[index],
@@ -1093,6 +1111,7 @@ const optimismNativeBorrowPerDay = optimismNativeBorrowSpeeds.map((speed) => spe
       optimismMarkets,
       10,
       optimismNames,
+      optimismAliases,
       optimismDigits.filter((digit): digit is number => digit !== null),
       optimismBoosts,
       optimismDeboosts,
@@ -1132,6 +1151,7 @@ const optimismNativeBorrowPerDay = optimismNativeBorrowSpeeds.map((speed) => spe
       moonbeamMarkets,
       1284,
       moonbeamNames,
+      moonbeamAliases,
       moonbeamDigits.filter((digit): digit is number => digit !== null),
       moonbeamBoosts,
       moonbeamDeboosts,
@@ -1171,6 +1191,7 @@ const optimismNativeBorrowPerDay = optimismNativeBorrowSpeeds.map((speed) => spe
       baseMarkets,
       8453,
       baseNames,
+      baseAliases,
       baseDigits.filter((digit): digit is number => digit !== null),
       baseBoosts,
       baseDeboosts,
