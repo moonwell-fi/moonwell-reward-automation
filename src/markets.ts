@@ -1,6 +1,7 @@
 import { formatUnits } from "viem";
 import { ContractCall, moonbeamClient, baseClient, optimismClient } from "./utils";
 import { mainConfig, marketConfigs } from "./config";
+import { getSafetyModuleDataForAllChains } from "./safetyModule";
 
 import {
   moonbeamComptroller,
@@ -41,6 +42,8 @@ export interface MarketType {
   totalBorrowsUnderlying: number;
   totalSupplyUSD: number;
   totalBorrowsUSD: number;
+  supplyRate: number;
+  borrowRate: number;
   currentWellSupplySpeed: number;
   currentWellBorrowSpeed: number;
   currentNativeSupplySpeed: number;
@@ -53,6 +56,8 @@ export interface MarketType {
   wellBorrowPerDayUsd: number;
   nativeSupplyPerDayUsd: number;
   nativeBorrowPerDayUsd: number;
+  supplyApy: number;
+  borrowApy: number;
   wellSupplyApr: number;
   wellBorrowApr: number;
   nativeSupplyApr: number;
@@ -130,6 +135,7 @@ async function getOptimismMarkets() {
 }
 
 export async function getMarketData() {
+  const safetyModuleData = await getSafetyModuleDataForAllChains();
   const moonbeamMarkets = await getMoonbeamMarkets();
   const baseMarkets = await getBaseMarkets();
   const optimismMarkets = await getOptimismMarkets();
@@ -1234,31 +1240,32 @@ export async function getMarketData() {
       ...mainConfig.moonbeam,
       networkTotalUsd: moonbeamNetworkTotalUsd,
       totalMarketPercentage: moonbeamTotalMarketPercentage,
-      wellPerEpoch: mainConfig.totalWellPerEpoch * moonbeamTotalMarketPercentage,
+      wellPerEpoch: Number(mainConfig.totalWellPerEpoch * moonbeamTotalMarketPercentage).toFixed(18),
       nativePerEpoch: mainConfig.moonbeam.nativePerEpoch,
-      wellPerEpochMarkets: (mainConfig.totalWellPerEpoch * moonbeamTotalMarketPercentage) * mainConfig.moonbeam.markets,
-      wellPerEpochSafetyModule: (mainConfig.totalWellPerEpoch * moonbeamTotalMarketPercentage) * mainConfig.moonbeam.safetyModule,
-      wellPerEpochDex: (mainConfig.totalWellPerEpoch * moonbeamTotalMarketPercentage) * mainConfig.moonbeam.dex,
+      wellPerEpochMarkets: Number((mainConfig.totalWellPerEpoch * moonbeamTotalMarketPercentage) * mainConfig.moonbeam.markets).toFixed(18),
+      wellPerEpochSafetyModule: Number((mainConfig.totalWellPerEpoch * moonbeamTotalMarketPercentage) * mainConfig.moonbeam.safetyModule).toFixed(18),
+      wellPerEpochDex: Number((mainConfig.totalWellPerEpoch * moonbeamTotalMarketPercentage) * mainConfig.moonbeam.dex).toFixed(18),
     },
     base: {
       ...mainConfig.base,
       networkTotalUsd: baseNetworkTotalUsd,
       totalMarketPercentage: baseTotalMarketPercentage,
-      wellPerEpoch: mainConfig.totalWellPerEpoch * baseTotalMarketPercentage,
+      wellPerEpoch: Number(mainConfig.totalWellPerEpoch * baseTotalMarketPercentage).toFixed(18),
       nativePerEpoch: mainConfig.base.nativePerEpoch,
-      wellPerEpochMarkets: (mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.markets,
-      wellPerEpochSafetyModule: (mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.safetyModule,
-      wellPerEpochDex: (mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.dex,
+      wellPerEpochMarkets: Number((mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.markets).toFixed(18),
+      wellPerEpochSafetyModule: Number((mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.safetyModule).toFixed(18),
+      wellPerEpochDex: Number((mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.dex).toFixed(18),
     },
     optimism: {
       ...mainConfig.optimism,
       networkTotalUsd: optimismNetworkTotalUsd,
       totalMarketPercentage: optimismTotalMarketPercentage,
-      wellPerEpoch: mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage,
+      wellPerEpoch: Number(mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage).toFixed(18),
       nativePerEpoch: mainConfig.optimism.nativePerEpoch,
-      wellPerEpochMarkets: (mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage) * mainConfig.optimism.markets,
-      wellPerEpochSafetyModule: (mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage) * mainConfig.optimism.safetyModule,
-      wellPerEpochDex: (mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage) * mainConfig.optimism.dex,
+      wellPerEpochMarkets: Number((mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage) * mainConfig.optimism.markets).toFixed(18),
+      wellPerEpochSafetyModule: Number((mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage) * mainConfig.optimism.safetyModule).toFixed(18),
+      wellPerEpochDex: Number((mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage) * mainConfig.optimism.dex).toFixed(18),
     },
+    safetyModule: safetyModuleData,
   };
 }

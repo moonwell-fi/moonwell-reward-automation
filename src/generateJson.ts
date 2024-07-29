@@ -65,9 +65,20 @@ export async function returnJson() {
 
   return {
     1284: {
+      addRewardInfo: {
+        amount: marketData.moonbeam.wellPerEpochDex.toString().concat('e18'),
+        endTimestamp: marketData.epochEndTimestamp,
+        pid: 15,
+        rewardPerSec: BigNumber(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18))
+          .div(BigNumber(marketData.totalSeconds))
+          .toString().concat('e18'),
+        target: "STELLASWAP_REWARDER",
+      },
       bridgeToRecipient: [
         { // Send total well per epoch - the DEX incentives to Base Temporal Governor
-          amount: BigNumber(marketData.base.wellPerEpoch - marketData.base.wellPerEpochDex).toString().concat('e18'),
+          amount: BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
+            .minus(parseFloat(marketData.base.wellPerEpochDex).toFixed(18))
+            .toString().concat('e18'),
           network: 8453,
           target: "TEMPORAL_GOVERNOR"
         },
@@ -77,7 +88,9 @@ export async function returnJson() {
           target: "DEX_RELAYER"
         },
         { // Send total well per epoch - the DEX incentives to Optimism Temporal Governor
-          amount: BigNumber(marketData.optimism.wellPerEpoch - marketData.optimism.wellPerEpochDex).toString().concat('e18'),
+          amount: BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18))
+            .minus(parseFloat(marketData.optimism.wellPerEpochDex).toFixed(18))
+            .toString().concat('e18'),
           network: 10,
           target: "TEMPORAL_GOVERNOR"
         },
@@ -88,13 +101,14 @@ export async function returnJson() {
         },
       ],
       setRewardSpeed: moonbeamSetRewardSpeeds,
+      stkWellEmissionsPerSecond: Number(parseFloat(marketData.moonbeam.wellPerEpochSafetyModule) / marketData.totalSeconds).toString().concat('e18'),
       transferFrom: [
         { // Transfer bridge amounts and StellaSwap DEX incentives from F-GLMR-LM multisig to the governor
-          amount: BigNumber(
-            marketData.base.wellPerEpoch
-            + marketData.optimism.wellPerEpoch
-            + marketData.moonbeam.wellPerEpochDex
-          ).toString().concat('e18'),
+          amount: BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
+            .plus(BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18)))
+            .plus(BigNumber(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18)))
+            .toFixed(18, BigNumber.ROUND_DOWN)
+            .concat('e18'),
           from: "MGLIMMER_MULTISIG",
           to: "MULTICHAIN_GOVERNOR_PROXY",
           token: "WELL",
@@ -115,6 +129,7 @@ export async function returnJson() {
     },
     8453: {
       setMRDSpeeds: baseSetRewardSpeeds,
+      stkWellEmissionsPerSecond: Number(parseFloat(marketData.base.wellPerEpochSafetyModule) / marketData.totalSeconds).toString().concat('e18'),
       transferFrom: [
         { // Transfer bridged market rewards to the Multi Reward Distributor
           amount: BigNumber(marketData.base.wellPerEpochMarkets).toString().concat('e18'),
@@ -132,6 +147,7 @@ export async function returnJson() {
     },
     10: {
       setMRDSpeeds: optimismSetRewardSpeeds,
+      stkWellEmissionsPerSecond: Number(parseFloat(marketData.optimism.wellPerEpochSafetyModule) / marketData.totalSeconds).toString().concat('e18'),
       transferFrom: [
         { // Transfer bridged market rewards to the Multi Reward Distributor
           amount: BigNumber(marketData.optimism.wellPerEpochMarkets).toString().concat('e18'),
