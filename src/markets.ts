@@ -1065,6 +1065,26 @@ export async function getMarketData() {
       newWellBorrowSpeed: newWellBorrowSpeed[index],
       newNativeSupplySpeed: newNativeSupplySpeed[index],
       newNativeBorrowSpeed: newNativeBorrowSpeed[index],
+      newWellSupplyApr: Number((
+        (newWellSupplySpeed[index] * 86400 * Number(wellPrice))
+        / suppliesUsd[index]
+        * 365 * 100).toFixed(2),
+      ),
+      newWellBorrowApr: Number((
+        (newWellBorrowSpeed[index] * 86400 * Number(wellPrice))
+        / borrowsUsd[index]
+        * 365 * 100).toFixed(2),
+      ),
+      newNativeSupplyApr: Number((
+        (newNativeSupplySpeed[index] * 86400 * Number(nativePrice))
+        / suppliesUsd[index]
+        * 365 * 100).toFixed(2),
+      ),
+      newNativeBorrowApr: Number((
+        (newNativeBorrowSpeed[index] * 86400 * Number(nativePrice))
+        / borrowsUsd[index]
+        * 365 * 100).toFixed(2),
+      ),
       newWellSupplyPerDay: Number(newWellSupplySpeed[index] * 86400),
       newWellBorrowPerDay: Number(newWellBorrowSpeed[index] * 86400),
       newNativeSupplyPerDay: Number(newNativeSupplySpeed[index] * 86400),

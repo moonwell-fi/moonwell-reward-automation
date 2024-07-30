@@ -1,16 +1,8 @@
 import BigNumber from 'bignumber.js';
 import { MarketType, getMarketData } from "./markets";
+import { generateMarkdown } from "./generateMarkdown";
 
-export async function returnJson() {
-  let marketData;
-  try {
-      marketData = await getMarketData();
-  } catch (error) {
-      console.error('Error:', error);
-      return new Response('Internal Server Error', { status: 500 });
-  }
-  console.log(marketData);
-
+export async function returnJson(marketData: any) {
   const moonbeamSetRewardSpeeds = marketData["1284"].flatMap((market: MarketType) => {
     const wellRewardSpeeds = {
       market: market.alias,
@@ -111,19 +103,19 @@ export async function returnJson() {
             .concat('e18'),
           from: "MGLIMMER_MULTISIG",
           to: "MULTICHAIN_GOVERNOR_PROXY",
-          token: "WELL",
+          token: "GOVTOKEN",
         },
         { // Transfer market rewards from F-GLMR-LM multisig to the Unitroller proxy
           amount: BigNumber(marketData.moonbeam.wellPerEpochMarkets).toString().concat('e18'),
           from: "MGLIMMER_MULTISIG",
           to: "UNITROLLER",
-          token: "WELL",
+          token: "GOVTOKEN",
         },
         { // Transfer Safety Module rewards from F-GLMR-LM multisig to the Ecosystem Reserve Proxy
           amount: BigNumber(marketData.moonbeam.wellPerEpochSafetyModule).toString().concat('e18'),
           from: "MGLIMMER_MULTISIG",
           to: "ECOSYSTEM_RESERVE_PROXY",
-          token: "WELL",
+          token: "GOVTOKEN",
         }
       ]
     },
@@ -153,13 +145,13 @@ export async function returnJson() {
           amount: BigNumber(marketData.optimism.wellPerEpochMarkets).toString().concat('e18'),
           from: "TEMPORAL_GOVERNOR",
           to: "MULTI_REWARD_DISTRIBUTOR",
-          token: "WELL",
+          token: "xWELL_PROXY",
         },
         { // Transfer bridged Safety Module rewards to the Multi Reward Distributor
           amount: BigNumber(marketData.optimism.wellPerEpochSafetyModule).toString().concat('e18'),
           from: "TEMPORAL_GOVERNOR",
           to: "ECOSYSTEM_RESERVE_PROXY",
-          token: "WELL",
+          token: "xWELL_PROXY",
         },
       ]
     },
