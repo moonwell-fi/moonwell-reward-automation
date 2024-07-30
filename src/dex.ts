@@ -18,6 +18,8 @@ export interface DefiLllamaPoolResult {
 
 export interface DexPoolInfo {
   network: number,
+  dex: string,
+  symbol: string,
   tvl: number,
   apy: number
 }
@@ -32,6 +34,8 @@ export async function getDexInfo() {
     let aerodromeLastInfo = aerodromeResult.data[aerodromeResult.data.length - 1]
     result.push({
       network: 8453,
+      dex: `Aerodrome`,
+      symbol: `ETH/WELL`,
       apy: aerodromeLastInfo.apy || 0,
       tvl: aerodromeLastInfo.tvlUsd || 0,
     })
@@ -45,6 +49,8 @@ export async function getDexInfo() {
     let stellaLastInfo = stellaResult.data[stellaResult.data.length - 1]
     result.push({
       network: 1284,
+      dex: `StellaSwap`,
+      symbol: `GLMR/WELL`,
       apy: stellaLastInfo.apy || 0,
       tvl: stellaLastInfo.tvlUsd || 0,
     })

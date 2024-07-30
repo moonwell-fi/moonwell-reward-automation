@@ -14,6 +14,7 @@
 import { getMarketData } from "./markets";
 import { returnJson } from "./generateJson";
 import { generateMarkdown } from "./generateMarkdown";
+import { getDexInfo } from "./dex";
 
 export default {
 	async fetch(request: Request, env: Record<string, any>, ctx: ExecutionContext): Promise<Response> {
@@ -29,6 +30,7 @@ export default {
 		try {
 			if (type === 'json') {
 				const marketData = await getMarketData();
+				const dexData = await getDexInfo();
 				const json = await returnJson(marketData, network);
 				return new Response(JSON.stringify(json), {
 					headers: {
@@ -38,8 +40,8 @@ export default {
 			} else if (type === 'markdown') {
 				const proposalNumber = searchParams.get('proposal') || 'X??';
 				const marketData = await getMarketData();
-				console.log(marketData);
-				const markdown = await generateMarkdown(marketData, proposalNumber, network);
+				const dexData = await getDexInfo();
+				const markdown = await generateMarkdown(marketData, proposalNumber, network, dexData);
 				return new Response(markdown, {
 					headers: {
 						'content-type': 'text/markdown',
