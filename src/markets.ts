@@ -1054,8 +1054,8 @@ export async function getMarketData() {
     wellBorrowPerDayUsd: Number(wellBorrowPerDayUsd[index].toFixed(2)),
     nativeSupplyPerDayUsd: Number(nativeSupplyPerDayUsd[index].toFixed(2)),
     nativeBorrowPerDayUsd: Number(nativeBorrowPerDayUsd[index].toFixed(2)),
-    supplyApy: Number(parseFloat(formatUnits(supplyRates[index], 18)) * 60 * 60 * 24 * 365.25).toFixed(2),
-    borrowApy: Number(parseFloat(formatUnits(borrowRates[index], 18)) * 60 * 60 * 24 * 365.25).toFixed(2),
+    supplyApy: Number(parseFloat(formatUnits(supplyRates[index], 18)) * 60 * 60 * 24 * 365).toFixed(4),
+    borrowApy: Number(parseFloat(formatUnits(borrowRates[index], 18)) * 60 * 60 * 24 * 365).toFixed(4),
     wellSupplyApr: suppliesUsd[index] > 0 ? Number((
       wellSupplyPerDayUsd[index]
       / suppliesUsd[index]

@@ -98,38 +98,6 @@ export async function returnJson(marketData: any, network: string) {
             .integerValue().toNumber(),
           target: "STELLASWAP_REWARDER",
         },
-        bridgeToRecipient: [
-          { // Send total well per epoch - the DEX incentives to Base Temporal Governor
-            amount: BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
-              .minus(parseFloat(marketData.base.wellPerEpochDex).toFixed(18))
-              .shiftedBy(18)
-              .integerValue().toNumber(),
-            network: 8453,
-            target: "TEMPORAL_GOVERNOR"
-          },
-          { // Send Base DEX incentives to DEX Relayer
-            amount: BigNumber(marketData.base.wellPerEpochDex)
-              .shiftedBy(18)
-              .integerValue().toNumber(),
-            network: 8453,
-            target: "DEX_RELAYER"
-          },
-          { // Send total well per epoch - the DEX incentives to Optimism Temporal Governor
-            amount: BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18))
-              .minus(parseFloat(marketData.optimism.wellPerEpochDex).toFixed(18))
-              .shiftedBy(18)
-              .integerValue().toNumber(),
-            network: 10,
-            target: "TEMPORAL_GOVERNOR"
-          },
-          { // Send Optimism DEX incentives to DEX Relayer
-            amount: BigNumber(marketData.optimism.wellPerEpochDex)
-              .shiftedBy(18)
-              .integerValue().toNumber(),
-            network: 10,
-            target: "DEX_RELAYER"
-          },
-        ],
         setRewardSpeed: moonbeamSetRewardSpeeds,
         stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.moonbeam.wellPerEpochSafetyModule) / marketData.totalSeconds)
           .shiftedBy(18)
@@ -169,6 +137,23 @@ export async function returnJson(marketData: any, network: string) {
   } else if (network === "Base") {
     return {
       8453: {
+        bridgeToRecipient: [
+          { // Send total well per epoch - the DEX incentives to Base Temporal Governor
+            amount: BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
+              .minus(parseFloat(marketData.base.wellPerEpochDex).toFixed(18))
+              .shiftedBy(18)
+              .integerValue().toNumber(),
+            network: 8453,
+            target: "TEMPORAL_GOVERNOR"
+          },
+          { // Send Base DEX incentives to DEX Relayer
+            amount: BigNumber(marketData.base.wellPerEpochDex)
+              .shiftedBy(18)
+              .integerValue().toNumber(),
+            network: 8453,
+            target: "DEX_RELAYER"
+          },
+        ],
         setMRDSpeeds: baseSetRewardSpeeds,
         stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.base.wellPerEpochSafetyModule) / marketData.totalSeconds)
           .shiftedBy(18)
@@ -198,6 +183,23 @@ export async function returnJson(marketData: any, network: string) {
   } else if (network === "Optimism") {
     return {
       10: {
+        bridgeToRecipient: [
+          { // Send total well per epoch - the DEX incentives to Optimism Temporal Governor
+            amount: BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18))
+              .minus(parseFloat(marketData.optimism.wellPerEpochDex).toFixed(18))
+              .shiftedBy(18)
+              .integerValue().toNumber(),
+            network: 10,
+            target: "TEMPORAL_GOVERNOR"
+          },
+          { // Send Optimism DEX incentives to DEX Relayer
+            amount: BigNumber(marketData.optimism.wellPerEpochDex)
+              .shiftedBy(18)
+              .integerValue().toNumber(),
+            network: 10,
+            target: "DEX_RELAYER"
+          },
+        ],
         setMRDSpeeds: optimismSetRewardSpeeds,
         stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.optimism.wellPerEpochSafetyModule) / marketData.totalSeconds)
           .shiftedBy(18)
