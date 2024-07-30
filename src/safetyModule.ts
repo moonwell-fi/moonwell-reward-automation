@@ -67,12 +67,14 @@ export async function getSafetyModuleData(
 
 export async function getSafetyModuleDataForAllChains() {
   const moonbeamSafetyModuleData = await getSafetyModuleData("moonbeam");
-  // const baseSafetyModuleData = await getSafetyModuleData("base");
-  // const optimismSafetyModuleData = await getSafetyModuleData("optimism");
+  const baseSafetyModuleData = await getSafetyModuleData("base");
+  const optimismSafetyModuleData = await getSafetyModuleData("optimism");
+
+  console.log(baseSafetyModuleData)
 
   return {
     moonbeam: moonbeamSafetyModuleData,
-    // base: baseSafetyModuleData,
-    // optimism: optimismSafetyModuleData,
+    base: baseSafetyModuleData,
+    optimism: optimismSafetyModuleData,
   };
 };

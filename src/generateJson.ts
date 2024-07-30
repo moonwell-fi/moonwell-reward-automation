@@ -163,7 +163,7 @@ export async function returnJson() {
         },
       ]
     },
-    startTimeStamp: marketData.epochStartTimestamp,
     endTimeSTamp: marketData.epochEndTimestamp,
+    startTimeStamp: marketData.epochStartTimestamp,
   }
 }

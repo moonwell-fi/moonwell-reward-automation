@@ -11005,7 +11005,7 @@ export const moonbeamViewsContract = {
 } as const;
 
 export const baseViewsContract = {
-  address: '0x6834770ABA6c2028f448E3259DDEE4BCB879d459' as `0x${string}`,
+  address: '0x821Ff3a967b39bcbE8A018a9b1563EAf878bad39' as `0x${string}`,
   abi: [
     {
       "type": "constructor",
