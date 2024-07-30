@@ -20,11 +20,16 @@ export default {
 		const url = new URL(request.url);
 		const searchParams = url.searchParams;
 		const type = searchParams.get('type');
+		const network = searchParams.get('network');
+
+		if (!type || !network) {
+			return new Response('Missing required search parameters: type and network', { status: 400 });
+		}
 
 		try {
 			if (type === 'json') {
 				const marketData = await getMarketData();
-				const json = await returnJson(marketData);
+				const json = await returnJson(marketData, network);
 				return new Response(JSON.stringify(json), {
 					headers: {
 						'content-type': 'application/json',
@@ -34,7 +39,7 @@ export default {
 				const proposalNumber = searchParams.get('proposal') || 'X??';
 				const marketData = await getMarketData();
 				console.log(marketData);
-				const markdown = await generateMarkdown(marketData, proposalNumber);
+				const markdown = await generateMarkdown(marketData, proposalNumber, network);
 				return new Response(markdown, {
 					headers: {
 						'content-type': 'text/markdown',
