@@ -68,15 +68,20 @@ This is an automated liquidity incentive governance proposal for the Moonwell pr
 
     markdown += `Total Supply in USD: ${formatUSD(networkSummary.supplyUSD)}\n`;
     markdown += `Total Borrows in USD: ${formatUSD(networkSummary.borrowUSD)}\n`;
-    markdown += `Total LP (${networkDexInfo?.symbol} on ${networkDexInfo?.dex}): ${formatUSD(networkDexInfo?.tvl || 0)}\n`;
-    markdown += `\n\n`;
+
+    if (networkDexInfo)
+      markdown += `Total LP (${networkDexInfo?.symbol} on ${networkDexInfo?.dex}): ${formatUSD(networkDexInfo?.tvl || 0)}\n`;
+    
+    markdown += `\n`;
     markdown += `Total WELL to distibute DEX: ${networkMarketData?.wellPerEpochDex} WELL\n`;
     markdown += `Total WELL to distibute Safety Module: ${networkMarketData?.wellPerEpochSafetyModule} WELL\n`;
-    markdown += `Total WELL to distibute Markets: ${networkMarketData?.wellPerEpochMarkets} WELL\n`;
-    markdown += `Total WELL to distibute Markets (Sanity Check): ${networkSummary?.totalWell} WELL\n`;
+    markdown += `Total WELL to distibute Markets: ${networkMarketData?.wellPerEpochMarkets} WELL [Config]\n`;
+    markdown += `Total WELL to distibute Markets: ${networkSummary?.totalWell.toFixed(18)} WELL [Sanity Check]\n`;
+    markdown += `Total WELL to distibute: ${networkMarketData.wellPerEpoch} WELL [Config]\n`;
+    markdown += `Total WELL to distribute: ${(Number(networkMarketData?.wellPerEpochDex) + Number(networkMarketData?.wellPerEpochSafetyModule) + Number(networkSummary?.totalWell)).toFixed(18)} WELL [Sanity Check]\n`;
     markdown += `\n`;
 
-    
+
 
     // Iterate over the markets for the specific network
     for (const market of Object.values(marketData[networkId])) {
