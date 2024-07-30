@@ -12,20 +12,20 @@ export async function returnJson(marketData: any, network: string) {
       market: market.alias,
       newBorrowSpeed: new BigNumber(market.newWellBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? '1' : new BigNumber(market.newWellBorrowSpeed)
         .shiftedBy(18)
-        .integerValue(),
+        .integerValue().toNumber(),
       newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isZero() ? '0' : new BigNumber(market.newWellSupplySpeed)
         .shiftedBy(18)
-        .integerValue(),
+        .integerValue().toNumber(),
       rewardType: 0, // 0 = WELL
     };
     const nativeRewardSpeeds = {
       market: market.alias,
       newBorrowSpeed: new BigNumber(market.newNativeBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? '1' : new BigNumber(market.newNativeBorrowSpeed)
         .shiftedBy(18)
-        .integerValue(),
+        .integerValue().toNumber(),
       newSupplySpeed: new BigNumber(market.newNativeSupplySpeed).isZero() ? '0' : new BigNumber(market.newNativeSupplySpeed)
         .shiftedBy(18)
-        .integerValue(),
+        .integerValue().toNumber(),
       rewardType: 1, // 1 = GLMR
     };
     return [wellRewardSpeeds, nativeRewardSpeeds];
@@ -37,22 +37,22 @@ export async function returnJson(marketData: any, network: string) {
       market: market.alias,
       newBorrowSpeed: new BigNumber(market.newWellBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? '1' : new BigNumber(market.newWellBorrowSpeed)
         .shiftedBy(18)
-        .integerValue(),
+        .integerValue().toNumber(),
       newEndTime: marketData.epochEndTimestamp,
       newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isZero() ? '0' : new BigNumber(market.newWellSupplySpeed)
         .shiftedBy(18)
-        .integerValue(),
+        .integerValue().toNumber(),
     };
     const nativeRewardSpeeds = {
       emissionToken: "USDC",
       market: market.alias,
       newBorrowSpeed: new BigNumber(market.newNativeBorrowSpeed).isEqualTo(new BigNumber('1e-6')) ? '1' : new BigNumber(market.newNativeBorrowSpeed)
         .shiftedBy(6)
-        .integerValue(),
+        .integerValue().toNumber(),
       newEndTime: marketData.epochEndTimestamp,
       newSupplySpeed: new BigNumber(market.newNativeSupplySpeed).isZero() ? '0' : new BigNumber(market.newNativeSupplySpeed)
         .shiftedBy(6)
-        .integerValue(),
+        .integerValue().toNumber(),
     };
     return [wellRewardSpeeds, nativeRewardSpeeds];
   });
@@ -63,22 +63,22 @@ export async function returnJson(marketData: any, network: string) {
       market: market.alias,
       newBorrowSpeed: new BigNumber(market.newWellBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? '1' : new BigNumber(market.newWellBorrowSpeed)
         .shiftedBy(18)
-        .integerValue(),
+        .integerValue().toNumber(),
       newEndTime: marketData.epochEndTimestamp,
       newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isZero() ? '0' : new BigNumber(market.newWellSupplySpeed)
         .shiftedBy(18)
-        .integerValue(),
+        .integerValue().toNumber(),
     };
     const nativeRewardSpeeds = {
       emissionToken: "OP",
       market: market.alias,
       newBorrowSpeed: new BigNumber(market.newNativeBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? '1' : new BigNumber(market.newNativeBorrowSpeed)
         .shiftedBy(18)
-        .integerValue(),
+        .integerValue().toNumber(),
       newEndTime: marketData.epochEndTimestamp,
       newSupplySpeed: new BigNumber(market.newNativeSupplySpeed).isZero() ? '0' : new BigNumber(market.newNativeSupplySpeed)
         .shiftedBy(18)
-        .integerValue(),
+        .integerValue().toNumber(),
     };
     return [wellRewardSpeeds, nativeRewardSpeeds];
   });
@@ -89,13 +89,13 @@ export async function returnJson(marketData: any, network: string) {
         addRewardInfo: {
           amount: BigNumber(marketData.moonbeam.wellPerEpochDex)
             .shiftedBy(18)
-            .integerValue(),
+            .integerValue().toNumber(),
           endTimestamp: marketData.epochEndTimestamp,
           pid: 15,
           rewardPerSec: BigNumber(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18))
             .div(BigNumber(marketData.totalSeconds))
             .shiftedBy(18)
-            .integerValue(),
+            .integerValue().toNumber(),
           target: "STELLASWAP_REWARDER",
         },
         bridgeToRecipient: [
@@ -103,14 +103,14 @@ export async function returnJson(marketData: any, network: string) {
             amount: BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
               .minus(parseFloat(marketData.base.wellPerEpochDex).toFixed(18))
               .shiftedBy(18)
-              .integerValue(),
+              .integerValue().toNumber(),
             network: 8453,
             target: "TEMPORAL_GOVERNOR"
           },
           { // Send Base DEX incentives to DEX Relayer
             amount: BigNumber(marketData.base.wellPerEpochDex)
               .shiftedBy(18)
-              .integerValue(),
+              .integerValue().toNumber(),
             network: 8453,
             target: "DEX_RELAYER"
           },
@@ -118,14 +118,14 @@ export async function returnJson(marketData: any, network: string) {
             amount: BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18))
               .minus(parseFloat(marketData.optimism.wellPerEpochDex).toFixed(18))
               .shiftedBy(18)
-              .integerValue(),
+              .integerValue().toNumber(),
             network: 10,
             target: "TEMPORAL_GOVERNOR"
           },
           { // Send Optimism DEX incentives to DEX Relayer
             amount: BigNumber(marketData.optimism.wellPerEpochDex)
               .shiftedBy(18)
-              .integerValue(),
+              .integerValue().toNumber(),
             network: 10,
             target: "DEX_RELAYER"
           },
@@ -133,14 +133,14 @@ export async function returnJson(marketData: any, network: string) {
         setRewardSpeed: moonbeamSetRewardSpeeds,
         stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.moonbeam.wellPerEpochSafetyModule) / marketData.totalSeconds)
           .shiftedBy(18)
-          .integerValue(),
+          .integerValue().toNumber(),
         transferFrom: [
           { // Transfer bridge amounts and StellaSwap DEX incentives from F-GLMR-LM multisig to the governor
             amount: BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
               .plus(BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18)))
               .plus(BigNumber(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18)))
               .shiftedBy(18)
-              .integerValue(),
+              .integerValue().toNumber(),
             from: "MGLIMMER_MULTISIG",
             to: "MULTICHAIN_GOVERNOR_PROXY",
             token: "GOVTOKEN",
@@ -148,7 +148,7 @@ export async function returnJson(marketData: any, network: string) {
           { // Transfer market rewards from F-GLMR-LM multisig to the Unitroller proxy
             amount: BigNumber(marketData.moonbeam.wellPerEpochMarkets)
               .shiftedBy(18)
-              .integerValue(),
+              .integerValue().toNumber(),
             from: "MGLIMMER_MULTISIG",
             to: "UNITROLLER",
             token: "GOVTOKEN",
@@ -156,7 +156,7 @@ export async function returnJson(marketData: any, network: string) {
           { // Transfer Safety Module rewards from F-GLMR-LM multisig to the Ecosystem Reserve Proxy
             amount: BigNumber(marketData.moonbeam.wellPerEpochSafetyModule)
               .shiftedBy(18)
-              .integerValue(),
+              .integerValue().toNumber(),
             from: "MGLIMMER_MULTISIG",
             to: "ECOSYSTEM_RESERVE_PROXY",
             token: "GOVTOKEN",
@@ -172,12 +172,12 @@ export async function returnJson(marketData: any, network: string) {
         setMRDSpeeds: baseSetRewardSpeeds,
         stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.base.wellPerEpochSafetyModule) / marketData.totalSeconds)
           .shiftedBy(18)
-          .integerValue(),
+          .integerValue().toNumber(),
         transferFrom: [
           { // Transfer bridged market rewards to the Multi Reward Distributor
             amount: BigNumber(marketData.base.wellPerEpochMarkets)
               .shiftedBy(18)
-              .integerValue(),
+              .integerValue().toNumber(),
             from: "TEMPORAL_GOVERNOR",
             to: "MULTI_REWARD_DISTRIBUTOR",
             token: "xWELL_PROXY",
@@ -185,7 +185,7 @@ export async function returnJson(marketData: any, network: string) {
           { // Transfer bridged Safety Module rewards to the Multi Reward Distributor
             amount: BigNumber(marketData.base.wellPerEpochSafetyModule)
               .shiftedBy(18)
-              .integerValue(),
+              .integerValue().toNumber(),
             from: "TEMPORAL_GOVERNOR",
             to: "ECOSYSTEM_RESERVE_PROXY",
             token: "xWELL_PROXY",
@@ -201,12 +201,13 @@ export async function returnJson(marketData: any, network: string) {
         setMRDSpeeds: optimismSetRewardSpeeds,
         stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.optimism.wellPerEpochSafetyModule) / marketData.totalSeconds)
           .shiftedBy(18)
-          .integerValue(),
+          .integerValue()
+          .toNumber(),
         transferFrom: [
           { // Transfer bridged market rewards to the Multi Reward Distributor
             amount: BigNumber(marketData.optimism.wellPerEpochMarkets)
               .shiftedBy(18)
-              .integerValue(),
+              .integerValue().toNumber(),
             from: "TEMPORAL_GOVERNOR",
             to: "MULTI_REWARD_DISTRIBUTOR",
             token: "xWELL_PROXY",
@@ -214,7 +215,7 @@ export async function returnJson(marketData: any, network: string) {
           { // Transfer bridged Safety Module rewards to the Multi Reward Distributor
             amount: BigNumber(marketData.optimism.wellPerEpochSafetyModule)
               .shiftedBy(18)
-              .integerValue(),
+              .integerValue().toNumber(),
             from: "TEMPORAL_GOVERNOR",
             to: "ECOSYSTEM_RESERVE_PROXY",
             token: "xWELL_PROXY",

@@ -32,7 +32,7 @@ export default {
 				const marketData = await getMarketData();
 				const dexData = await getDexInfo();
 				const json = await returnJson(marketData, network);
-				return new Response(JSON.stringify(json), {
+				return new Response(JSON.stringify(json, null, 2), {
 					headers: {
 						'content-type': 'application/json',
 					},

@@ -731,6 +731,7 @@ export async function getMarketData() {
     );
   });
 
+
   function calculateNetworkTotalUSD(
     markets: any[],
     supplies: bigint[],
@@ -1055,26 +1056,25 @@ export async function getMarketData() {
     nativeBorrowPerDayUsd: Number(nativeBorrowPerDayUsd[index].toFixed(2)),
     supplyApy: Number(parseFloat(formatUnits(supplyRates[index], 18)) * 60 * 60 * 24 * 365.25).toFixed(2),
     borrowApy: Number(parseFloat(formatUnits(borrowRates[index], 18)) * 60 * 60 * 24 * 365.25).toFixed(2),
-    wellSupplyApr: Number((
+    wellSupplyApr: suppliesUsd[index] > 0 ? Number((
       wellSupplyPerDayUsd[index]
       / suppliesUsd[index]
       * 365 * 100).toFixed(2)
-    ),
-    wellBorrowApr: Number((
+    ) : Number(0).toFixed(2),
+    wellBorrowApr: borrowsUsd[index] > 0 ? Number((
       wellBorrowPerDayUsd[index]
       / borrowsUsd[index]
-      * 365 * 100).toFixed(2),
-    ),
-    nativeSupplyApr: Number((
+      * 365 * 100).toFixed(2)) : Number(0).toFixed(2)
+    ,
+    nativeSupplyApr: suppliesUsd[index] > 0 ? Number((
       nativeSupplyPerDayUsd[index]
       / suppliesUsd[index]
-      * 365 * 100).toFixed(2),
-    ),
-    nativeBorrowApr: Number((
+      * 365 * 100).toFixed(2)
+    ) : Number(0).toFixed(2),
+    nativeBorrowApr: borrowsUsd[index] > 0 ? Number((
       nativeBorrowPerDayUsd[index]
       / borrowsUsd[index]
-      * 365 * 100).toFixed(2),
-    ),
+      * 365 * 100).toFixed(2)) : Number(0).toFixed(2),
     percentage: percentages[index],
     wellPerEpochMarket: Number(totalWellPerEpochMarkets * percentages[index]),
     wellPerEpochMarketSupply: Number(totalWellPerEpochMarkets * percentages[index] * supply[index]),
@@ -1083,26 +1083,26 @@ export async function getMarketData() {
     newWellBorrowSpeed: newWellBorrowSpeed[index],
     newNativeSupplySpeed: newNativeSupplySpeed[index],
     newNativeBorrowSpeed: newNativeBorrowSpeed[index],
-    newWellSupplyApr: Number((
+    newWellSupplyApr: suppliesUsd[index] > 0 ? Number((
       (newWellSupplySpeed[index] * 86400 * Number(wellPrice))
       / suppliesUsd[index]
       * 365 * 100).toFixed(2),
-    ),
-    newWellBorrowApr: Number((
+    ) : Number(0).toFixed(2),
+    newWellBorrowApr: borrowsUsd[index] > 0 ? Number((
       (newWellBorrowSpeed[index] * 86400 * Number(wellPrice))
       / borrowsUsd[index]
       * 365 * 100).toFixed(2),
-    ),
-    newNativeSupplyApr: Number((
+    ) : Number(0).toFixed(2),
+    newNativeSupplyApr: suppliesUsd[index] > 0 ? Number((
       (newNativeSupplySpeed[index] * 86400 * Number(nativePrice))
       / suppliesUsd[index]
       * 365 * 100).toFixed(2),
-    ),
-    newNativeBorrowApr: Number((
+    ) : Number(0).toFixed(2),
+    newNativeBorrowApr: borrowsUsd[index] > 0 ? Number((
       (newNativeBorrowSpeed[index] * 86400 * Number(nativePrice))
       / borrowsUsd[index]
       * 365 * 100).toFixed(2),
-    ),
+    ) : Number(0).toFixed(2),
     newWellSupplyPerDay: Number(newWellSupplySpeed[index] * 86400),
     newWellBorrowPerDay: Number(newWellBorrowSpeed[index] * 86400),
     newNativeSupplyPerDay: Number(newNativeSupplySpeed[index] * 86400),
