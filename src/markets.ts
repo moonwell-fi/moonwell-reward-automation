@@ -826,14 +826,20 @@ export async function getMarketData() {
   };
 
   const moonbeamNewWellSupplySpeeds = moonbeamMarkets.map((market, index) => {
-    const totalWellPerEpochMarkets = mainConfig.totalWellPerEpoch * moonbeamTotalMarketPercentage;
+    const totalWellPerEpochMarkets =
+      mainConfig.totalWellPerEpoch
+      * moonbeamTotalMarketPercentage
+      * mainConfig.moonbeam.markets;
     const percentage = moonbeamPercentages[index];
     const supplyRatio = moonbeamSupplyRatios[index] ?? 0;
     return Number((totalWellPerEpochMarkets * percentage * supplyRatio) / mainConfig.secondsPerEpoch);
   });
 
   const moonbeamNewWellBorrowSpeeds = moonbeamMarkets.map((market, index) => {
-    const totalWellPerEpochMarkets = mainConfig.totalWellPerEpoch * moonbeamTotalMarketPercentage;
+    const totalWellPerEpochMarkets =
+      mainConfig.totalWellPerEpoch
+      * moonbeamTotalMarketPercentage
+      * mainConfig.moonbeam.markets;
     const percentage = moonbeamPercentages[index];
     const borrowRatio = moonbeamBorrowRatios[index] ?? 0;
     const speed = Number((totalWellPerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
@@ -842,14 +848,20 @@ export async function getMarketData() {
   });
 
   const baseNewWellSupplySpeeds = baseMarkets.map((market, index) => {
-    const totalWellPerEpochMarkets = mainConfig.totalWellPerEpoch * baseTotalMarketPercentage;
+    const totalWellPerEpochMarkets =
+      mainConfig.totalWellPerEpoch
+      * baseTotalMarketPercentage
+      * mainConfig.base.markets;
     const percentage = basePercentages[index];
     const supplyRatio = baseSupplyRatios[index] ?? 0;
     return Number((totalWellPerEpochMarkets * percentage * supplyRatio) / mainConfig.secondsPerEpoch);
   });
 
   const baseNewWellBorrowSpeeds = baseMarkets.map((market, index) => {
-    const totalWellPerEpochMarkets = mainConfig.totalWellPerEpoch * baseTotalMarketPercentage;
+    const totalWellPerEpochMarkets =
+      mainConfig.totalWellPerEpoch
+      * baseTotalMarketPercentage
+      * mainConfig.base.markets;
     const percentage = basePercentages[index];
     const borrowRatio = baseBorrowRatios[index] ?? 0;
     const speed = Number((totalWellPerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
@@ -858,14 +870,20 @@ export async function getMarketData() {
   });
 
   const optimismNewWellSupplySpeeds = optimismMarkets.map((market, index) => {
-    const totalWellPerEpochMarkets = mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage;
+    const totalWellPerEpochMarkets =
+      mainConfig.totalWellPerEpoch
+      * optimismTotalMarketPercentage
+      * mainConfig.optimism.markets;
     const percentage = optimismPercentages[index];
     const supplyRatio = optimismSupplyRatios[index] ?? 0;
     return Number((totalWellPerEpochMarkets * percentage * supplyRatio) / mainConfig.secondsPerEpoch);
   });
 
   const optimismNewWellBorrowSpeeds = optimismMarkets.map((market, index) => {
-    const totalWellPerEpochMarkets = mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage;
+    const totalWellPerEpochMarkets =
+      mainConfig.totalWellPerEpoch
+      * optimismTotalMarketPercentage
+      * mainConfig.optimism.markets;
     const percentage = optimismPercentages[index];
     const borrowRatio = optimismBorrowRatios[index] ?? 0;
     const speed = Number((totalWellPerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
