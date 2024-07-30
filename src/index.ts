@@ -11,16 +11,43 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
+import { getMarketData } from "./markets";
 import { returnJson } from "./generateJson";
+import { generateMarkdown } from "./generateMarkdown";
 
 export default {
 	async fetch(request: Request, env: Record<string, any>, ctx: ExecutionContext): Promise<Response> {
+		const url = new URL(request.url);
+		const searchParams = url.searchParams;
+		const type = searchParams.get('type');
+		const network = searchParams.get('network');
+
+		if (!type || !network) {
+			return new Response('Missing required search parameters: type and network', { status: 400 });
+		}
+
 		try {
-			return new Response(JSON.stringify(await returnJson()), {
-				headers: {
+			if (type === 'json') {
+				const marketData = await getMarketData();
+				const json = await returnJson(marketData, network);
+				return new Response(JSON.stringify(json), {
+					headers: {
 						'content-type': 'application/json',
-				},
-			});
+					},
+				});
+			} else if (type === 'markdown') {
+				const proposalNumber = searchParams.get('proposal') || 'X??';
+				const marketData = await getMarketData();
+				console.log(marketData);
+				const markdown = await generateMarkdown(marketData, proposalNumber, network);
+				return new Response(markdown, {
+					headers: {
+						'content-type': 'text/markdown',
+					},
+				});
+			} else {
+				return new Response('Invalid type parameter. Use ?type=json or ?type=markdown', { status: 400 });
+			}
 		} catch (error) {
 			console.error('Error:', error);
 			return new Response('Internal Server Error', { status: 500 });

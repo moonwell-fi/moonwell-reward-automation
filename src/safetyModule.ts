@@ -70,8 +70,6 @@ export async function getSafetyModuleDataForAllChains() {
   const baseSafetyModuleData = await getSafetyModuleData("base");
   const optimismSafetyModuleData = await getSafetyModuleData("optimism");
 
-  console.log(baseSafetyModuleData)
-
   return {
     moonbeam: moonbeamSafetyModuleData,
     base: baseSafetyModuleData,
