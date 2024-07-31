@@ -136,7 +136,7 @@ export async function returnJson(marketData: any, network: string) {
     };
   } else if (network === "Base") {
     return {
-      8453: {
+      1284: {
         bridgeToRecipient: [
           { // Send total well per epoch - the DEX incentives to Base Temporal Governor
             amount: BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
@@ -154,6 +154,8 @@ export async function returnJson(marketData: any, network: string) {
             target: "DEX_RELAYER"
           },
         ],
+      },
+      8453: {
         setMRDSpeeds: baseSetRewardSpeeds,
         stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.base.wellPerEpochSafetyModule) / marketData.totalSeconds)
           .shiftedBy(18)
@@ -182,7 +184,7 @@ export async function returnJson(marketData: any, network: string) {
     };
   } else if (network === "Optimism") {
     return {
-      10: {
+      1284: {
         bridgeToRecipient: [
           { // Send total well per epoch - the DEX incentives to Optimism Temporal Governor
             amount: BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18))
@@ -200,6 +202,8 @@ export async function returnJson(marketData: any, network: string) {
             target: "DEX_RELAYER"
           },
         ],
+      },
+      10: {
         setMRDSpeeds: optimismSetRewardSpeeds,
         stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.optimism.wellPerEpochSafetyModule) / marketData.totalSeconds)
           .shiftedBy(18)
