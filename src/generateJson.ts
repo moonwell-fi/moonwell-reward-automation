@@ -178,7 +178,7 @@ export async function returnJson(marketData: any, network: string) {
               .shiftedBy(18)
               .integerValue().toNumber(),
             from: "TEMPORAL_GOVERNOR",
-            to: "MULTI_REWARD_DISTRIBUTOR",
+            to: "MRD_PROXY",
             token: "xWELL_PROXY",
           },
           { // Transfer bridged Safety Module rewards to the Multi Reward Distributor
@@ -242,7 +242,7 @@ export async function returnJson(marketData: any, network: string) {
               .integerValue()
               .toNumber(),
             from: "FOUNDATION_OP_MULTISIG",
-            to: "MULTI_REWARD_DISTRIBUTOR",
+            to: "MRD_PROXY",
             token: "OP",
           },
           { // Transfer bridged market rewards to the Multi Reward Distributor
@@ -250,7 +250,7 @@ export async function returnJson(marketData: any, network: string) {
               .shiftedBy(18)
               .integerValue().toNumber(),
             from: "TEMPORAL_GOVERNOR",
-            to: "MULTI_REWARD_DISTRIBUTOR",
+            to: "MRD_PROXY",
             token: "xWELL_PROXY",
           },
           { // Transfer bridged Safety Module rewards to the Multi Reward Distributor
