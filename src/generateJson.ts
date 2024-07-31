@@ -152,6 +152,17 @@ export async function returnJson(marketData: any, network: string) {
             target: "DEX_RELAYER"
           },
         ],
+        transferFrom: [
+          { // Transfer all Base incentives to the Multichain Governor for bridging
+            amount: BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
+              .shiftedBy(18)
+              .plus(1)
+              .integerValue().toNumber(),
+            from: "MGLIMMER_MULTISIG",
+            to: "MULTICHAIN_GOVERNOR_PROXY",
+            token: "GOVTOKEN",
+          },
+        ],
       },
       8453: {
         setMRDSpeeds: baseSetRewardSpeeds,
@@ -198,6 +209,17 @@ export async function returnJson(marketData: any, network: string) {
               .integerValue().toNumber(),
             network: 10,
             target: "DEX_RELAYER"
+          },
+        ],
+        transferFrom: [
+          { // Transfer all Optimism incentives to the Multichain Governor for bridging
+            amount: BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18))
+              .shiftedBy(18)
+              .plus(1)
+              .integerValue().toNumber(),
+            from: "MGLIMMER_MULTISIG",
+            to: "MULTICHAIN_GOVERNOR_PROXY",
+            token: "GOVTOKEN",
           },
         ],
       },

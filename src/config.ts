@@ -17,14 +17,14 @@ export const mainConfig = {
   },
   base: {
     nativePerEpoch: 0,
-    markets: 0.48,
-    safetyModule: 0.47,
-    dex: 0.05,
+    markets: 0.6,
+    safetyModule: 0.3,
+    dex: 0.1,
   },
   optimism: {
     nativePerEpoch: 29_329.70,
-    markets: 0.48,
-    safetyModule: 0.47,
+    markets: 0.85,
+    safetyModule: 0.1,
     dex: 0.05,
   },
 };
@@ -13025,8 +13025,10 @@ export const marketConfigs = {
       digits: 6,
       boost: 5_000_000,
       deboost: 0,
-      supply: 0.5,
-      borrow: 0.5,
+      /* supply: 0.5,
+      borrow: 0.5, */
+      supply: 1,
+      borrow: 0,
       enabled: true,
     },
     {
@@ -13036,8 +13038,10 @@ export const marketConfigs = {
       digits: 6,
       boost: 1_000_000,
       deboost: 0,
-      supply: 0.5,
-      borrow: 0.5,
+      /* supply: 0.5,
+      borrow: 0.5, */
+      supply: 1,
+      borrow: 0,
       enabled: true,
     },
     {
@@ -13047,8 +13051,10 @@ export const marketConfigs = {
       digits: 18,
       boost: 1_000_000,
       deboost: 0,
-      supply: 0.5,
-      borrow: 0.5,
+      /* supply: 0.5,
+      borrow: 0.5, */
+      supply: 1,
+      borrow: 0,
       enabled: true,
     },
     {
@@ -13058,6 +13064,8 @@ export const marketConfigs = {
       digits: 8,
       boost: 2_000_000,
       deboost: 0,
+      /* supply: 1,
+      borrow: 0, */
       supply: 1,
       borrow: 0,
       enabled: true,
@@ -13069,8 +13077,10 @@ export const marketConfigs = {
       digits: 18,
       boost: 5_000_000,
       deboost: 0,
-      supply: 0.5,
-      borrow: 0.5,
+      /* supply: 0.5,
+      borrow: 0.5, */
+      supply: 1,
+      borrow: 0,
       enabled: true,
     },
     {
@@ -13080,8 +13090,10 @@ export const marketConfigs = {
       digits: 18,
       boost: 2_000_000,
       deboost: 0,
-      supply: 0.45,
-      borrow: 0.55,
+      /* supply: 0.45,
+      borrow: 0.55, */
+      supply: 1,
+      borrow: 0,
       enabled: true,
     },
     {
@@ -13091,8 +13103,10 @@ export const marketConfigs = {
       digits: 18,
       boost: 2_000_000,
       deboost: 0,
-      supply: 0.45,
-      borrow: 0.55,
+      /* supply: 0.45,
+      borrow: 0.55, */
+      supply: 1,
+      borrow: 0,
       enabled: true,
     },
     {
@@ -13102,19 +13116,10 @@ export const marketConfigs = {
       digits: 18,
       boost: 1_000_000,
       deboost: 0,
-      supply: 0.45,
-      borrow: 0.45,
-      enabled: true,
-    },
-    {
-      address: '0x21d851585840942B0eF9f20d842C00C5f3735eaF',
-      nameOverride: 'VELO',
-      alias: 'MOONWELL_VELO',
-      digits: 18,
-      boost: 1_000_000,
-      deboost: 0,
-      supply: 0.25,
-      borrow: 0.75,
+      /* supply: 0.45,
+      borrow: 0.45, */
+      supply: 1,
+      borrow: 0,
       enabled: true,
     },
     {
@@ -13124,8 +13129,10 @@ export const marketConfigs = {
       digits: 18,
       boost: 1_000_000,
       deboost: 0,
-      supply: 0.75,
-      borrow: 0.25,
+      /* supply: 0.75,
+      borrow: 0.25, */
+      supply: 1,
+      borrow: 0,
       enabled: true,
     },
   ],
@@ -13135,7 +13142,7 @@ export const marketConfigs = {
       nameOverride: 'GLMR',
       alias: 'mGLIMMER',
       digits: 18,
-      boost: 0,
+      boost: 10_000_000,
       deboost: 0,
       supply: 0.5,
       borrow: 0.5,
@@ -13146,7 +13153,7 @@ export const marketConfigs = {
       nameOverride: 'DOT',
       alias: 'mxcDOT',
       digits: 10,
-      boost: 0,
+      boost: 10_000_000,
       deboost: 0,
       supply: 0.5,
       borrow: 0.5,
@@ -13331,5 +13338,10 @@ export const excludedMarkets = [
     address: "0x298f2E346b82D69a473BF25f329BDF869e17dEc8",
     chainId: 1284,
     name: "mBUSD.wh",
+  },
+  {
+    address: "0x21d851585840942B0eF9f20d842C00C5f3735eaF",
+    chainId: 10,
+    name: "Moonwell VELO",
   },
 ]
