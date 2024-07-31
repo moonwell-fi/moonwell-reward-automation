@@ -103,10 +103,8 @@ export async function returnJson(marketData: any, network: string) {
           .shiftedBy(18)
           .integerValue().toNumber(),
         transferFrom: [
-          { // Transfer bridge amounts and StellaSwap DEX incentives from F-GLMR-LM multisig to the governor
-            amount: BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
-              .plus(BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18)))
-              .plus(BigNumber(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18)))
+          { // Transfer StellaSwap DEX incentives from F-GLMR-LM multisig to the governor
+            amount: BigNumber(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18))
               .shiftedBy(18)
               .integerValue().toNumber(),
             from: "MGLIMMER_MULTISIG",
