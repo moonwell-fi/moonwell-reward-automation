@@ -140,14 +140,16 @@ export async function returnJson(marketData: any, network: string) {
             amount: BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
               .minus(parseFloat(marketData.base.wellPerEpochDex).toFixed(18))
               .shiftedBy(18)
-              .integerValue().toNumber(),
+              .integerValue()
+              .toNumber(),
             network: 8453,
             target: "TEMPORAL_GOVERNOR"
           },
           { // Send Base DEX incentives to DEX Relayer
             amount: BigNumber(marketData.base.wellPerEpochDex)
               .shiftedBy(18)
-              .integerValue().toNumber(),
+              .integerValue()
+              .toNumber(),
             network: 8453,
             target: "DEX_RELAYER"
           },
@@ -156,8 +158,9 @@ export async function returnJson(marketData: any, network: string) {
           { // Transfer all Base incentives to the Multichain Governor for bridging
             amount: BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
               .shiftedBy(18)
+              .integerValue()
               .plus(1)
-              .integerValue().toNumber(),
+              .toNumber(),
             from: "MGLIMMER_MULTISIG",
             to: "MULTICHAIN_GOVERNOR_PROXY",
             token: "GOVTOKEN",
@@ -199,14 +202,16 @@ export async function returnJson(marketData: any, network: string) {
             amount: BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18))
               .minus(parseFloat(marketData.optimism.wellPerEpochDex).toFixed(18))
               .shiftedBy(18)
-              .integerValue().toNumber(),
+              .integerValue()
+              .toNumber(),
             network: 10,
             target: "TEMPORAL_GOVERNOR"
           },
           { // Send Optimism DEX incentives to DEX Relayer
             amount: BigNumber(marketData.optimism.wellPerEpochDex)
               .shiftedBy(18)
-              .integerValue().toNumber(),
+              .integerValue()
+              .toNumber(),
             network: 10,
             target: "DEX_RELAYER"
           },
@@ -215,8 +220,9 @@ export async function returnJson(marketData: any, network: string) {
           { // Transfer all Optimism incentives to the Multichain Governor for bridging
             amount: BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18))
               .shiftedBy(18)
+              .integerValue()
               .plus(1)
-              .integerValue().toNumber(),
+              .toNumber(),
             from: "MGLIMMER_MULTISIG",
             to: "MULTICHAIN_GOVERNOR_PROXY",
             token: "GOVTOKEN",
