@@ -22,14 +22,15 @@ export default {
 		const searchParams = url.searchParams;
 		const type = searchParams.get('type');
 		const network = searchParams.get('network');
+		const timestamp = searchParams.get('timestamp');
 
-		if (!type || !network) {
-			return new Response('Missing required search parameters: type and network', { status: 400 });
+		if (!type || !network || !timestamp) {
+			return new Response('Missing required search parameters: type, network, and timestamp', { status: 400 });
 		}
 
 		try {
 			if (type === 'json') {
-				const marketData = await getMarketData();
+				const marketData = await getMarketData(Number(timestamp));
 				const dexData = await getDexInfo();
 				const json = await returnJson(marketData, network);
 				return new Response(JSON.stringify(json, null, 2), {
@@ -39,7 +40,7 @@ export default {
 				});
 			} else if (type === 'markdown') {
 				const proposalNumber = searchParams.get('proposal') || 'X??';
-				const marketData = await getMarketData();
+				const marketData = await getMarketData(Number(timestamp));
 				const dexData = await getDexInfo();
 				const markdown = await generateMarkdown(marketData, proposalNumber, network, dexData);
 				return new Response(markdown, {

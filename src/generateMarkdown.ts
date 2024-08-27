@@ -69,8 +69,12 @@ This is an automated liquidity incentive governance proposal for the Moonwell pr
       }
     }, { supplyUSD: 0, borrowUSD: 0, totalWell: 0, supplyWell: 0, borrowWell: 0, totalWellBySpeed: 0 })
 
+    const blockNumber = networkId === '10' ? marketData.optimismBlockNumber : networkId === '1284' ? marketData.moonbeamBlockNumber : networkId === '8453' ? marketData.baseBlockNumber : null;
+
     markdown += `| Metric | Value |\n`;
     markdown += `| --- | --- |\n`;
+    markdown += `| Timestamp of capture | ${marketData.timestamp} |\n`;
+    markdown += `| Closest block number | ${blockNumber} |\n`;
     markdown += `| Total Supply in USD | ${formatUSD(networkSummary.supplyUSD)} |\n`;
     markdown += `| Total Borrows in USD | ${formatUSD(networkSummary.borrowUSD)} |\n`;
 

@@ -5,6 +5,7 @@ export interface ContractCall {
   address: `0x${string}`;
   abi: any;
   functionName: string;
+  blockNumber?: number;
   args: readonly any[];
 }
 

@@ -9,6 +9,7 @@ import {
 
 export async function getSafetyModuleData(
   chain: string,
+  blockNumber: bigint
 ) {
   let client;
   let viewsContract;
@@ -20,6 +21,7 @@ export async function getSafetyModuleData(
       contractCall = {
         ...viewsContract,
         functionName: "getStakingInfo",
+        blockNumber: blockNumber,
         args: [],
       };
       break;
@@ -29,6 +31,7 @@ export async function getSafetyModuleData(
       contractCall = {
         ...viewsContract,
         functionName: "getStakingInfo",
+        blockNumber: blockNumber,
         args: [],
       };
       break;
@@ -38,6 +41,7 @@ export async function getSafetyModuleData(
       contractCall = {
         ...viewsContract,
         functionName: "getStakingInfo",
+        blockNumber: blockNumber,
         args: [],
       };
       break;
@@ -65,10 +69,14 @@ export async function getSafetyModuleData(
   };
 };
 
-export async function getSafetyModuleDataForAllChains() {
-  const moonbeamSafetyModuleData = await getSafetyModuleData("moonbeam");
-  const baseSafetyModuleData = await getSafetyModuleData("base");
-  const optimismSafetyModuleData = await getSafetyModuleData("optimism");
+export async function getSafetyModuleDataForAllChains(
+  moonbeamBlockNumber: bigint,
+  baseBlockNumber: bigint,
+  optimismBlockNumber: bigint,
+) {
+  const moonbeamSafetyModuleData = await getSafetyModuleData("moonbeam", moonbeamBlockNumber);
+  const baseSafetyModuleData = await getSafetyModuleData("base", baseBlockNumber);
+  const optimismSafetyModuleData = await getSafetyModuleData("optimism", optimismBlockNumber);
 
   return {
     moonbeam: moonbeamSafetyModuleData,
