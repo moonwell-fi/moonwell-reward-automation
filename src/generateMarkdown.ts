@@ -45,10 +45,7 @@ This is an automated liquidity incentive governance proposal for the Moonwell pr
 
 `;
 
-
   const networkId = network === 'Optimism' ? '10' : network === 'Moonbeam' ? '1284' : network === 'Base' ? '8453' : null;
-
-
 
   if (networkId && marketData[networkId]) {
     const networkName = networkId === '1284' ? 'Moonbeam' : networkId === '10' ? 'Optimism' : 'Base';
@@ -118,7 +115,7 @@ This is an automated liquidity incentive governance proposal for the Moonwell pr
       markdown += `| WELL Supply | ${market.wellChangeSupplySpeedPercentage}% |\n`;
       markdown += `| WELL Borrow | ${market.wellChangeBorrowSpeedPercentage}% |\n`;
       markdown += `| ${nativeToken} Supply | ${market.nativeChangeSupplySpeedPercentage}% |\n`;
-      markdown += `| ${nativeToken} Borrow | ${market.nativeChangeBorrowSpeedPercentage}% |\n`;
+      markdown += `| ${nativeToken} Borrow | ${market.nativeChangeBorrowSpeedPercentage === 99999999999900 ? '0%' : `${market.nativeChangeBorrowSpeedPercentage}%`} |\n`;
     }
   } else {
     markdown += 'Invalid network provided.\n';
