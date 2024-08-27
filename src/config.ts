@@ -1,5 +1,4 @@
 import { BigNumber } from "bignumber.js"
-import { a } from "vitest/dist/suite-ynYMzeLu.js";
 
 export const mainConfig = {
   totalWellPerEpoch: new BigNumber(750_000_000) // 750 million
@@ -18,14 +17,14 @@ export const mainConfig = {
   base: {
     nativePerEpoch: 0,
     markets: 0.6,
-    safetyModule: 0.3,
-    dex: 0.1,
+    safetyModule: 0.39,
+    dex: 0.01,
   },
   optimism: {
-    nativePerEpoch: 29_329.70,
+    nativePerEpoch: 17_043.81817042,
     markets: 0.85,
-    safetyModule: 0.1,
-    dex: 0.05,
+    safetyModule: 0.14,
+    dex: 0.01,
   },
 };
 
@@ -13012,6 +13011,166 @@ export const optimismViewsContract = {
   ],
 } as const;
 
+export const xWellRouterContract = {
+  address: '0x0c87F9f6c052060b28DeA1e4aCFd24A407ac33FA' as `0x${string}`,
+  abi: [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_xwell",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_well",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_lockbox",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_wormholeBridge",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "BridgeOutSuccess",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "baseWormholeChainId",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "bridgeCost",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "bridgeToBase",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "bridgeToBase",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "lockbox",
+      "outputs": [
+        {
+          "internalType": "contract XERC20Lockbox",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "well",
+      "outputs": [
+        {
+          "internalType": "contract ERC20",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "wormholeBridge",
+      "outputs": [
+        {
+          "internalType": "contract WormholeBridgeAdapter",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "xwell",
+      "outputs": [
+        {
+          "internalType": "contract xWELL",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+} as const;
+
 export const baseNativeToken = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' // USDC since there is no native token on Base
 
 export const optimismNativeToken = '0x4200000000000000000000000000000000000042' // OP
@@ -13023,12 +13182,10 @@ export const marketConfigs = {
       alias: 'MOONWELL_USDC',
       nameOverride: 'USDC',
       digits: 6,
-      boost: 5_000_000,
+      boost: 3_000_000,
       deboost: 0,
-      /* supply: 0.5,
-      borrow: 0.5, */
-      supply: 1,
-      borrow: 0,
+      supply: 0.5,
+      borrow: 0.5,
       enabled: true,
     },
     {
@@ -13036,12 +13193,10 @@ export const marketConfigs = {
       nameOverride: 'USDT',
       alias: 'MOONWELL_USDT',
       digits: 6,
-      boost: 1_000_000,
+      boost: 1_750_000,
       deboost: 0,
-      /* supply: 0.5,
-      borrow: 0.5, */
-      supply: 1,
-      borrow: 0,
+      supply: 0.5,
+      borrow: 0.5,
       enabled: true,
     },
     {
@@ -13049,12 +13204,10 @@ export const marketConfigs = {
       nameOverride: 'DAI',
       alias: 'MOONWELL_DAI',
       digits: 18,
-      boost: 1_000_000,
+      boost: 500_000,
       deboost: 0,
-      /* supply: 0.5,
-      borrow: 0.5, */
-      supply: 1,
-      borrow: 0,
+      supply: 0.5,
+      borrow: 0.5,
       enabled: true,
     },
     {
@@ -13062,10 +13215,8 @@ export const marketConfigs = {
       nameOverride: 'WBTC',
       alias: 'MOONWELL_WBTC',
       digits: 8,
-      boost: 2_000_000,
+      boost: 0,
       deboost: 0,
-      /* supply: 1,
-      borrow: 0, */
       supply: 1,
       borrow: 0,
       enabled: true,
@@ -13075,12 +13226,10 @@ export const marketConfigs = {
       nameOverride: 'ETH',
       alias: 'MOONWELL_WETH',
       digits: 18,
-      boost: 5_000_000,
+      boost: 3_000_000,
       deboost: 0,
-      /* supply: 0.5,
-      borrow: 0.5, */
-      supply: 1,
-      borrow: 0,
+      supply: 0.5,
+      borrow: 0.5,
       enabled: true,
     },
     {
@@ -13088,12 +13237,10 @@ export const marketConfigs = {
       nameOverride: 'wstETH',
       alias: 'MOONWELL_wstETH',
       digits: 18,
-      boost: 2_000_000,
-      deboost: 0,
-      /* supply: 0.45,
-      borrow: 0.55, */
-      supply: 1,
-      borrow: 0,
+      boost: 0,
+      deboost: 500_000,
+      supply: 0.45,
+      borrow: 0.55,
       enabled: true,
     },
     {
@@ -13101,10 +13248,8 @@ export const marketConfigs = {
       nameOverride: 'cbETH',
       alias: 'MOONWELL_cbETH',
       digits: 18,
-      boost: 2_000_000,
-      deboost: 0,
-      /* supply: 0.45,
-      borrow: 0.55, */
+      boost: 0,
+      deboost: 100_000,
       supply: 1,
       borrow: 0,
       enabled: true,
@@ -13114,12 +13259,21 @@ export const marketConfigs = {
       nameOverride: 'rETH',
       alias: 'MOONWELL_rETH',
       digits: 18,
-      boost: 1_000_000,
+      boost: 0,
       deboost: 0,
-      /* supply: 0.45,
-      borrow: 0.45, */
-      supply: 1,
-      borrow: 0,
+      supply: 0.45,
+      borrow: 0.55,
+      enabled: true,
+    },
+    {
+      address: '0xb8051464C8c92209C92F3a4CD9C73746C4c3CFb3',
+      nameOverride: 'weETH',
+      alias: 'MOONWELL_weETH',
+      digits: 18,
+      boost: 200_000,
+      deboost: 0,
+      supply: 0.45,
+      borrow: 0.55,
       enabled: true,
     },
     {
@@ -13127,12 +13281,21 @@ export const marketConfigs = {
       nameOverride: 'OP',
       alias: 'MOONWELL_OP',
       digits: 18,
-      boost: 1_000_000,
+      boost: 0,
       deboost: 0,
-      /* supply: 0.75,
-      borrow: 0.25, */
-      supply: 1,
-      borrow: 0,
+      supply: 0.75,
+      borrow: 0.25,
+      enabled: true,
+    },
+    {
+      address: '0x866b838b97Ee43F2c818B3cb5Cc77A0dc22003Fc',
+      nameOverride: 'VELO',
+      alias: 'MOONWELL_VELO',
+      digits: 18,
+      boost: 250_000,
+      deboost: 0,
+      supply: 0.45,
+      borrow: 0.55,
       enabled: true,
     },
   ],
@@ -13142,7 +13305,7 @@ export const marketConfigs = {
       nameOverride: 'GLMR',
       alias: 'mGLIMMER',
       digits: 18,
-      boost: 10_000_000,
+      boost: 0,
       deboost: 0,
       supply: 0.5,
       borrow: 0.5,
@@ -13153,7 +13316,7 @@ export const marketConfigs = {
       nameOverride: 'DOT',
       alias: 'mxcDOT',
       digits: 10,
-      boost: 10_000_000,
+      boost: 0,
       deboost: 0,
       supply: 0.5,
       borrow: 0.5,
@@ -13233,10 +13396,10 @@ export const marketConfigs = {
       alias: 'MOONWELL_USDBC',
       digits: 6,
       boost: 0,
-      deboost: 0,
+      deboost: 224_615.13,
       supply: 0.50,
       borrow: 0.50,
-      enabled: false,
+      enabled: true,
     },
     {
       address: '0x628ff693426583D9a7FB391E54366292F509D457',
@@ -13255,7 +13418,7 @@ export const marketConfigs = {
       alias: 'MOONWELL_cbETH',
       digits: 18,
       boost: 0,
-      deboost: 0,
+      deboost: 2_000_000,
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
@@ -13269,14 +13432,14 @@ export const marketConfigs = {
       deboost: 0,
       supply: 0.50,
       borrow: 0.50,
-      enabled: false,
+      enabled: true,
     },
     {
       address: '0xEdc817A28E8B93B03976FBd4a3dDBc9f7D176c22',
       nameOverride: 'USDC',
       alias: 'MOONWELL_USDC',
       digits: 6,
-      boost: 0,
+      boost: 4_000_000,
       deboost: 0,
       supply: 0.50,
       borrow: 0.50,
@@ -13288,7 +13451,7 @@ export const marketConfigs = {
       alias: 'MOONWELL_wstETH',
       digits: 18,
       boost: 0,
-      deboost: 0,
+      deboost: 2_000_000,
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
@@ -13299,6 +13462,17 @@ export const marketConfigs = {
       alias: 'MOONWELL_rETH',
       digits: 18,
       boost: 0,
+      deboost: 0,
+      supply: 0.45,
+      borrow: 0.55,
+      enabled: true,
+    },
+    {
+      address: '0xb8051464C8c92209C92F3a4CD9C73746C4c3CFb3',
+      nameOverride: 'weETH',
+      alias: 'MOONWELL_weETH',
+      digits: 18,
+      boost: 500_000,
       deboost: 0,
       supply: 0.45,
       borrow: 0.55,

@@ -45,10 +45,7 @@ This is an automated liquidity incentive governance proposal for the Moonwell pr
 
 `;
 
-
   const networkId = network === 'Optimism' ? '10' : network === 'Moonbeam' ? '1284' : network === 'Base' ? '8453' : null;
-
-
 
   if (networkId && marketData[networkId]) {
     const networkName = networkId === '1284' ? 'Moonbeam' : networkId === '10' ? 'Optimism' : 'Base';
@@ -69,8 +66,12 @@ This is an automated liquidity incentive governance proposal for the Moonwell pr
       }
     }, { supplyUSD: 0, borrowUSD: 0, totalWell: 0, supplyWell: 0, borrowWell: 0, totalWellBySpeed: 0 })
 
+    const blockNumber = networkId === '10' ? marketData.optimismBlockNumber : networkId === '1284' ? marketData.moonbeamBlockNumber : networkId === '8453' ? marketData.baseBlockNumber : null;
+
     markdown += `| Metric | Value |\n`;
     markdown += `| --- | --- |\n`;
+    markdown += `| Timestamp of capture | ${marketData.timestamp} |\n`;
+    markdown += `| Closest block number | ${blockNumber} |\n`;
     markdown += `| Total Supply in USD | ${formatUSD(networkSummary.supplyUSD)} |\n`;
     markdown += `| Total Borrows in USD | ${formatUSD(networkSummary.borrowUSD)} |\n`;
 
@@ -105,7 +106,7 @@ This is an automated liquidity incentive governance proposal for the Moonwell pr
       markdown += `| ${nativeToken} Supply APR | ${market.nativeSupplyApr}% | ${market.newNativeSupplyApr}% |\n`;
       markdown += `| ${nativeToken} Borrow APR | ${market.nativeBorrowApr}% | ${market.newNativeBorrowApr}% |\n`;
       markdown += `| Total Supply APR | ${((Number(market.supplyApy) + (market.wellSupplyApr / 100) + (market.nativeSupplyApr / 100)) * 100).toFixed(2)}% | ${((Number(market.supplyApy) + (market.newWellSupplyApr / 100) + (market.newNativeSupplyApr / 100)) * 100).toFixed(2)}% |\n`;
-      markdown += `| Total Borrow APR | ${((Number(market.borrowApy) + (market.wellBorrowApr / 100) + (market.nativeBorrowApr / 100)) * 100).toFixed(2)}% | ${((Number(market.borrowApy) + (market.newWellBorrowApr / 100) + (market.newNativeBorrowApr / 100)) * 100).toFixed(2)}% |\n`;
+      markdown += `| Total Borrow APR | ${((Number(market.borrowApy) - (market.wellBorrowApr / 100) - (market.nativeBorrowApr / 100)) * 100).toFixed(2)}% | ${((Number(market.borrowApy) - (market.newWellBorrowApr / 100) - (market.newNativeBorrowApr / 100)) * 100).toFixed(2)}% |\n`;
       markdown += `| Total Supply Incentives Per Day in USD | ${formatUSD((Number(market.wellSupplyPerDayUsd) + Number(market.nativeSupplyPerDayUsd)))} | ${formatUSD((Number(market.newWellSupplyPerDayUsd) + Number(market.newNativeSupplyPerDayUsd)))} |\n`;
       markdown += `| Total Borrow Incentives Per Day in USD | ${formatUSD((Number(market.wellBorrowPerDayUsd) + Number(market.nativeBorrowPerDayUsd)))} | ${formatUSD((Number(market.newWellBorrowPerDayUsd) + Number(market.newNativeBorrowPerDayUsd)))} |\n`;
       markdown += '\n';
@@ -114,7 +115,7 @@ This is an automated liquidity incentive governance proposal for the Moonwell pr
       markdown += `| WELL Supply | ${market.wellChangeSupplySpeedPercentage}% |\n`;
       markdown += `| WELL Borrow | ${market.wellChangeBorrowSpeedPercentage}% |\n`;
       markdown += `| ${nativeToken} Supply | ${market.nativeChangeSupplySpeedPercentage}% |\n`;
-      markdown += `| ${nativeToken} Borrow | ${market.nativeChangeBorrowSpeedPercentage}% |\n`;
+      markdown += `| ${nativeToken} Borrow | ${market.nativeChangeBorrowSpeedPercentage === 99999999999900 ? '0%' : `${market.nativeChangeBorrowSpeedPercentage}%`} |\n`;
     }
   } else {
     markdown += 'Invalid network provided.\n';

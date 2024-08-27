@@ -19,11 +19,12 @@ import {
   moonbeamViewsContract,
   baseViewsContract,
   optimismViewsContract,
+  xWellRouterContract,
   excludedMarkets
 } from "./config";
 
 import { mTokenv1ABI, mTokenv2ABI } from "./constants";
-import { optimism } from "viem/chains";
+import { moonbeam, optimism } from "viem/chains";
 
 export interface MarketType {
   market: string;
@@ -84,21 +85,53 @@ export interface MarketType {
   nativeChangeBorrowSpeedPercentage: number;
 }
 
-/* function convertApy(apy: bigint) {
-  const SECONDS_PER_DAY = 86400;
-  const DAYS_PER_YEAR = 365;
+async function getClosestBlockNumber(
+  client: any,
+  timestamp: number,
+  blockTime: number
+): Promise<number> {
+  const currentBlockNumber = await client.getBlockNumber();
+  const currentBlockDetails = await client.getBlock({ blockNumber: BigInt(currentBlockNumber) });
+  const currentTimestamp = Number(currentBlockDetails.timestamp);
 
-  const apyBigNumber = new BigNumber(apy.toString());
+  // Calculate the approximate block number based on the time difference
+  const blockDiff = Math.floor((currentTimestamp - timestamp) / blockTime);
+  let low = Math.max(0, Number(BigInt(currentBlockNumber) - BigInt(blockDiff)));
+  let high = Number(BigInt(currentBlockNumber));
 
-  const finalApy = apyBigNumber
-    .times(SECONDS_PER_DAY)
-    .plus(1)
-    .pow(DAYS_PER_YEAR)
-    .minus(1)
-    .times(100);
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2);
+    const blockDetails = await client.getBlock({ blockNumber: BigInt(mid) });
+    const blockTimestamp = Number(blockDetails.timestamp);
 
-  return finalApy.toFixed(2);
-} */
+    if (blockTimestamp === timestamp) {
+      return mid;
+    } else if (blockTimestamp < timestamp) {
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  // If we didn't find an exact match, return the block with the closest timestamp
+  const lowBlockDetails = await client.getBlock({ blockNumber: BigInt(low) });
+  const lowBlockTimestamp = Number(lowBlockDetails.timestamp);
+  const highBlockDetails = await client.getBlock({ blockNumber: BigInt(high) });
+  const highBlockTimestamp = Number(highBlockDetails.timestamp);
+
+  return Math.abs(lowBlockTimestamp - timestamp) < Math.abs(highBlockTimestamp - timestamp)
+    ? low
+    : high;
+}
+
+async function getBridgeCost(): Promise<bigint> {
+  const bridgeCost = await moonbeamClient.readContract({
+    ...xWellRouterContract,
+    functionName: "bridgeCost",
+    args: [],
+  });
+  return bridgeCost as bigint;
+}
 
 async function filterExcludedMarkets(markets: string[], chainId: number): Promise<string[]> {
   const excludedAddresses = excludedMarkets
@@ -134,8 +167,27 @@ async function getOptimismMarkets() {
   return await filterExcludedMarkets(markets as string[], 10);
 }
 
-export async function getMarketData() {
-  const safetyModuleData = await getSafetyModuleDataForAllChains();
+export async function getMarketData(timestamp: number) {
+  const moonbeamBlockNumber = await getClosestBlockNumber(
+    moonbeamClient,
+    timestamp,
+    6 // Moonbeam block time is ~6 seconds
+  );
+  const baseBlockNumber = await getClosestBlockNumber(
+    baseClient,
+    timestamp,
+    2 // Base block time is ~2 seconds
+  );
+  const optimismBlockNumber = await getClosestBlockNumber(
+    optimismClient,
+    timestamp,
+    2 // Optimism block time is ~2 seconds
+  );
+  const safetyModuleData = await getSafetyModuleDataForAllChains(
+    BigInt(moonbeamBlockNumber),
+    BigInt(baseBlockNumber),
+    BigInt(optimismBlockNumber)
+  );
   const moonbeamMarkets = await getMoonbeamMarkets();
   const baseMarkets = await getBaseMarkets();
   const optimismMarkets = await getOptimismMarkets();
@@ -268,6 +320,7 @@ export async function getMarketData() {
     contracts: moonbeamMarkets.map(market => ({
       ...moonbeamOracleContract,
       functionName: "getUnderlyingPrice",
+      blockNumber: BigInt(moonbeamBlockNumber),
       args: [market],
     } as ContractCall)),
   })).map((price) => price.result as bigint);
@@ -284,6 +337,7 @@ export async function getMarketData() {
     contracts: baseMarkets.map(market => ({
       ...baseOracleContract,
       functionName: "getUnderlyingPrice",
+      blockNumber: BigInt(baseBlockNumber),
       args: [market],
     } as ContractCall)),
   })).map((price) => price.result as bigint);
@@ -300,6 +354,7 @@ export async function getMarketData() {
     contracts: optimismMarkets.map(market => ({
       ...optimismOracleContract,
       functionName: "getUnderlyingPrice",
+      blockNumber: BigInt(optimismBlockNumber),
       args: [market],
     } as ContractCall)),
   })).map((price) => price.result as bigint);
@@ -319,6 +374,7 @@ export async function getMarketData() {
   const wellPrice = (await baseClient.readContract({
     ...aeroMarketContract,
     functionName: "quote",
+    blockNumber: BigInt(baseBlockNumber),
     args: [xWellToken.address, BigInt(1e18), BigInt(1)],
   })) * BigInt(ethPrice) as bigint;
 
@@ -327,6 +383,7 @@ export async function getMarketData() {
       address: market as `0x${string}`,
       abi: mTokenv1ABI,
       functionName: "totalSupply",
+      blockNumber: BigInt(moonbeamBlockNumber),
     })),
   })).map((supply) => supply.result as bigint);
 
@@ -335,6 +392,7 @@ export async function getMarketData() {
       address: market as `0x${string}`,
       abi: mTokenv2ABI,
       functionName: "totalSupply",
+      blockNumber: BigInt(baseBlockNumber),
     } as ContractCall)),
   })).map((supply) => supply.result as bigint);
 
@@ -343,6 +401,7 @@ export async function getMarketData() {
       address: market as `0x${string}`,
       abi: mTokenv2ABI,
       functionName: "totalSupply",
+      blockNumber: BigInt(optimismBlockNumber),
     } as ContractCall)),
   })).map((supply) => supply.result as bigint);
 
@@ -351,6 +410,7 @@ export async function getMarketData() {
       address: market as `0x${string}`,
       abi: mTokenv1ABI,
       functionName: "totalBorrows",
+      blockNumber: BigInt(moonbeamBlockNumber),
     } as ContractCall)),
   })).map((borrow) => borrow.result as bigint);
 
@@ -359,6 +419,7 @@ export async function getMarketData() {
       address: market as `0x${string}`,
       abi: mTokenv2ABI,
       functionName: "totalBorrows",
+      blockNumber: BigInt(baseBlockNumber),
     } as ContractCall)),
   })).map((borrow) => borrow.result as bigint);
 
@@ -367,6 +428,7 @@ export async function getMarketData() {
       address: market as `0x${string}`,
       abi: mTokenv2ABI,
       functionName: "totalBorrows",
+      blockNumber: BigInt(optimismBlockNumber),
     } as ContractCall)),
   })).map((borrow) => borrow.result as bigint);
 
@@ -375,6 +437,7 @@ export async function getMarketData() {
       address: market as `0x${string}`,
       abi: mTokenv1ABI,
       functionName: "exchangeRateStored",
+      blockNumber: BigInt(moonbeamBlockNumber),
     } as ContractCall)),
   })).map((exchangeRate) => exchangeRate.result as bigint);
 
@@ -383,6 +446,7 @@ export async function getMarketData() {
       address: market as `0x${string}`,
       abi: mTokenv2ABI,
       functionName: "exchangeRateStored",
+      blockNumber: BigInt(baseBlockNumber),
     } as ContractCall)),
   })).map((exchangeRate) => exchangeRate.result as bigint);
 
@@ -391,6 +455,7 @@ export async function getMarketData() {
       address: market as `0x${string}`,
       abi: mTokenv2ABI,
       functionName: "exchangeRateStored",
+      blockNumber: BigInt(optimismBlockNumber),
     } as ContractCall)),
   })).map((exchangeRate) => exchangeRate.result as bigint);
 
@@ -400,6 +465,7 @@ export async function getMarketData() {
       address: moonbeamComptroller.address,
       abi: moonbeamComptroller.abi,
       functionName: "supplyRewardSpeeds",
+      blockNumber: BigInt(moonbeamBlockNumber),
       args: [0, market], // 0 = WELL
     } as ContractCall)),
   })).map((supplyRewardSpeed) => supplyRewardSpeed.result as bigint);
@@ -409,6 +475,7 @@ export async function getMarketData() {
       address: moonbeamComptroller.address,
       abi: moonbeamComptroller.abi,
       functionName: "borrowRewardSpeeds",
+      blockNumber: BigInt(moonbeamBlockNumber),
       args: [0, market], // 0 = WELL
     } as ContractCall)),
   })).map((borrowRewardSpeed) => borrowRewardSpeed.result as bigint);
@@ -418,6 +485,7 @@ export async function getMarketData() {
       address: baseMultiRewardDistributor.address,
       abi: baseMultiRewardDistributor.abi,
       functionName: "getConfigForMarket",
+      blockNumber: BigInt(baseBlockNumber),
       args: [market, xWellToken.address],
     } as ContractCall)),
   })).map((supplyRewardSpeed) => {
@@ -430,6 +498,7 @@ export async function getMarketData() {
       address: baseMultiRewardDistributor.address,
       abi: baseMultiRewardDistributor.abi,
       functionName: "getConfigForMarket",
+      blockNumber: BigInt(baseBlockNumber),
       args: [market, xWellToken.address],
     } as ContractCall)),
   })).map((borrowRewardSpeed) => {
@@ -442,6 +511,7 @@ export async function getMarketData() {
       address: optimismMultiRewardDistributor.address,
       abi: optimismMultiRewardDistributor.abi,
       functionName: "getConfigForMarket",
+      blockNumber: BigInt(optimismBlockNumber),
       args: [market, xWellToken.address],
     } as ContractCall)),
   })).map((supplyRewardSpeed) => {
@@ -454,6 +524,7 @@ export async function getMarketData() {
       address: optimismMultiRewardDistributor.address,
       abi: optimismMultiRewardDistributor.abi,
       functionName: "getConfigForMarket",
+      blockNumber: BigInt(optimismBlockNumber),
       args: [market, xWellToken.address],
     } as ContractCall)),
   })).map((borrowRewardSpeed) => {
@@ -466,6 +537,7 @@ export async function getMarketData() {
       address: moonbeamComptroller.address,
       abi: moonbeamComptroller.abi,
       functionName: "supplyRewardSpeeds",
+      blockNumber: BigInt(moonbeamBlockNumber),
       args: [1, market], // 1 = GLMR (native token)
     } as ContractCall)),
   })).map((supplyRewardSpeed) => supplyRewardSpeed.result as bigint);
@@ -475,6 +547,7 @@ export async function getMarketData() {
       address: baseMultiRewardDistributor.address,
       abi: baseMultiRewardDistributor.abi,
       functionName: "getConfigForMarket",
+      blockNumber: BigInt(baseBlockNumber),
       args: [market, baseNativeToken],
     } as ContractCall)),
   })).map((supplyRewardSpeed) => {
@@ -487,6 +560,7 @@ export async function getMarketData() {
       address: optimismMultiRewardDistributor.address,
       abi: optimismMultiRewardDistributor.abi,
       functionName: "getConfigForMarket",
+      blockNumber: BigInt(optimismBlockNumber),
       args: [market, optimismNativeToken],
     } as ContractCall)),
   })).map((supplyRewardSpeed) => {
@@ -499,6 +573,7 @@ export async function getMarketData() {
       address: moonbeamComptroller.address,
       abi: moonbeamComptroller.abi,
       functionName: "borrowRewardSpeeds",
+      blockNumber: BigInt(moonbeamBlockNumber),
       args: [1, market], // 1 = GLMR (native token)
     } as ContractCall)),
   })).map((borrowRewardSpeed) => borrowRewardSpeed.result as bigint);
@@ -508,6 +583,7 @@ export async function getMarketData() {
       address: baseMultiRewardDistributor.address,
       abi: baseMultiRewardDistributor.abi,
       functionName: "getConfigForMarket",
+      blockNumber: BigInt(baseBlockNumber),
       args: [market, baseNativeToken],
     } as ContractCall)),
   })).map((borrowRewardSpeed) => {
@@ -520,6 +596,7 @@ export async function getMarketData() {
       address: optimismMultiRewardDistributor.address,
       abi: optimismMultiRewardDistributor.abi,
       functionName: "getConfigForMarket",
+      blockNumber: BigInt(optimismBlockNumber),
       args: [market, optimismNativeToken],
     } as ContractCall)),
   })).map((borrowRewardSpeed) => {
@@ -532,6 +609,7 @@ export async function getMarketData() {
       address: moonbeamViewsContract.address,
       abi: moonbeamViewsContract.abi,
       functionName: "getMarketInfo",
+      blockNumber: BigInt(moonbeamBlockNumber),
       args: [market],
     } as ContractCall)),
   }));
@@ -544,6 +622,7 @@ export async function getMarketData() {
       address: baseViewsContract.address,
       abi: baseViewsContract.abi,
       functionName: "getMarketInfo",
+      blockNumber: BigInt(baseBlockNumber),
       args: [market],
     } as ContractCall)),
   }));
@@ -556,6 +635,7 @@ export async function getMarketData() {
       address: optimismViewsContract.address,
       abi: optimismViewsContract.abi,
       functionName: "getMarketInfo",
+      blockNumber: BigInt(optimismBlockNumber),
       args: [market],
     } as ContractCall)),
   }));
@@ -1274,6 +1354,11 @@ export async function getMarketData() {
     epochEndTimestamp: calculateEpochStartTimestamp() + mainConfig.secondsPerEpoch,
     totalSeconds: mainConfig.secondsPerEpoch,
     wellPerEpoch: mainConfig.totalWellPerEpoch,
+    bridgeCost: (await getBridgeCost()).toString(),
+    timestamp: timestamp,
+    moonbeamBlockNumber: moonbeamBlockNumber,
+    baseBlockNumber: baseBlockNumber,
+    optimismBlockNumber: optimismBlockNumber,
     moonbeam: {
       ...mainConfig.moonbeam,
       networkTotalUsd: moonbeamNetworkTotalUsd,
