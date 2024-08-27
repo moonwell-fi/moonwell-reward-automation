@@ -10,20 +10,20 @@ export async function returnJson(marketData: any, network: string) {
   const moonbeamSetRewardSpeeds = marketData["1284"].flatMap((market: MarketType) => {
     const wellRewardSpeeds = {
       market: market.alias,
-      newBorrowSpeed: new BigNumber(market.newWellBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? '1' : new BigNumber(market.newWellBorrowSpeed)
+      newBorrowSpeed: new BigNumber(market.newWellBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? 1 : new BigNumber(market.newWellBorrowSpeed)
         .shiftedBy(18)
         .integerValue().toNumber(),
-      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isZero() ? '0' : new BigNumber(market.newWellSupplySpeed)
+      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isZero() ? 0 : new BigNumber(market.newWellSupplySpeed)
         .shiftedBy(18)
         .integerValue().toNumber(),
       rewardType: 0, // 0 = WELL
     };
     const nativeRewardSpeeds = {
       market: market.alias,
-      newBorrowSpeed: new BigNumber(market.newNativeBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? '1' : new BigNumber(market.newNativeBorrowSpeed)
+      newBorrowSpeed: new BigNumber(market.newNativeBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? 1 : new BigNumber(market.newNativeBorrowSpeed)
         .shiftedBy(18)
         .integerValue().toNumber(),
-      newSupplySpeed: new BigNumber(market.newNativeSupplySpeed).isZero() ? '0' : new BigNumber(market.newNativeSupplySpeed)
+      newSupplySpeed: new BigNumber(market.newNativeSupplySpeed).isZero() ? 0 : new BigNumber(market.newNativeSupplySpeed)
         .shiftedBy(18)
         .integerValue().toNumber(),
       rewardType: 1, // 1 = GLMR
@@ -35,22 +35,22 @@ export async function returnJson(marketData: any, network: string) {
     const wellRewardSpeeds = {
       emissionToken: "xWELL_PROXY",
       market: market.alias,
-      newBorrowSpeed: new BigNumber(market.newWellBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? '1' : new BigNumber(market.newWellBorrowSpeed)
+      newBorrowSpeed: new BigNumber(market.newWellBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? 1 : new BigNumber(market.newWellBorrowSpeed)
         .shiftedBy(18)
         .integerValue().toNumber(),
       newEndTime: marketData.epochEndTimestamp,
-      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isZero() ? '0' : new BigNumber(market.newWellSupplySpeed)
+      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isZero() ? 0 : new BigNumber(market.newWellSupplySpeed)
         .shiftedBy(18)
         .integerValue().toNumber(),
     };
     const nativeRewardSpeeds = {
       emissionToken: "USDC",
       market: market.alias,
-      newBorrowSpeed: new BigNumber(market.newNativeBorrowSpeed).isEqualTo(new BigNumber('1e-6')) ? '1' : new BigNumber(market.newNativeBorrowSpeed)
+      newBorrowSpeed: new BigNumber(market.newNativeBorrowSpeed).isEqualTo(new BigNumber('1e-6')) ? 1 : new BigNumber(market.newNativeBorrowSpeed)
         .shiftedBy(6)
         .integerValue().toNumber(),
       newEndTime: marketData.epochEndTimestamp,
-      newSupplySpeed: new BigNumber(market.newNativeSupplySpeed).isZero() ? '0' : new BigNumber(market.newNativeSupplySpeed)
+      newSupplySpeed: new BigNumber(market.newNativeSupplySpeed).isZero() ? 0 : new BigNumber(market.newNativeSupplySpeed)
         .shiftedBy(6)
         .integerValue().toNumber(),
     };
@@ -61,22 +61,22 @@ export async function returnJson(marketData: any, network: string) {
     const wellRewardSpeeds = {
       emissionToken: "xWELL_PROXY",
       market: market.alias,
-      newBorrowSpeed: new BigNumber(market.newWellBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? '1' : new BigNumber(market.newWellBorrowSpeed)
+      newBorrowSpeed: new BigNumber(market.newWellBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? 1 : new BigNumber(market.newWellBorrowSpeed)
         .shiftedBy(18)
         .integerValue().toNumber(),
       newEndTime: marketData.epochEndTimestamp,
-      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isZero() ? '0' : new BigNumber(market.newWellSupplySpeed)
+      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isZero() ? 0 : new BigNumber(market.newWellSupplySpeed)
         .shiftedBy(18)
         .integerValue().toNumber(),
     };
     const nativeRewardSpeeds = {
       emissionToken: "OP",
       market: market.alias,
-      newBorrowSpeed: new BigNumber(market.newNativeBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? '1' : new BigNumber(market.newNativeBorrowSpeed)
+      newBorrowSpeed: new BigNumber(market.newNativeBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? 1 : new BigNumber(market.newNativeBorrowSpeed)
         .shiftedBy(18)
         .integerValue().toNumber(),
       newEndTime: marketData.epochEndTimestamp,
-      newSupplySpeed: new BigNumber(market.newNativeSupplySpeed).isZero() ? '0' : new BigNumber(market.newNativeSupplySpeed)
+      newSupplySpeed: new BigNumber(market.newNativeSupplySpeed).isZero() ? 0 : new BigNumber(market.newNativeSupplySpeed)
         .shiftedBy(18)
         .integerValue().toNumber(),
     };
