@@ -106,7 +106,8 @@ export async function returnJson(marketData: any, network: string) {
           { // Transfer StellaSwap DEX incentives from F-GLMR-LM multisig to the governor
             amount: BigNumber(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18))
               .shiftedBy(18)
-              .integerValue().toNumber(),
+              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
+              .toNumber(),
             from: "MGLIMMER_MULTISIG",
             to: "MULTICHAIN_GOVERNOR_PROXY",
             token: "GOVTOKEN",
@@ -114,7 +115,8 @@ export async function returnJson(marketData: any, network: string) {
           { // Transfer market rewards from F-GLMR-LM multisig to the Unitroller proxy
             amount: BigNumber(marketData.moonbeam.wellPerEpochMarkets)
               .shiftedBy(18)
-              .integerValue().toNumber(),
+              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
+              .toNumber(),
             from: "MGLIMMER_MULTISIG",
             to: "UNITROLLER",
             token: "GOVTOKEN",
@@ -122,7 +124,8 @@ export async function returnJson(marketData: any, network: string) {
           { // Transfer Safety Module rewards from F-GLMR-LM multisig to the Ecosystem Reserve Proxy
             amount: BigNumber(marketData.moonbeam.wellPerEpochSafetyModule)
               .shiftedBy(18)
-              .integerValue().toNumber(),
+              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
+              .toNumber(),
             from: "MGLIMMER_MULTISIG",
             to: "ECOSYSTEM_RESERVE_PROXY",
             token: "GOVTOKEN",
@@ -140,16 +143,18 @@ export async function returnJson(marketData: any, network: string) {
             amount: BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
               .minus(parseFloat(marketData.base.wellPerEpochDex).toFixed(18))
               .shiftedBy(18)
-              .integerValue()
+              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .toNumber(),
+            nativeValue: BigNumber(marketData.bridgeCost * 4).toNumber(), // pad bridgeCost by 4x in case of price fluctuations
             network: 8453,
             target: "TEMPORAL_GOVERNOR"
           },
           { // Send Base DEX incentives to DEX Relayer
             amount: BigNumber(marketData.base.wellPerEpochDex)
               .shiftedBy(18)
-              .integerValue()
+              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .toNumber(),
+              nativeValue: BigNumber(marketData.bridgeCost * 4).toNumber(), // pad bridgeCost by 4x in case of price fluctuations
             network: 8453,
             target: "DEX_RELAYER"
           },
@@ -158,7 +163,7 @@ export async function returnJson(marketData: any, network: string) {
           { // Transfer all Base incentives to the Multichain Governor for bridging
             amount: BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
               .shiftedBy(18)
-              .integerValue()
+              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .plus(1)
               .toNumber(),
             from: "MGLIMMER_MULTISIG",
@@ -176,7 +181,8 @@ export async function returnJson(marketData: any, network: string) {
           { // Transfer bridged market rewards to the Multi Reward Distributor
             amount: BigNumber(marketData.base.wellPerEpochMarkets)
               .shiftedBy(18)
-              .integerValue().toNumber(),
+              .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
+              .toNumber(),
             from: "TEMPORAL_GOVERNOR",
             to: "MRD_PROXY",
             token: "xWELL_PROXY",
@@ -184,7 +190,8 @@ export async function returnJson(marketData: any, network: string) {
           { // Transfer bridged Safety Module rewards to the Multi Reward Distributor
             amount: BigNumber(marketData.base.wellPerEpochSafetyModule)
               .shiftedBy(18)
-              .integerValue().toNumber(),
+              .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
+              .toNumber(),
             from: "TEMPORAL_GOVERNOR",
             to: "ECOSYSTEM_RESERVE_PROXY",
             token: "xWELL_PROXY",
@@ -202,16 +209,18 @@ export async function returnJson(marketData: any, network: string) {
             amount: BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18))
               .minus(parseFloat(marketData.optimism.wellPerEpochDex).toFixed(18))
               .shiftedBy(18)
-              .integerValue()
+              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .toNumber(),
+              nativeValue: BigNumber(marketData.bridgeCost * 4).toNumber(), // pad bridgeCost by 4x in case of price fluctuations
             network: 10,
             target: "TEMPORAL_GOVERNOR"
           },
           { // Send Optimism DEX incentives to DEX Relayer
             amount: BigNumber(marketData.optimism.wellPerEpochDex)
               .shiftedBy(18)
-              .integerValue()
+              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .toNumber(),
+              nativeValue: BigNumber(marketData.bridgeCost * 4).toNumber(), // pad bridgeCost by 4x in case of price fluctuations
             network: 10,
             target: "DEX_RELAYER"
           },
@@ -220,7 +229,7 @@ export async function returnJson(marketData: any, network: string) {
           { // Transfer all Optimism incentives to the Multichain Governor for bridging
             amount: BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18))
               .shiftedBy(18)
-              .integerValue()
+              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .plus(1)
               .toNumber(),
             from: "MGLIMMER_MULTISIG",
@@ -239,7 +248,7 @@ export async function returnJson(marketData: any, network: string) {
           { // Transfer bridged market rewards to the Multi Reward Distributor
             amount: BigNumber(marketData.optimism.nativePerEpoch)
               .shiftedBy(18)
-              .integerValue()
+              .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
               .toNumber(),
             from: "FOUNDATION_OP_MULTISIG",
             to: "MRD_PROXY",
@@ -248,7 +257,8 @@ export async function returnJson(marketData: any, network: string) {
           { // Transfer bridged market rewards to the Multi Reward Distributor
             amount: BigNumber(marketData.optimism.wellPerEpochMarkets)
               .shiftedBy(18)
-              .integerValue().toNumber(),
+              .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
+              .toNumber(),
             from: "TEMPORAL_GOVERNOR",
             to: "MRD_PROXY",
             token: "xWELL_PROXY",
@@ -256,7 +266,8 @@ export async function returnJson(marketData: any, network: string) {
           { // Transfer bridged Safety Module rewards to the Multi Reward Distributor
             amount: BigNumber(marketData.optimism.wellPerEpochSafetyModule)
               .shiftedBy(18)
-              .integerValue().toNumber(),
+              .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
+              .toNumber(),
             from: "TEMPORAL_GOVERNOR",
             to: "ECOSYSTEM_RESERVE_PROXY",
             token: "xWELL_PROXY",

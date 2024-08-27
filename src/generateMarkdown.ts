@@ -105,7 +105,7 @@ This is an automated liquidity incentive governance proposal for the Moonwell pr
       markdown += `| ${nativeToken} Supply APR | ${market.nativeSupplyApr}% | ${market.newNativeSupplyApr}% |\n`;
       markdown += `| ${nativeToken} Borrow APR | ${market.nativeBorrowApr}% | ${market.newNativeBorrowApr}% |\n`;
       markdown += `| Total Supply APR | ${((Number(market.supplyApy) + (market.wellSupplyApr / 100) + (market.nativeSupplyApr / 100)) * 100).toFixed(2)}% | ${((Number(market.supplyApy) + (market.newWellSupplyApr / 100) + (market.newNativeSupplyApr / 100)) * 100).toFixed(2)}% |\n`;
-      markdown += `| Total Borrow APR | ${((Number(market.borrowApy) + (market.wellBorrowApr / 100) + (market.nativeBorrowApr / 100)) * 100).toFixed(2)}% | ${((Number(market.borrowApy) + (market.newWellBorrowApr / 100) + (market.newNativeBorrowApr / 100)) * 100).toFixed(2)}% |\n`;
+      markdown += `| Total Borrow APR | ${((Number(market.borrowApy) - (market.wellBorrowApr / 100) - (market.nativeBorrowApr / 100)) * 100).toFixed(2)}% | ${((Number(market.borrowApy) - (market.newWellBorrowApr / 100) - (market.newNativeBorrowApr / 100)) * 100).toFixed(2)}% |\n`;
       markdown += `| Total Supply Incentives Per Day in USD | ${formatUSD((Number(market.wellSupplyPerDayUsd) + Number(market.nativeSupplyPerDayUsd)))} | ${formatUSD((Number(market.newWellSupplyPerDayUsd) + Number(market.newNativeSupplyPerDayUsd)))} |\n`;
       markdown += `| Total Borrow Incentives Per Day in USD | ${formatUSD((Number(market.wellBorrowPerDayUsd) + Number(market.nativeBorrowPerDayUsd)))} | ${formatUSD((Number(market.newWellBorrowPerDayUsd) + Number(market.newNativeBorrowPerDayUsd)))} |\n`;
       markdown += '\n';

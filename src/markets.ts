@@ -19,6 +19,7 @@ import {
   moonbeamViewsContract,
   baseViewsContract,
   optimismViewsContract,
+  xWellRouterContract,
   excludedMarkets
 } from "./config";
 
@@ -99,6 +100,15 @@ export interface MarketType {
 
   return finalApy.toFixed(2);
 } */
+
+async function getBridgeCost(): Promise<BigInt> {
+  const bridgeCost = await moonbeamClient.readContract({
+    ...xWellRouterContract,
+    functionName: "bridgeCost",
+    args: [],
+  } as ContractCall);
+  return bridgeCost as BigInt;
+}
 
 async function filterExcludedMarkets(markets: string[], chainId: number): Promise<string[]> {
   const excludedAddresses = excludedMarkets
@@ -1274,6 +1284,7 @@ export async function getMarketData() {
     epochEndTimestamp: calculateEpochStartTimestamp() + mainConfig.secondsPerEpoch,
     totalSeconds: mainConfig.secondsPerEpoch,
     wellPerEpoch: mainConfig.totalWellPerEpoch,
+    bridgeCost: (await getBridgeCost()).toString(),
     moonbeam: {
       ...mainConfig.moonbeam,
       networkTotalUsd: moonbeamNetworkTotalUsd,
