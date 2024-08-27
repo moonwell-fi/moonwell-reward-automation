@@ -17,14 +17,14 @@ export const mainConfig = {
   base: {
     nativePerEpoch: 0,
     markets: 0.6,
-    safetyModule: 0.3,
-    dex: 0.1,
+    safetyModule: 0.39,
+    dex: 0.01,
   },
   optimism: {
     nativePerEpoch: 17_043.81817042,
     markets: 0.85,
-    safetyModule: 0.1,
-    dex: 0.05,
+    safetyModule: 0.14,
+    dex: 0.01,
   },
 };
 
