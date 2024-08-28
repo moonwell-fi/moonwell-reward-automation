@@ -1059,6 +1059,7 @@ export async function getMarketData(timestamp: number) {
     newNativeBorrowSpeed: number[],
     wellPrice: string,
     nativePrice: string,
+    totalNativePerEpochMarkets: number,
   ) => markets.map((market: any, index: any) => ({
     market,
     name: names[index],
@@ -1223,6 +1224,9 @@ export async function getMarketData(timestamp: number) {
         ) / Number(formatUnits(currentNativeBorrowSpeed[index], 18))
           * 100).toFixed(2),
     ),
+    nativePerEpochMarket: Number(totalNativePerEpochMarkets * percentages[index]),
+    nativePerEpochMarketSupply: Number(totalNativePerEpochMarkets * percentages[index] * supply[index]),
+    nativePerEpochMarketBorrow: Number(totalNativePerEpochMarkets * percentages[index] * borrow[index]),
   }));
 
   return {
@@ -1265,6 +1269,7 @@ export async function getMarketData(timestamp: number) {
       optimismNewNativeBorrowSpeeds,
       formatUnits(wellPrice, 36),
       optimismNativePrice,
+      Number(mainConfig.optimism.nativePerEpoch),
     ),
     1284: formatResults(
       moonbeamMarkets,
@@ -1305,6 +1310,7 @@ export async function getMarketData(timestamp: number) {
       moonbeamNewNativeBorrowSpeeds,
       formatUnits(wellPrice, 36),
       moonbeamNativePrice,
+      Number(mainConfig.moonbeam.nativePerEpoch),
     ),
     8453: formatResults(
       baseMarkets,
@@ -1345,6 +1351,7 @@ export async function getMarketData(timestamp: number) {
       baseNewNativeBorrowSpeeds,
       formatUnits(wellPrice, 36),
       baseNativePrice,
+      Number(mainConfig.base.nativePerEpoch),
     ),
     wellPrice: formatUnits(wellPrice, 36),
     glmrPrice: moonbeamNativePrice,
