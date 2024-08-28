@@ -64,8 +64,8 @@ This is an automated liquidity incentive governance proposal for the Moonwell pr
         borrowWell: prev.borrowWell + curr.wellPerEpochMarketBorrow,
         totalWellBySpeed: prev.totalWellBySpeed + (curr.newWellSupplySpeed * mainConfig.secondsPerEpoch) + (curr.newWellBorrowSpeed * mainConfig.secondsPerEpoch),
         totalNative: prev.totalNative + curr.nativePerEpochMarket,
-        supplyNative: prev.supplyNative + curr.nativePerEpochMarket,
-        borrowNative: prev.borrowNative + curr.nativePerEpochMarket,
+        supplyNative: prev.supplyNative + curr.nativePerEpochMarketSupply,
+        borrowNative: prev.borrowNative + curr.nativePerEpochMarketBorrow,
         totalNativeBySpeed: prev.totalNativeBySpeed + (curr.newNativeSupplySpeed * mainConfig.secondsPerEpoch) + (curr.newNativeBorrowSpeed * mainConfig.secondsPerEpoch),
       }
     }, { supplyUSD: 0, borrowUSD: 0, totalWell: 0, supplyWell: 0, borrowWell: 0, totalWellBySpeed: 0, totalNative: 0, supplyNative: 0, borrowNative: 0, totalNativeBySpeed: 0,  })
