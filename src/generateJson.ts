@@ -89,13 +89,15 @@ export async function returnJson(marketData: any, network: string) {
         addRewardInfo: {
           amount: BigNumber(marketData.moonbeam.wellPerEpochDex)
             .shiftedBy(18)
-            .integerValue().toNumber(),
+            .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
+            .toNumber(),
           endTimestamp: marketData.epochEndTimestamp,
           pid: 15,
           rewardPerSec: BigNumber(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18))
             .div(BigNumber(marketData.totalSeconds))
             .shiftedBy(18)
-            .integerValue().toNumber(),
+            .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
+            .toNumber(),
           target: "STELLASWAP_REWARDER",
         },
         setRewardSpeed: moonbeamSetRewardSpeeds,
