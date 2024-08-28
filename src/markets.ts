@@ -113,15 +113,20 @@ async function getClosestBlockNumber(
     }
   }
 
-  // If we didn't find an exact match, return the block with the closest timestamp
+  // If we didn't find an exact match, return the block with the closest timestamp <= target timestamp
   const lowBlockDetails = await client.getBlock({ blockNumber: BigInt(low) });
   const lowBlockTimestamp = Number(lowBlockDetails.timestamp);
   const highBlockDetails = await client.getBlock({ blockNumber: BigInt(high) });
   const highBlockTimestamp = Number(highBlockDetails.timestamp);
 
-  return Math.abs(lowBlockTimestamp - timestamp) < Math.abs(highBlockTimestamp - timestamp)
-    ? low
-    : high;
+  if (lowBlockTimestamp <= timestamp) {
+    return low;
+  } else if (highBlockTimestamp <= timestamp) {
+    return high;
+  } else {
+    // If both blocks have a timestamp higher than the target, return the block with the lower timestamp
+    return lowBlockTimestamp < highBlockTimestamp ? high : low;
+  }
 }
 
 async function getBridgeCost(): Promise<bigint> {

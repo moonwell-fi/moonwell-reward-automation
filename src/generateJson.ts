@@ -90,6 +90,7 @@ export async function returnJson(marketData: any, network: string) {
           amount: BigNumber(marketData.moonbeam.wellPerEpochDex)
             .shiftedBy(18)
             .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
+            .plus(1e16)
             .toNumber(),
           endTimestamp: marketData.epochEndTimestamp,
           pid: 15,
@@ -109,6 +110,7 @@ export async function returnJson(marketData: any, network: string) {
             amount: BigNumber(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18))
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
+              .plus(1e16)
               .toNumber(),
             from: "MGLIMMER_MULTISIG",
             to: "MULTICHAIN_GOVERNOR_PROXY",
@@ -146,6 +148,7 @@ export async function returnJson(marketData: any, network: string) {
               .minus(parseFloat(marketData.base.wellPerEpochDex).toFixed(18))
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
+              .plus(1e16)
               .toNumber(),
             nativeValue: BigNumber(marketData.bridgeCost * 4).toNumber(), // pad bridgeCost by 4x in case of price fluctuations
             network: 8453,
@@ -155,6 +158,7 @@ export async function returnJson(marketData: any, network: string) {
             amount: BigNumber(marketData.base.wellPerEpochDex)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
+              .plus(1e16)
               .toNumber(),
               nativeValue: BigNumber(marketData.bridgeCost * 4).toNumber(), // pad bridgeCost by 4x in case of price fluctuations
             network: 8453,
@@ -166,7 +170,7 @@ export async function returnJson(marketData: any, network: string) {
             amount: BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
-              .plus(1)
+              .plus(1e15)
               .toNumber(),
             from: "MGLIMMER_MULTISIG",
             to: "MULTICHAIN_GOVERNOR_PROXY",
@@ -184,6 +188,7 @@ export async function returnJson(marketData: any, network: string) {
             amount: BigNumber(marketData.base.wellPerEpochMarkets)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
+              .minus(1e16)
               .toNumber(),
             from: "TEMPORAL_GOVERNOR",
             to: "MRD_PROXY",
@@ -193,6 +198,7 @@ export async function returnJson(marketData: any, network: string) {
             amount: BigNumber(marketData.base.wellPerEpochSafetyModule)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
+              .minus(1e16)
               .toNumber(),
             from: "TEMPORAL_GOVERNOR",
             to: "ECOSYSTEM_RESERVE_PROXY",
@@ -212,6 +218,7 @@ export async function returnJson(marketData: any, network: string) {
               .minus(parseFloat(marketData.optimism.wellPerEpochDex).toFixed(18))
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
+              .plus(1e16)
               .toNumber(),
               nativeValue: BigNumber(marketData.bridgeCost * 4).toNumber(), // pad bridgeCost by 4x in case of price fluctuations
             network: 10,
@@ -221,6 +228,7 @@ export async function returnJson(marketData: any, network: string) {
             amount: BigNumber(marketData.optimism.wellPerEpochDex)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
+              .plus(1e16)
               .toNumber(),
               nativeValue: BigNumber(marketData.bridgeCost * 4).toNumber(), // pad bridgeCost by 4x in case of price fluctuations
             network: 10,
@@ -232,7 +240,7 @@ export async function returnJson(marketData: any, network: string) {
             amount: BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18))
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
-              .plus(1)
+              .plus(1e15)
               .toNumber(),
             from: "MGLIMMER_MULTISIG",
             to: "MULTICHAIN_GOVERNOR_PROXY",
@@ -247,10 +255,11 @@ export async function returnJson(marketData: any, network: string) {
           .integerValue()
           .toNumber(),
         transferFrom: [
-          { // Transfer bridged market rewards to the Multi Reward Distributor
+          { // Transfer native OP rewards to the Multi Reward Distributor
             amount: BigNumber(marketData.optimism.nativePerEpoch)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
+              .minus(1e16)
               .toNumber(),
             from: "FOUNDATION_OP_MULTISIG",
             to: "MRD_PROXY",
@@ -260,6 +269,7 @@ export async function returnJson(marketData: any, network: string) {
             amount: BigNumber(marketData.optimism.wellPerEpochMarkets)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
+              .minus(1e16)
               .toNumber(),
             from: "TEMPORAL_GOVERNOR",
             to: "MRD_PROXY",
@@ -269,6 +279,7 @@ export async function returnJson(marketData: any, network: string) {
             amount: BigNumber(marketData.optimism.wellPerEpochSafetyModule)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
+              .minus(1e16)
               .toNumber(),
             from: "TEMPORAL_GOVERNOR",
             to: "ECOSYSTEM_RESERVE_PROXY",
