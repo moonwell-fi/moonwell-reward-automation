@@ -727,6 +727,9 @@ export async function getMarketData(timestamp: number) {
   );
 
   const moonbeamTotalSupplyUsd = moonbeamMarkets.map((market, index) => {
+    if (!moonbeamEnabled[index]) { // Only include markets that are enabled
+      return 0;
+    }
     const supply = moonbeamSupplies[index];
     const exchangeRate = moonbeamExchangeRates[index];
     const price = moonbeamPrices[index];
@@ -743,6 +746,9 @@ export async function getMarketData(timestamp: number) {
   });
 
   const baseTotalSupplyUsd = baseMarkets.map((market, index) => {
+    if (!baseEnabled[index]) { // Only include markets that are enabled
+      return 0;
+    }
     const supply = baseSupplies[index];
     const exchangeRate = baseExchangeRates[index];
     const price = basePrices[index];
@@ -759,6 +765,9 @@ export async function getMarketData(timestamp: number) {
   });
 
   const optimismTotalSupplyUsd = optimismMarkets.map((market, index) => {
+    if (!optimismEnabled[index]) { // Only include markets that are enabled
+      return 0;
+    }
     const supply = optimismSupplies[index];
     const exchangeRate = optimismExchangeRates[index];
     const price = optimismPrices[index];
@@ -784,6 +793,9 @@ export async function getMarketData(timestamp: number) {
   const optimismPercentages = calculatePercentages(optimismTotalSupplyUsd);
 
   const moonbeamTotalBorrowsUsd = moonbeamMarkets.map((market, index) => {
+    if (!moonbeamEnabled[index]) { // Only include markets that are enabled
+      return 0;
+    }
     const borrow = moonbeamBorrows[index];
     const price = moonbeamPrices[index];
     const digit = moonbeamDigits.filter((digit): digit is number => digit !== null)[index];
@@ -795,6 +807,9 @@ export async function getMarketData(timestamp: number) {
   });
 
   const baseTotalBorrowsUsd = baseMarkets.map((market, index) => {
+    if (!baseEnabled[index]) { // Only include markets that are enabled
+      return 0;
+    }
     const borrow = baseBorrows[index];
     const price = basePrices[index];
     const digit = baseDigits.filter((digit): digit is number => digit !== null)[index];
@@ -806,6 +821,9 @@ export async function getMarketData(timestamp: number) {
   });
 
   const optimismTotalBorrowsUsd = optimismMarkets.map((market, index) => {
+    if (!optimismEnabled[index]) { // Only include markets that are enabled
+      return 0;
+    }
     const borrow = optimismBorrows[index];
     const price = optimismPrices[index];
     const digit = optimismDigits.filter((digit): digit is number => digit !== null)[index];
@@ -825,7 +843,8 @@ export async function getMarketData(timestamp: number) {
     digits: number[],
     boosts: number[],
     deboosts: number[],
-    borrows: bigint[]
+    borrows: bigint[],
+    enabledMarkets: boolean[]
   ) {
     let totalSupplyUSD = 0;
     let totalBorrowsUSD = 0;
@@ -838,18 +857,23 @@ export async function getMarketData(timestamp: number) {
       const boost = boosts[index];
       const deboost = deboosts[index];
       const borrow = borrows[index];
+      const enabled = enabledMarkets[index];
+      let supplyUSD = 0;
+      let borrowUSD = 0;
 
-      const supplyUSD =
-        Number(formatUnits(supply, 8)) *
-        Number(formatUnits(exchangeRate, 18 + digit - 8)) *
-        Number(formatUnits(price, 36 - digit));
+      if (enabled) { // Only include markets that are enabled
+        supplyUSD =
+          Number(formatUnits(supply, 8)) *
+          Number(formatUnits(exchangeRate, 18 + digit - 8)) *
+          Number(formatUnits(price, 36 - digit));
 
-      const borrowUSD =
-        Number(formatUnits(borrow, digit)) *
-        Number(formatUnits(price, 36 - digit));
+        borrowUSD =
+          Number(formatUnits(borrow, digit)) *
+          Number(formatUnits(price, 36 - digit));
 
-      totalSupplyUSD += supplyUSD + boost - deboost;
-      totalBorrowsUSD += borrowUSD;
+        totalSupplyUSD += supplyUSD + boost - deboost;
+        totalBorrowsUSD += borrowUSD;
+      }
     });
 
     return totalSupplyUSD + totalBorrowsUSD;
@@ -863,7 +887,8 @@ export async function getMarketData(timestamp: number) {
     moonbeamDigits.filter((digit): digit is number => digit !== null),
     moonbeamBoosts.filter((boost): boost is number => boost !== null),
     moonbeamDeboosts.filter((deboost): deboost is number => deboost !== null),
-    moonbeamBorrows
+    moonbeamBorrows,
+    moonbeamEnabled.filter((enabled): enabled is boolean => enabled !== null),
   );
 
   const baseNetworkTotalUsd = calculateNetworkTotalUSD(
@@ -874,7 +899,8 @@ export async function getMarketData(timestamp: number) {
     baseDigits.filter((digit): digit is number => digit !== null),
     baseBoosts.filter((boost): boost is number => boost !== null),
     baseDeboosts.filter((deboost): deboost is number => deboost !== null),
-    baseBorrows
+    baseBorrows,
+    baseEnabled.filter((enabled): enabled is boolean => enabled !== null),
   );
 
   const optimismNetworkTotalUsd = calculateNetworkTotalUSD(
@@ -885,7 +911,8 @@ export async function getMarketData(timestamp: number) {
     optimismDigits.filter((digit): digit is number => digit !== null),
     optimismBoosts.filter((boost): boost is number => boost !== null),
     optimismDeboosts.filter((deboost): deboost is number => deboost !== null),
-    optimismBorrows
+    optimismBorrows,
+    optimismEnabled.filter((enabled): enabled is boolean => enabled !== null),
   );
 
   const moonbeamTotalMarketPercentage = (
@@ -912,6 +939,9 @@ export async function getMarketData(timestamp: number) {
   };
 
   const moonbeamNewWellSupplySpeeds = moonbeamMarkets.map((market, index) => {
+    if (!moonbeamEnabled[index]) { // Only include markets that are enabled
+      return 0;
+    }
     const totalWellPerEpochMarkets =
       mainConfig.totalWellPerEpoch
       * moonbeamTotalMarketPercentage
@@ -922,6 +952,9 @@ export async function getMarketData(timestamp: number) {
   });
 
   const moonbeamNewWellBorrowSpeeds = moonbeamMarkets.map((market, index) => {
+    if (!moonbeamEnabled[index]) { // Only include markets that are enabled
+      return 1e-18;
+    }
     const totalWellPerEpochMarkets =
       mainConfig.totalWellPerEpoch
       * moonbeamTotalMarketPercentage
@@ -934,6 +967,9 @@ export async function getMarketData(timestamp: number) {
   });
 
   const baseNewWellSupplySpeeds = baseMarkets.map((market, index) => {
+    if (!baseEnabled[index]) { // Only include markets that are enabled
+      return 0;
+    }
     const totalWellPerEpochMarkets =
       mainConfig.totalWellPerEpoch
       * baseTotalMarketPercentage
@@ -944,6 +980,9 @@ export async function getMarketData(timestamp: number) {
   });
 
   const baseNewWellBorrowSpeeds = baseMarkets.map((market, index) => {
+    if (!baseEnabled[index]) { // Only include markets that are enabled
+      return 1e-18;
+    }
     const totalWellPerEpochMarkets =
       mainConfig.totalWellPerEpoch
       * baseTotalMarketPercentage
@@ -956,6 +995,9 @@ export async function getMarketData(timestamp: number) {
   });
 
   const optimismNewWellSupplySpeeds = optimismMarkets.map((market, index) => {
+    if (!optimismEnabled[index]) { // Only include markets that are enabled
+      return 0;
+    }
     const totalWellPerEpochMarkets =
       mainConfig.totalWellPerEpoch
       * optimismTotalMarketPercentage
@@ -966,6 +1008,9 @@ export async function getMarketData(timestamp: number) {
   });
 
   const optimismNewWellBorrowSpeeds = optimismMarkets.map((market, index) => {
+    if (!optimismEnabled[index]) { // Only include markets that are enabled
+      return 1e-18;
+    }
     const totalWellPerEpochMarkets =
       mainConfig.totalWellPerEpoch
       * optimismTotalMarketPercentage
@@ -978,6 +1023,9 @@ export async function getMarketData(timestamp: number) {
   });
 
   const moonbeamNewNativeSupplySpeeds = moonbeamMarkets.map((market, index) => {
+    if (!moonbeamEnabled[index]) { // Only include markets that are enabled
+      return 0;
+    }
     const totalNativePerEpochMarkets = mainConfig.moonbeam.nativePerEpoch;
     const percentage = moonbeamPercentages[index];
     const supplyRatio = moonbeamSupplyRatios[index] ?? 0;
@@ -985,6 +1033,9 @@ export async function getMarketData(timestamp: number) {
   });
 
   const moonbeamNewNativeBorrowSpeeds = moonbeamMarkets.map((market, index) => {
+    if (!moonbeamEnabled[index]) { // Only include markets that are enabled
+      return 1e-18;
+    }
     const totalNativePerEpochMarkets = mainConfig.moonbeam.nativePerEpoch;
     const percentage = moonbeamPercentages[index];
     const borrowRatio = moonbeamBorrowRatios[index] ?? 0;
@@ -994,6 +1045,9 @@ export async function getMarketData(timestamp: number) {
   });
 
   const baseNewNativeSupplySpeeds = baseMarkets.map((market, index) => {
+    if (!baseEnabled[index]) { // Only include markets that are enabled
+      return 0;
+    }
     const totalNativePerEpochMarkets = mainConfig.base.nativePerEpoch;
     const percentage = basePercentages[index];
     const supplyRatio = baseSupplyRatios[index] ?? 0;
@@ -1001,6 +1055,9 @@ export async function getMarketData(timestamp: number) {
   });
 
   const baseNewNativeBorrowSpeeds = baseMarkets.map((market, index) => {
+    if (!baseEnabled[index]) { // Only include markets that are enabled
+      return 1e-18;
+    }
     const totalNativePerEpochMarkets = mainConfig.base.nativePerEpoch;
     const percentage = basePercentages[index];
     const borrowRatio = baseBorrowRatios[index] ?? 0;
@@ -1010,6 +1067,9 @@ export async function getMarketData(timestamp: number) {
   });
 
   const optimismNewNativeSupplySpeeds = optimismMarkets.map((market, index) => {
+    if (!optimismEnabled[index]) { // Only include markets that are enabled
+      return 0;
+    }
     const totalNativePerEpochMarkets = mainConfig.optimism.nativePerEpoch;
     const percentage = optimismPercentages[index];
     const supplyRatio = optimismSupplyRatios[index] ?? 0;
@@ -1017,6 +1077,9 @@ export async function getMarketData(timestamp: number) {
   });
 
   const optimismNewNativeBorrowSpeeds = optimismMarkets.map((market, index) => {
+    if (!optimismEnabled[index]) { // Only include markets that are enabled
+      return 1e-18;
+    }
     const totalNativePerEpochMarkets = mainConfig.optimism.nativePerEpoch;
     const percentage = optimismPercentages[index];
     const borrowRatio = optimismBorrowRatios[index] ?? 0;

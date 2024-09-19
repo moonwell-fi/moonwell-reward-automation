@@ -16,6 +16,25 @@ import { returnJson } from "./generateJson";
 import { generateMarkdown } from "./generateMarkdown";
 import { getDexInfo } from "./dex";
 
+// Helper function to deep merge objects
+function deepMerge(target: any, source: any) {
+	for (const key in source) {
+		if (source[key] instanceof Object && key in target) {
+			if (Array.isArray(source[key])) {
+				if (!Array.isArray(target[key])) {
+					target[key] = [];
+				}
+				target[key] = target[key].concat(source[key]);
+			} else {
+				target[key] = deepMerge(Object.assign({}, target[key]), source[key]);
+			}
+		} else {
+			Object.assign(target, { [key]: source[key] });
+		}
+	}
+	return target;
+}
+
 export default {
 	async fetch(request: Request, env: Record<string, any>, ctx: ExecutionContext): Promise<Response> {
 		const url = new URL(request.url);
@@ -34,14 +53,15 @@ export default {
 				let json = '';
 				const networks = network ? [network] : ['Optimism', 'Moonbeam', 'Base'];
 
-				const jsonArray = await Promise.all(networks.map(async (n) => {
+				const mergedJson = await networks.reduce(async (accPromise, n) => {
+					const acc = await accPromise;
 					const result = await returnJson(marketData, n);
-					return result;
-				}));
-
-				return new Response(JSON.stringify(jsonArray, null, 2), {
+					return deepMerge(acc, result);
+				}, Promise.resolve({}));
+		
+				return new Response(JSON.stringify(mergedJson, null, 2), {
 					headers: {
-							'content-type': 'application/json',
+						'content-type': 'application/json',
 					},
 				});
 			} else if (type === 'markdown') {
