@@ -39,11 +39,7 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
   const startDate = formatDate(marketData.epochStartTimestamp);
   const endDate = formatDate(marketData.epochEndTimestamp);
 
-  let markdown = `# MIP-${proposal} Automated Liquidity Incentive Proposal
-
-This is an automated liquidity incentive governance proposal for the Moonwell protocol on the ${network} network. If successful, the proposal would automatically distribute and adjust liquidity incentives for the period beginning ${startDate} and ending on ${endDate}.
-
-`;
+  let markdown =  '';
 
   const networkId = network === 'Optimism' ? '10' : network === 'Moonbeam' ? '1284' : network === 'Base' ? '8453' : null;
 
@@ -52,6 +48,10 @@ This is an automated liquidity incentive governance proposal for the Moonwell pr
     const nativeToken = networkId === '1284' ? 'GLMR' : networkId === '10' ? 'OP' : 'USDC';
 
     markdown += `## ${networkName} Network\n\n`;
+    markdown += `If successful, the proposal would automatically distribute and adjust liquidity incentives for the period beginning ${startDate} and ending on ${endDate}.
+
+`;
+
     //Breakdown
     const networkMarketData = marketData[network.toLowerCase()];
     const networkDexInfo = dexData.find(r => r.network.toString() == networkId)

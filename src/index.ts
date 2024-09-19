@@ -24,25 +24,49 @@ export default {
 		const network = searchParams.get('network');
 		const timestamp = searchParams.get('timestamp');
 
-		if (!type || !network || !timestamp) {
-			return new Response('Missing required search parameters: type, network, and timestamp', { status: 400 });
+		if (!type || !timestamp) {
+			return new Response('Missing required parameters: type and timestamp', { status: 400 });
 		}
 
 		try {
 			if (type === 'json') {
 				const marketData = await getMarketData(Number(timestamp));
-				const dexData = await getDexInfo();
-				const json = await returnJson(marketData, network);
-				return new Response(JSON.stringify(json, null, 2), {
+				let json = '';
+				const networks = network ? [network] : ['Optimism', 'Moonbeam', 'Base'];
+
+				const jsonArray = await Promise.all(networks.map(async (n) => {
+					const result = await returnJson(marketData, n);
+					return result;
+				}));
+
+				return new Response(JSON.stringify(jsonArray, null, 2), {
 					headers: {
-						'content-type': 'application/json',
+							'content-type': 'application/json',
 					},
 				});
 			} else if (type === 'markdown') {
 				const proposalNumber = searchParams.get('proposal') || 'X??';
 				const marketData = await getMarketData(Number(timestamp));
 				const dexData = await getDexInfo();
-				const markdown = await generateMarkdown(marketData, proposalNumber, network, dexData);
+				let markdown = '';
+				if (network) {
+					markdown += `# MIP-${proposalNumber} Automated Liquidity Incentive Proposal
+
+This is an automated liquidity incentive governance proposal for the Moonwell protocol on the ${network} network.
+
+`;
+				} else {
+					markdown += `# MIP-${proposalNumber} Automated Liquidity Incentive Proposal
+
+This is an automated liquidity incentive governance proposal for the Moonwell protocol.
+
+`;
+				}
+				const networks = network ? [network] : ['Optimism', 'Moonbeam', 'Base'];
+
+				for (const n of networks) {
+					markdown += await generateMarkdown(marketData, proposalNumber, n, dexData);
+				}
 				return new Response(markdown, {
 					headers: {
 						'content-type': 'text/markdown',
