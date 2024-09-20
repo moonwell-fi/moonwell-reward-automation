@@ -170,7 +170,7 @@ export async function returnJson(marketData: any, network: string) {
             amount: BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
-              .plus(1e15)
+              .plus(1e17)
               .toNumber(),
             from: "MGLIMMER_MULTISIG",
             to: "MULTICHAIN_GOVERNOR_PROXY",
@@ -194,7 +194,7 @@ export async function returnJson(marketData: any, network: string) {
             to: "MRD_PROXY",
             token: "xWELL_PROXY",
           },
-          { // Transfer bridged Safety Module rewards to the Multi Reward Distributor
+          { // Transfer bridged Safety Module rewards to the Ecosystem reserve
             amount: BigNumber(marketData.base.wellPerEpochSafetyModule)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
@@ -240,7 +240,7 @@ export async function returnJson(marketData: any, network: string) {
             amount: BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18))
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
-              .plus(1e15)
+              .plus(1e17)
               .toNumber(),
             from: "MGLIMMER_MULTISIG",
             to: "MULTICHAIN_GOVERNOR_PROXY",
