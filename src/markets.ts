@@ -1340,36 +1340,72 @@ export async function getMarketData(timestamp: number) {
     newNativeSupplyPerDayUsd: Number((newNativeSupplySpeed[index] * 86400 * Number(nativePrice)).toFixed(2)),
     newNativeBorrowPerDayUsd: Number((newNativeBorrowSpeed[index] * 86400 * Number(nativePrice)).toFixed(2)),
     wellChangeSupplySpeedPercentage: Number(
-      formatUnits(currentWellSupplySpeed[index], 18) === "0"
-        ? 0
-        : ((newWellSupplySpeed[index]
-          - Number(formatUnits(currentWellSupplySpeed[index], 18))
-        ) / Number(formatUnits(currentWellSupplySpeed[index], 18))
-          * 100).toFixed(2),
+      (() => {
+        const currentSpeed = Number(formatUnits(currentWellSupplySpeed[index], 18));
+        const newSpeed = newWellSupplySpeed[index];
+        
+        if (currentSpeed === 0) {
+          return newSpeed > 0 ? 100 : 0; // If current is 0 and new is positive, it's a 100% increase
+        } else if (currentSpeed === 1e-18 && newSpeed === -1e-18) {
+          return 0; // No change
+        } else if (currentSpeed <= 1e-18) {
+          return newSpeed > 1e-18 ? 100 : 0; // Treat very small current speeds as effectively zero
+        } else if (newSpeed <= 1e-18) {
+          return -100; // Treat very small new speeds as zero
+        } else {
+          return Number(((newSpeed - currentSpeed) / currentSpeed * 100).toFixed(2));
+        }
+      })()
     ),
     wellChangeBorrowSpeedPercentage: Number(
-      formatUnits(currentWellBorrowSpeed[index], 18) === "0"
-        ? 0
-        : ((newWellBorrowSpeed[index]
-          - Number(formatUnits(currentWellBorrowSpeed[index], 18))
-        ) / Number(formatUnits(currentWellBorrowSpeed[index], 18))
-          * 100).toFixed(2),
+      (() => {
+        const currentSpeed = Number(formatUnits(currentWellBorrowSpeed[index], 18));
+        const newSpeed = newWellBorrowSpeed[index];
+        
+        if (currentSpeed === 1e-18 && newSpeed === -1e-18) {
+          return 0; // No change
+        } else if (currentSpeed <= 1e-18) {
+          return newSpeed > 1e-18 ? 100 : 0; // Treat very small current speeds as effectively zero
+        } else if (newSpeed <= 1e-18) {
+          return -100; // Treat very small new speeds as zero
+        } else {
+          return Number(((newSpeed - currentSpeed) / currentSpeed * 100).toFixed(2));
+        }
+      })()
     ),
     nativeChangeSupplySpeedPercentage: Number(
-      formatUnits(currentNativeSupplySpeed[index], 18) === "0"
-        ? 0
-        : ((newNativeSupplySpeed[index]
-          - Number(formatUnits(currentNativeSupplySpeed[index], 18))
-        ) / Number(formatUnits(currentNativeSupplySpeed[index], 18))
-          * 100).toFixed(2),
+      (() => {
+        const currentSpeed = Number(formatUnits(currentNativeSupplySpeed[index], 18));
+        const newSpeed = newNativeSupplySpeed[index];
+        
+        if (currentSpeed === 0) {
+          return newSpeed > 0 ? 100 : 0; // If current is 0 and new is positive, it's a 100% increase
+        } else if (currentSpeed === 1e-18 && newSpeed === -1e-18) {
+          return 0; // No change
+        } else if (currentSpeed <= 1e-18) {
+          return newSpeed > 1e-18 ? 100 : 0; // Treat very small current speeds as effectively zero
+        } else if (newSpeed <= 1e-18) {
+          return -100; // Treat very small new speeds as zero
+        } else {
+          return Number(((newSpeed - currentSpeed) / currentSpeed * 100).toFixed(2));
+        }
+      })()
     ),
     nativeChangeBorrowSpeedPercentage: Number(
-      formatUnits(currentNativeBorrowSpeed[index], 18) === "0"
-        ? 0
-        : ((newNativeBorrowSpeed[index]
-          - Number(formatUnits(currentNativeBorrowSpeed[index], 18))
-        ) / Number(formatUnits(currentNativeBorrowSpeed[index], 18))
-          * 100).toFixed(2),
+      (() => {
+        const currentSpeed = Number(formatUnits(currentNativeBorrowSpeed[index], 18));
+        const newSpeed = newNativeBorrowSpeed[index];
+        
+        if (currentSpeed === 1e-18 && newSpeed === -1e-18) {
+          return 0; // No change
+        } else if (currentSpeed <= 1e-18) {
+          return newSpeed > 1e-18 ? 100 : 0; // Treat very small current speeds as effectively zero
+        } else if (newSpeed <= 1e-18) {
+          return -100; // Treat very small new speeds as zero
+        } else {
+          return Number(((newSpeed - currentSpeed) / currentSpeed * 100).toFixed(2));
+        }
+      })()
     ),
     nativePerEpochMarket: Number(totalNativePerEpochMarkets * percentages[index]),
     nativePerEpochMarketSupply: Number(totalNativePerEpochMarkets * percentages[index] * supply[index]),
