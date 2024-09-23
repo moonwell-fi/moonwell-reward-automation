@@ -39,11 +39,7 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
   const startDate = formatDate(marketData.epochStartTimestamp);
   const endDate = formatDate(marketData.epochEndTimestamp);
 
-  let markdown = `# MIP-${proposal} Automated Liquidity Incentive Proposal
-
-This is an automated liquidity incentive governance proposal for the Moonwell protocol on the ${network} network. If successful, the proposal would automatically distribute and adjust liquidity incentives for the period beginning ${startDate} and ending on ${endDate}.
-
-`;
+  let markdown =  '';
 
   const networkId = network === 'Optimism' ? '10' : network === 'Moonbeam' ? '1284' : network === 'Base' ? '8453' : null;
 
@@ -52,6 +48,10 @@ This is an automated liquidity incentive governance proposal for the Moonwell pr
     const nativeToken = networkId === '1284' ? 'GLMR' : networkId === '10' ? 'OP' : 'USDC';
 
     markdown += `## ${networkName} Network\n\n`;
+    markdown += `If successful, the proposal would automatically distribute and adjust liquidity incentives for the period beginning ${startDate} and ending on ${endDate}.
+
+`;
+
     //Breakdown
     const networkMarketData = marketData[network.toLowerCase()];
     const networkDexInfo = dexData.find(r => r.network.toString() == networkId)
@@ -80,11 +80,11 @@ This is an automated liquidity incentive governance proposal for the Moonwell pr
     markdown += `| Total Borrows in USD | ${formatUSD(networkSummary.borrowUSD)} |\n`;
 
     if (networkDexInfo) {
-      markdown += `| \n`;
+      markdown += `| | |\n`;
       markdown += `| Total LP (${networkDexInfo?.symbol} on ${networkDexInfo?.dex}) | ${formatUSD(networkDexInfo?.tvl || 0)} |\n`;
     }
 
-    markdown += `| \n`;
+    markdown += `| | |\n`;
     markdown += `| Total WELL to distribute DEX | ${networkMarketData?.wellPerEpochDex} WELL |\n`;
     markdown += `| Total WELL to distribute Safety Module | ${networkMarketData?.wellPerEpochSafetyModule} WELL |\n`;
     markdown += `| Total WELL to distribute Markets (Config) | ${networkMarketData?.wellPerEpochMarkets} WELL |\n`;
@@ -96,18 +96,19 @@ This is an automated liquidity incentive governance proposal for the Moonwell pr
     markdown += `| Total WELL to distribute (Config) | ${networkMarketData.wellPerEpoch} WELL |\n`;
     markdown += `| Total WELL to distribute (Sanity Check) | ${(Number(networkMarketData?.wellPerEpochDex) + Number(networkMarketData?.wellPerEpochSafetyModule) + Number(networkSummary?.totalWell)).toFixed(18)} WELL \n`;
 
-    markdown += `| \n`;
+    markdown += `| | |\n`;
     markdown += `| Total ${nativeToken} to distribute Markets (Config) | ${networkMarketData?.nativePerEpoch.toFixed(18)} ${nativeToken} |\n`;
     markdown += `| Total ${nativeToken} to distribute Markets (Sanity Check) | ${networkSummary?.totalNative.toFixed(18)} ${nativeToken} |\n`;
     markdown += `| Total ${nativeToken} to distribute Markets (Supply Side) | ${networkSummary?.supplyNative.toFixed(18)} ${nativeToken} |\n`;
     markdown += `| Total ${nativeToken} to distribute Markets (Borrow Side) | ${networkSummary?.borrowNative.toFixed(18)} ${nativeToken} |\n`;
     markdown += `| Total ${nativeToken} to distribute Markets (Borrow + Supply) | ${(networkSummary?.borrowNative + networkSummary?.supplyNative).toFixed(18)} ${nativeToken} |\n`;
-    markdown += `| Total ${nativeToken} to distribute Markets (By Speed) | ${(networkSummary?.totalNativeBySpeed).toFixed(18)} ${nativeToken} |\n`;
+    markdown += `| Total ${nativeToken} to distribute Markets (By Speed) | ${Math.max(0, Number(networkSummary?.totalNativeBySpeed)).toFixed(18)} ${nativeToken} |\n`;
     markdown += `\n`;
     // Iterate over the markets for the specific network
     for (const market of Object.values(marketData[networkId])) {
       markdown += `### ${market.name} (${market.alias})\n\n`;
-      markdown += `Total Supply in USD: ${formatUSD(market.totalSupplyUSD)}\n`;
+      // Cancel out boosts and deboosts so we don't show incorrect total supply in USD
+      markdown += `Total Supply in USD: ${formatUSD(market.totalSupplyUSD - market.boost + market.deboost)}\n`;
       markdown += `Total Borrows in USD: ${formatUSD(market.totalBorrowsUSD)}\n\n`;
       markdown += `| Metric | Current Value | New Value |\n`;
       markdown += `| --- | --- | --- |\n`;
@@ -119,7 +120,7 @@ This is an automated liquidity incentive governance proposal for the Moonwell pr
       markdown += `| ${nativeToken} Borrow APR | ${market.nativeBorrowApr}% | ${market.newNativeBorrowApr}% |\n`;
       markdown += `| Total Supply APR | ${((Number(market.supplyApy) + (market.wellSupplyApr / 100) + (market.nativeSupplyApr / 100)) * 100).toFixed(2)}% | ${((Number(market.supplyApy) + (market.newWellSupplyApr / 100) + (market.newNativeSupplyApr / 100)) * 100).toFixed(2)}% |\n`;
       markdown += `| Total Borrow APR | ${((Number(market.borrowApy) - (market.wellBorrowApr / 100) - (market.nativeBorrowApr / 100)) * 100).toFixed(2)}% | ${((Number(market.borrowApy) - (market.newWellBorrowApr / 100) - (market.newNativeBorrowApr / 100)) * 100).toFixed(2)}% |\n`;
-      markdown += `| Total Supply Incentives Per Day in USD | ${formatUSD((Number(market.wellSupplyPerDayUsd) + Number(market.nativeSupplyPerDayUsd)))} | ${formatUSD((Number(market.newWellSupplyPerDayUsd) + Number(market.newNativeSupplyPerDayUsd)))} |\n`;
+      markdown += `| Total Supply Incentives Per Day in USD | ${formatUSD(Math.max(0, (Number(market.wellSupplyPerDayUsd) + Number(market.nativeSupplyPerDayUsd))))} | ${formatUSD(Math.max(0, (Number(market.newWellSupplyPerDayUsd) + Number(market.newNativeSupplyPerDayUsd))))} |\n`;
       markdown += `| Total Borrow Incentives Per Day in USD | ${formatUSD((Number(market.wellBorrowPerDayUsd) + Number(market.nativeBorrowPerDayUsd)))} | ${formatUSD((Number(market.newWellBorrowPerDayUsd) + Number(market.newNativeBorrowPerDayUsd)))} |\n`;
       markdown += '\n';
       markdown += `| Metric | % Change |\n`;

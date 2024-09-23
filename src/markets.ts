@@ -727,6 +727,9 @@ export async function getMarketData(timestamp: number) {
   );
 
   const moonbeamTotalSupplyUsd = moonbeamMarkets.map((market, index) => {
+    if (!moonbeamEnabled[index]) { // Only include markets that are enabled
+      return 0;
+    }
     const supply = moonbeamSupplies[index];
     const exchangeRate = moonbeamExchangeRates[index];
     const price = moonbeamPrices[index];
@@ -743,6 +746,9 @@ export async function getMarketData(timestamp: number) {
   });
 
   const baseTotalSupplyUsd = baseMarkets.map((market, index) => {
+    if (!baseEnabled[index]) { // Only include markets that are enabled
+      return 0;
+    }
     const supply = baseSupplies[index];
     const exchangeRate = baseExchangeRates[index];
     const price = basePrices[index];
@@ -759,6 +765,9 @@ export async function getMarketData(timestamp: number) {
   });
 
   const optimismTotalSupplyUsd = optimismMarkets.map((market, index) => {
+    if (!optimismEnabled[index]) { // Only include markets that are enabled
+      return 0;
+    }
     const supply = optimismSupplies[index];
     const exchangeRate = optimismExchangeRates[index];
     const price = optimismPrices[index];
@@ -784,6 +793,9 @@ export async function getMarketData(timestamp: number) {
   const optimismPercentages = calculatePercentages(optimismTotalSupplyUsd);
 
   const moonbeamTotalBorrowsUsd = moonbeamMarkets.map((market, index) => {
+    if (!moonbeamEnabled[index]) { // Only include markets that are enabled
+      return 0;
+    }
     const borrow = moonbeamBorrows[index];
     const price = moonbeamPrices[index];
     const digit = moonbeamDigits.filter((digit): digit is number => digit !== null)[index];
@@ -795,6 +807,9 @@ export async function getMarketData(timestamp: number) {
   });
 
   const baseTotalBorrowsUsd = baseMarkets.map((market, index) => {
+    if (!baseEnabled[index]) { // Only include markets that are enabled
+      return 0;
+    }
     const borrow = baseBorrows[index];
     const price = basePrices[index];
     const digit = baseDigits.filter((digit): digit is number => digit !== null)[index];
@@ -806,6 +821,9 @@ export async function getMarketData(timestamp: number) {
   });
 
   const optimismTotalBorrowsUsd = optimismMarkets.map((market, index) => {
+    if (!optimismEnabled[index]) { // Only include markets that are enabled
+      return 0;
+    }
     const borrow = optimismBorrows[index];
     const price = optimismPrices[index];
     const digit = optimismDigits.filter((digit): digit is number => digit !== null)[index];
@@ -825,7 +843,8 @@ export async function getMarketData(timestamp: number) {
     digits: number[],
     boosts: number[],
     deboosts: number[],
-    borrows: bigint[]
+    borrows: bigint[],
+    enabledMarkets: boolean[]
   ) {
     let totalSupplyUSD = 0;
     let totalBorrowsUSD = 0;
@@ -838,18 +857,23 @@ export async function getMarketData(timestamp: number) {
       const boost = boosts[index];
       const deboost = deboosts[index];
       const borrow = borrows[index];
+      const enabled = enabledMarkets[index];
+      let supplyUSD = 0;
+      let borrowUSD = 0;
 
-      const supplyUSD =
-        Number(formatUnits(supply, 8)) *
-        Number(formatUnits(exchangeRate, 18 + digit - 8)) *
-        Number(formatUnits(price, 36 - digit));
+      if (enabled) { // Only include markets that are enabled
+        supplyUSD =
+          Number(formatUnits(supply, 8)) *
+          Number(formatUnits(exchangeRate, 18 + digit - 8)) *
+          Number(formatUnits(price, 36 - digit));
 
-      const borrowUSD =
-        Number(formatUnits(borrow, digit)) *
-        Number(formatUnits(price, 36 - digit));
+        borrowUSD =
+          Number(formatUnits(borrow, digit)) *
+          Number(formatUnits(price, 36 - digit));
 
-      totalSupplyUSD += supplyUSD + boost - deboost;
-      totalBorrowsUSD += borrowUSD;
+        totalSupplyUSD += supplyUSD + boost - deboost;
+        totalBorrowsUSD += borrowUSD;
+      }
     });
 
     return totalSupplyUSD + totalBorrowsUSD;
@@ -863,7 +887,8 @@ export async function getMarketData(timestamp: number) {
     moonbeamDigits.filter((digit): digit is number => digit !== null),
     moonbeamBoosts.filter((boost): boost is number => boost !== null),
     moonbeamDeboosts.filter((deboost): deboost is number => deboost !== null),
-    moonbeamBorrows
+    moonbeamBorrows,
+    moonbeamEnabled.filter((enabled): enabled is boolean => enabled !== null),
   );
 
   const baseNetworkTotalUsd = calculateNetworkTotalUSD(
@@ -874,7 +899,8 @@ export async function getMarketData(timestamp: number) {
     baseDigits.filter((digit): digit is number => digit !== null),
     baseBoosts.filter((boost): boost is number => boost !== null),
     baseDeboosts.filter((deboost): deboost is number => deboost !== null),
-    baseBorrows
+    baseBorrows,
+    baseEnabled.filter((enabled): enabled is boolean => enabled !== null),
   );
 
   const optimismNetworkTotalUsd = calculateNetworkTotalUSD(
@@ -885,7 +911,8 @@ export async function getMarketData(timestamp: number) {
     optimismDigits.filter((digit): digit is number => digit !== null),
     optimismBoosts.filter((boost): boost is number => boost !== null),
     optimismDeboosts.filter((deboost): deboost is number => deboost !== null),
-    optimismBorrows
+    optimismBorrows,
+    optimismEnabled.filter((enabled): enabled is boolean => enabled !== null),
   );
 
   const moonbeamTotalMarketPercentage = (
@@ -912,117 +939,232 @@ export async function getMarketData(timestamp: number) {
   };
 
   const moonbeamNewWellSupplySpeeds = moonbeamMarkets.map((market, index) => {
+    const currentSpeed = Number(formatUnits(moonbeamWellSupplySpeeds[index], 18));
+    
+    if (!moonbeamEnabled[index]) { // Only include markets that are enabled
+      return currentSpeed === 0 ? -1e-18 : 0;
+    }
     const totalWellPerEpochMarkets =
       mainConfig.totalWellPerEpoch
       * moonbeamTotalMarketPercentage
       * mainConfig.moonbeam.markets;
     const percentage = moonbeamPercentages[index];
     const supplyRatio = moonbeamSupplyRatios[index] ?? 0;
-    return Number((totalWellPerEpochMarkets * percentage * supplyRatio) / mainConfig.secondsPerEpoch);
+    const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * supplyRatio) / mainConfig.secondsPerEpoch);
+  
+    // Return -1 if the speeds are the same, otherwise return the calculated speed
+    return Math.abs(calculatedSpeed - currentSpeed) < 1e-18 ? -1e-18 : calculatedSpeed;
   });
 
   const moonbeamNewWellBorrowSpeeds = moonbeamMarkets.map((market, index) => {
+    const currentSpeed = Number(formatUnits(moonbeamWellBorrowSpeeds[index], 18));
+    
+    if (!moonbeamEnabled[index]) { // Only include markets that are enabled
+      return currentSpeed === 1e-18 ? -1e-18 : 1e-18;
+    }
     const totalWellPerEpochMarkets =
       mainConfig.totalWellPerEpoch
       * moonbeamTotalMarketPercentage
       * mainConfig.moonbeam.markets;
     const percentage = moonbeamPercentages[index];
     const borrowRatio = moonbeamBorrowRatios[index] ?? 0;
-    const speed = Number((totalWellPerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
-    // Special case: if speed is 0, return 1e-18 instead
-    return speed === 0 ? 1e-18 : speed;
+    const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
+    // Return -1 if the speeds are the same
+    if (Math.abs(calculatedSpeed - currentSpeed) < 1e-18) {
+      return -1e-18;
+    }
+    
+    // Return 1e-18 if the calculated speed is 0
+    return calculatedSpeed === 0 ? 1e-18 : calculatedSpeed;
   });
 
   const baseNewWellSupplySpeeds = baseMarkets.map((market, index) => {
+    const currentSpeed = Number(formatUnits(baseWellSupplySpeeds[index], 18));
+    
+    if (!baseEnabled[index]) { // Only include markets that are enabled
+      return currentSpeed === 0 ? -1e-18 : 0;
+    }
     const totalWellPerEpochMarkets =
       mainConfig.totalWellPerEpoch
       * baseTotalMarketPercentage
       * mainConfig.base.markets;
     const percentage = basePercentages[index];
     const supplyRatio = baseSupplyRatios[index] ?? 0;
-    return Number((totalWellPerEpochMarkets * percentage * supplyRatio) / mainConfig.secondsPerEpoch);
+    const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * supplyRatio) / mainConfig.secondsPerEpoch);
+
+    // Return -1 if the speeds are the same, otherwise return the calculated speed
+    return Math.abs(calculatedSpeed - currentSpeed) < 1e-18 ? -1e-18 : calculatedSpeed;
   });
 
   const baseNewWellBorrowSpeeds = baseMarkets.map((market, index) => {
+    const currentSpeed = Number(formatUnits(baseWellBorrowSpeeds[index], 18));
+
+    if (!baseEnabled[index]) { // Only include markets that are enabled
+      return currentSpeed === 1e-18 ? -1e-18: 1e-18;
+    }
     const totalWellPerEpochMarkets =
       mainConfig.totalWellPerEpoch
       * baseTotalMarketPercentage
       * mainConfig.base.markets;
     const percentage = basePercentages[index];
     const borrowRatio = baseBorrowRatios[index] ?? 0;
-    const speed = Number((totalWellPerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
-    // Special case: if speed is 0, return 1e-18 instead
-    return speed === 0 ? 1e-18 : speed;
+    const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
+    // Return -1 if the speeds are the same
+    if (Math.abs(calculatedSpeed - currentSpeed) < 1e-18) {
+      return -1e-18;
+    }
+
+    // Return 1e-18 if the calculated speed is 0
+    return calculatedSpeed === 0 ? 1e-18 : calculatedSpeed;
   });
 
   const optimismNewWellSupplySpeeds = optimismMarkets.map((market, index) => {
+    const currentSpeed = Number(formatUnits(optimismWellSupplySpeeds[index], 18));
+
+    if (!optimismEnabled[index]) { // Only include markets that are enabled
+      return currentSpeed === 0 ? -1e-18: 0;
+    }
     const totalWellPerEpochMarkets =
       mainConfig.totalWellPerEpoch
       * optimismTotalMarketPercentage
       * mainConfig.optimism.markets;
     const percentage = optimismPercentages[index];
     const supplyRatio = optimismSupplyRatios[index] ?? 0;
-    return Number((totalWellPerEpochMarkets * percentage * supplyRatio) / mainConfig.secondsPerEpoch);
+    const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * supplyRatio) / mainConfig.secondsPerEpoch);
+
+    // Return -1 if the speeds are the same, otherwise return the calculated speed
+    return Math.abs(calculatedSpeed - currentSpeed) < 1e-18 ? -1e-18 : calculatedSpeed;
   });
 
   const optimismNewWellBorrowSpeeds = optimismMarkets.map((market, index) => {
+    const currentSpeed = Number(formatUnits(optimismWellBorrowSpeeds[index], 18));
+
+    if (!optimismEnabled[index]) { // Only include markets that are enabled
+      return currentSpeed === 1e-18 ? -1e-18: 1e-18;
+    }
+
     const totalWellPerEpochMarkets =
       mainConfig.totalWellPerEpoch
       * optimismTotalMarketPercentage
       * mainConfig.optimism.markets;
     const percentage = optimismPercentages[index];
     const borrowRatio = optimismBorrowRatios[index] ?? 0;
-    const speed = Number((totalWellPerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
-    // Special case: if speed is 0, return 1e-18 instead
-    return speed === 0 ? 1e-18 : speed;
+    const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
+    // Return -1 if the speeds are the same
+    if (Math.abs(calculatedSpeed - currentSpeed) < 1e-18) {
+      return -1e-18;
+    }
+
+    // Return 1e-18 if the calculated speed is 0
+    return calculatedSpeed === 0 ? 1e-18 : calculatedSpeed;
   });
 
   const moonbeamNewNativeSupplySpeeds = moonbeamMarkets.map((market, index) => {
+    const currentSpeed = Number(formatUnits(moonbeamNativeSupplySpeeds[index], 18));
+    if (!moonbeamEnabled[index]) { // Only include markets that are enabled
+      return currentSpeed === 0 ? -1e18 : 0;
+    }
     const totalNativePerEpochMarkets = mainConfig.moonbeam.nativePerEpoch;
     const percentage = moonbeamPercentages[index];
     const supplyRatio = moonbeamSupplyRatios[index] ?? 0;
-    return Number((totalNativePerEpochMarkets * percentage * supplyRatio) / mainConfig.secondsPerEpoch);
+    const calculatedSpeed = Number((totalNativePerEpochMarkets * percentage * supplyRatio) / mainConfig.secondsPerEpoch);
+    
+    // Return -1 if the speeds are the same, otherwise return the calculated speed
+    return Math.abs(calculatedSpeed - currentSpeed) < 1e-18 ? -1e-18 : calculatedSpeed;
   });
 
   const moonbeamNewNativeBorrowSpeeds = moonbeamMarkets.map((market, index) => {
+    const currentSpeed = Number(formatUnits(moonbeamNativeBorrowSpeeds[index], 18));
+
+    if (!moonbeamEnabled[index]) { // Only include markets that are enabled
+      return currentSpeed === 1e-18 ? -1e-18 : 1e-18;
+    }
     const totalNativePerEpochMarkets = mainConfig.moonbeam.nativePerEpoch;
     const percentage = moonbeamPercentages[index];
     const borrowRatio = moonbeamBorrowRatios[index] ?? 0;
-    const speed = Number((totalNativePerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
+    const calculatedSpeed = Number((totalNativePerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
+
+    // Return -1 if the speeds are the same
+    if (Math.abs(calculatedSpeed - currentSpeed) < 1e-18) {
+      return -1e-18;
+    }
+
     // Special case: if speed is 0, return 1e-18 instead
-    return speed === 0 ? 1e-18 : speed;
+    return calculatedSpeed === 0 ? 1e-18 : calculatedSpeed;
   });
 
   const baseNewNativeSupplySpeeds = baseMarkets.map((market, index) => {
+    const currentSpeed = Number(formatUnits(baseNativeSupplySpeeds[index], 6));
+
+    if (!baseEnabled[index]) { // Only include markets that are enabled
+      return currentSpeed === 0 ? -1e-6 : 0;
+    }
+
     const totalNativePerEpochMarkets = mainConfig.base.nativePerEpoch;
     const percentage = basePercentages[index];
     const supplyRatio = baseSupplyRatios[index] ?? 0;
-    return Number((totalNativePerEpochMarkets * percentage * supplyRatio) / mainConfig.secondsPerEpoch);
+    const calculatedSpeed = Number((totalNativePerEpochMarkets * percentage * supplyRatio) / mainConfig.secondsPerEpoch);
+
+    // Return -1 if the speeds are the same, otherwise return the calculated speed
+    return Math.abs(calculatedSpeed - currentSpeed) < 1e-6 ? -1e-6 : calculatedSpeed;
   });
 
   const baseNewNativeBorrowSpeeds = baseMarkets.map((market, index) => {
+    const currentSpeed = Number(formatUnits(baseNativeBorrowSpeeds[index], 18));
+
+    if (!baseEnabled[index]) { // Only include markets that are enabled
+      return currentSpeed === 1e-6 ? -1e-6 : 1e-6;
+    }
+
     const totalNativePerEpochMarkets = mainConfig.base.nativePerEpoch;
     const percentage = basePercentages[index];
     const borrowRatio = baseBorrowRatios[index] ?? 0;
-    const speed = Number((totalNativePerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
+    const calculatedSpeed = Number((totalNativePerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
+
+    // Return -1 if the speeds are the same
+    if (Math.abs(calculatedSpeed - currentSpeed) < 1e-6) {
+      return -1e-6;
+    }
+
     // Special case: if speed is 0, return 1e-6 instead (USDC is 6 digits)
-    return speed === 0 ? 1e-6 : speed;
+    return calculatedSpeed === 0 ? 1e-6 : calculatedSpeed;
   });
 
   const optimismNewNativeSupplySpeeds = optimismMarkets.map((market, index) => {
+    const currentSpeed = Number(formatUnits(optimismNativeSupplySpeeds[index], 18));
+
+    if (!optimismEnabled[index]) { // Only include markets that are enabled
+      return currentSpeed === 0 ? -1e-18 : 0;
+    }
+
     const totalNativePerEpochMarkets = mainConfig.optimism.nativePerEpoch;
     const percentage = optimismPercentages[index];
     const supplyRatio = optimismSupplyRatios[index] ?? 0;
-    return Number((totalNativePerEpochMarkets * percentage * supplyRatio) / mainConfig.secondsPerEpoch);
+    const calculatedSpeed = Number((totalNativePerEpochMarkets * percentage * supplyRatio) / mainConfig.secondsPerEpoch);
+
+    // Return -1 if the speeds are the same, otherwise return the calculated speed
+    return Math.abs(calculatedSpeed - currentSpeed) < 1e-18 ? -1e-18 : calculatedSpeed;
   });
 
   const optimismNewNativeBorrowSpeeds = optimismMarkets.map((market, index) => {
+    const currentSpeed = Number(formatUnits(optimismNativeBorrowSpeeds[index], 18));
+
+    if (!optimismEnabled[index]) { // Only include markets that are enabled
+      return currentSpeed === 1e-18 ? -1e-18 : 1e-18;
+    }
+
     const totalNativePerEpochMarkets = mainConfig.optimism.nativePerEpoch;
     const percentage = optimismPercentages[index];
     const borrowRatio = optimismBorrowRatios[index] ?? 0;
-    const speed = Number((totalNativePerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
+    const calculatedSpeed = Number((totalNativePerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
+
+    // Return -1 if the speeds are the same
+    if (Math.abs(calculatedSpeed - currentSpeed) < 1e-18) {
+      return -1e-18;
+    }
+    
     // Special case: if speed is 0, return 1e1-8 instead
-    return speed === 0 ? 1e-18 : speed;
+    return calculatedSpeed === 0 ? 1e-18 : calculatedSpeed;
   });
 
   const formatResults = (
@@ -1198,36 +1340,72 @@ export async function getMarketData(timestamp: number) {
     newNativeSupplyPerDayUsd: Number((newNativeSupplySpeed[index] * 86400 * Number(nativePrice)).toFixed(2)),
     newNativeBorrowPerDayUsd: Number((newNativeBorrowSpeed[index] * 86400 * Number(nativePrice)).toFixed(2)),
     wellChangeSupplySpeedPercentage: Number(
-      formatUnits(currentWellSupplySpeed[index], 18) === "0"
-        ? 0
-        : ((newWellSupplySpeed[index]
-          - Number(formatUnits(currentWellSupplySpeed[index], 18))
-        ) / Number(formatUnits(currentWellSupplySpeed[index], 18))
-          * 100).toFixed(2),
+      (() => {
+        const currentSpeed = Number(formatUnits(currentWellSupplySpeed[index], 18));
+        const newSpeed = newWellSupplySpeed[index];
+        
+        if (currentSpeed === 0) {
+          return newSpeed > 0 ? 100 : 0; // If current is 0 and new is positive, it's a 100% increase
+        } else if (currentSpeed === 1e-18 && newSpeed === -1e-18) {
+          return 0; // No change
+        } else if (currentSpeed <= 1e-18) {
+          return newSpeed > 1e-18 ? 100 : 0; // Treat very small current speeds as effectively zero
+        } else if (newSpeed <= 1e-18) {
+          return -100; // Treat very small new speeds as zero
+        } else {
+          return Number(((newSpeed - currentSpeed) / currentSpeed * 100).toFixed(2));
+        }
+      })()
     ),
     wellChangeBorrowSpeedPercentage: Number(
-      formatUnits(currentWellBorrowSpeed[index], 18) === "0"
-        ? 0
-        : ((newWellBorrowSpeed[index]
-          - Number(formatUnits(currentWellBorrowSpeed[index], 18))
-        ) / Number(formatUnits(currentWellBorrowSpeed[index], 18))
-          * 100).toFixed(2),
+      (() => {
+        const currentSpeed = Number(formatUnits(currentWellBorrowSpeed[index], 18));
+        const newSpeed = newWellBorrowSpeed[index];
+        
+        if (currentSpeed === 1e-18 && newSpeed === -1e-18) {
+          return 0; // No change
+        } else if (currentSpeed <= 1e-18) {
+          return newSpeed > 1e-18 ? 100 : 0; // Treat very small current speeds as effectively zero
+        } else if (newSpeed <= 1e-18) {
+          return -100; // Treat very small new speeds as zero
+        } else {
+          return Number(((newSpeed - currentSpeed) / currentSpeed * 100).toFixed(2));
+        }
+      })()
     ),
     nativeChangeSupplySpeedPercentage: Number(
-      formatUnits(currentNativeSupplySpeed[index], 18) === "0"
-        ? 0
-        : ((newNativeSupplySpeed[index]
-          - Number(formatUnits(currentNativeSupplySpeed[index], 18))
-        ) / Number(formatUnits(currentNativeSupplySpeed[index], 18))
-          * 100).toFixed(2),
+      (() => {
+        const currentSpeed = Number(formatUnits(currentNativeSupplySpeed[index], 18));
+        const newSpeed = newNativeSupplySpeed[index];
+        
+        if (currentSpeed === 0) {
+          return newSpeed > 0 ? 100 : 0; // If current is 0 and new is positive, it's a 100% increase
+        } else if (currentSpeed === 1e-18 && newSpeed === -1e-18) {
+          return 0; // No change
+        } else if (currentSpeed <= 1e-18) {
+          return newSpeed > 1e-18 ? 100 : 0; // Treat very small current speeds as effectively zero
+        } else if (newSpeed <= 1e-18) {
+          return -100; // Treat very small new speeds as zero
+        } else {
+          return Number(((newSpeed - currentSpeed) / currentSpeed * 100).toFixed(2));
+        }
+      })()
     ),
     nativeChangeBorrowSpeedPercentage: Number(
-      formatUnits(currentNativeBorrowSpeed[index], 18) === "0"
-        ? 0
-        : ((newNativeBorrowSpeed[index]
-          - Number(formatUnits(currentNativeBorrowSpeed[index], 18))
-        ) / Number(formatUnits(currentNativeBorrowSpeed[index], 18))
-          * 100).toFixed(2),
+      (() => {
+        const currentSpeed = Number(formatUnits(currentNativeBorrowSpeed[index], 18));
+        const newSpeed = newNativeBorrowSpeed[index];
+        
+        if (currentSpeed === 1e-18 && newSpeed === -1e-18) {
+          return 0; // No change
+        } else if (currentSpeed <= 1e-18) {
+          return newSpeed > 1e-18 ? 100 : 0; // Treat very small current speeds as effectively zero
+        } else if (newSpeed <= 1e-18) {
+          return -100; // Treat very small new speeds as zero
+        } else {
+          return Number(((newSpeed - currentSpeed) / currentSpeed * 100).toFixed(2));
+        }
+      })()
     ),
     nativePerEpochMarket: Number(totalNativePerEpochMarkets * percentages[index]),
     nativePerEpochMarketSupply: Number(totalNativePerEpochMarkets * percentages[index] * supply[index]),
