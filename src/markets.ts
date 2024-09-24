@@ -940,7 +940,7 @@ export async function getMarketData(timestamp: number) {
 
   const moonbeamNewWellSupplySpeeds = moonbeamMarkets.map((market, index) => {
     const currentSpeed = Number(formatUnits(moonbeamWellSupplySpeeds[index], 18));
-    
+
     if (!moonbeamEnabled[index]) { // Only include markets that are enabled
       return currentSpeed === 0 ? -1e-18 : 0;
     }
@@ -951,14 +951,14 @@ export async function getMarketData(timestamp: number) {
     const percentage = moonbeamPercentages[index];
     const supplyRatio = moonbeamSupplyRatios[index] ?? 0;
     const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * supplyRatio) / mainConfig.secondsPerEpoch);
-  
+
     // Return -1 if the speeds are the same, otherwise return the calculated speed
     return Math.abs(calculatedSpeed - currentSpeed) < 1e-18 ? -1e-18 : calculatedSpeed;
   });
 
   const moonbeamNewWellBorrowSpeeds = moonbeamMarkets.map((market, index) => {
     const currentSpeed = Number(formatUnits(moonbeamWellBorrowSpeeds[index], 18));
-    
+
     if (!moonbeamEnabled[index]) { // Only include markets that are enabled
       return currentSpeed === 1e-18 ? -1e-18 : 1e-18;
     }
@@ -973,14 +973,14 @@ export async function getMarketData(timestamp: number) {
     if (Math.abs(calculatedSpeed - currentSpeed) < 1e-18) {
       return -1e-18;
     }
-    
+
     // Return 1e-18 if the calculated speed is 0
     return calculatedSpeed === 0 ? 1e-18 : calculatedSpeed;
   });
 
   const baseNewWellSupplySpeeds = baseMarkets.map((market, index) => {
     const currentSpeed = Number(formatUnits(baseWellSupplySpeeds[index], 18));
-    
+
     if (!baseEnabled[index]) { // Only include markets that are enabled
       return currentSpeed === 0 ? -1e-18 : 0;
     }
@@ -1009,6 +1009,11 @@ export async function getMarketData(timestamp: number) {
     const percentage = basePercentages[index];
     const borrowRatio = baseBorrowRatios[index] ?? 0;
     const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
+    // Return -1e-18 if the current speed is 1e-18 and the calculated speed is 0
+    if (currentSpeed === 1e-18 && calculatedSpeed === 0) {
+      return -1e-18;
+    }
+
     // Return -1 if the speeds are the same
     if (Math.abs(calculatedSpeed - currentSpeed) < 1e-18) {
       return -1e-18;
@@ -1050,6 +1055,11 @@ export async function getMarketData(timestamp: number) {
     const percentage = optimismPercentages[index];
     const borrowRatio = optimismBorrowRatios[index] ?? 0;
     const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
+    // Return -1e-18 if the current speed is 1e-18 and the calculated speed is 0
+    if (currentSpeed === 1e-18 && calculatedSpeed === 0) {
+      return -1e-18;
+    }
+
     // Return -1 if the speeds are the same
     if (Math.abs(calculatedSpeed - currentSpeed) < 1e-18) {
       return -1e-18;
@@ -1068,7 +1078,7 @@ export async function getMarketData(timestamp: number) {
     const percentage = moonbeamPercentages[index];
     const supplyRatio = moonbeamSupplyRatios[index] ?? 0;
     const calculatedSpeed = Number((totalNativePerEpochMarkets * percentage * supplyRatio) / mainConfig.secondsPerEpoch);
-    
+
     // Return -1 if the speeds are the same, otherwise return the calculated speed
     return Math.abs(calculatedSpeed - currentSpeed) < 1e-18 ? -1e-18 : calculatedSpeed;
   });
@@ -1121,11 +1131,8 @@ export async function getMarketData(timestamp: number) {
     const borrowRatio = baseBorrowRatios[index] ?? 0;
     const calculatedSpeed = Number((totalNativePerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
 
-    console.log(`Market ${baseNames[index]}, calculatedSpeed: ${calculatedSpeed}, currentSpeed: ${currentSpeed}`);
-
     // Return -1 if the speeds are the same
     if ((calculatedSpeed === 0) && (currentSpeed === 0.000001)) {
-      console.log(`Market ${baseNames[index]}, returning -1e-6`);
       return -1e-6;
     }
 
@@ -1161,11 +1168,16 @@ export async function getMarketData(timestamp: number) {
     const borrowRatio = optimismBorrowRatios[index] ?? 0;
     const calculatedSpeed = Number((totalNativePerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
 
+    // Return -1e-18 if the current speed is 1e-18 and the calculated speed is 0
+    if (currentSpeed === 1e-18 && calculatedSpeed === 0) {
+      return -1e-18;
+    }
+
     // Return -1 if the speeds are the same
     if (Math.abs(calculatedSpeed - currentSpeed) < 1e-18) {
       return -1e-18;
     }
-    
+
     // Special case: if speed is 0, return 1e1-8 instead
     return calculatedSpeed === 0 ? 1e-18 : calculatedSpeed;
   });
