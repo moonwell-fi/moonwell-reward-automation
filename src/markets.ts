@@ -1110,7 +1110,7 @@ export async function getMarketData(timestamp: number) {
   });
 
   const baseNewNativeBorrowSpeeds = baseMarkets.map((market, index) => {
-    const currentSpeed = Number(formatUnits(baseNativeBorrowSpeeds[index], 18));
+    const currentSpeed = Number(formatUnits(baseNativeBorrowSpeeds[index], 6));
 
     if (!baseEnabled[index]) { // Only include markets that are enabled
       return currentSpeed === 1e-6 ? -1e-6 : 1e-6;
