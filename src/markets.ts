@@ -1121,8 +1121,11 @@ export async function getMarketData(timestamp: number) {
     const borrowRatio = baseBorrowRatios[index] ?? 0;
     const calculatedSpeed = Number((totalNativePerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
 
+    console.log(`Market ${baseNames[index]}, calculatedSpeed: ${calculatedSpeed}, currentSpeed: ${currentSpeed}`);
+
     // Return -1 if the speeds are the same
-    if (Math.abs(calculatedSpeed - currentSpeed) < 1e-6) {
+    if ((calculatedSpeed === 0) && (currentSpeed === 0.000001)) {
+      console.log(`Market ${baseNames[index]}, returning -1e-6`);
       return -1e-6;
     }
 
