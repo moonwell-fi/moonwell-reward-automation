@@ -942,7 +942,7 @@ export async function getMarketData(timestamp: number) {
     const currentSpeed = Number(formatUnits(moonbeamWellSupplySpeeds[index], 18));
 
     if (!moonbeamEnabled[index]) { // Only include markets that are enabled
-      return currentSpeed === 0 ? -1e-18 : 0;
+      return currentSpeed === 0 ? currentSpeed : 0;
     }
     const totalWellPerEpochMarkets =
       mainConfig.totalWellPerEpoch
@@ -952,15 +952,15 @@ export async function getMarketData(timestamp: number) {
     const supplyRatio = moonbeamSupplyRatios[index] ?? 0;
     const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * supplyRatio) / mainConfig.secondsPerEpoch);
 
-    // Return -1 if the speeds are the same, otherwise return the calculated speed
-    return Math.abs(calculatedSpeed - currentSpeed) < 1e-18 ? -1e-18 : calculatedSpeed;
+    // Return currentSpeed if the speeds are the same, otherwise return the calculated speed
+    return Math.abs(calculatedSpeed - currentSpeed) < 1e-18 ? currentSpeed : calculatedSpeed;
   });
 
   const moonbeamNewWellBorrowSpeeds = moonbeamMarkets.map((market, index) => {
     const currentSpeed = Number(formatUnits(moonbeamWellBorrowSpeeds[index], 18));
 
     if (!moonbeamEnabled[index]) { // Only include markets that are enabled
-      return currentSpeed === 1e-18 ? -1e-18 : 1e-18;
+      return currentSpeed === 1e-18 ? currentSpeed : 1e-18;
     }
     const totalWellPerEpochMarkets =
       mainConfig.totalWellPerEpoch
@@ -969,9 +969,9 @@ export async function getMarketData(timestamp: number) {
     const percentage = moonbeamPercentages[index];
     const borrowRatio = moonbeamBorrowRatios[index] ?? 0;
     const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
-    // Return -1 if the speeds are the same
+    // Return currentSpeed if the speeds are the same
     if (Math.abs(calculatedSpeed - currentSpeed) < 1e-18) {
-      return -1e-18;
+      return currentSpeed;
     }
 
     // Return 1e-18 if the calculated speed is 0
@@ -1072,31 +1072,31 @@ export async function getMarketData(timestamp: number) {
   const moonbeamNewNativeSupplySpeeds = moonbeamMarkets.map((market, index) => {
     const currentSpeed = Number(formatUnits(moonbeamNativeSupplySpeeds[index], 18));
     if (!moonbeamEnabled[index]) { // Only include markets that are enabled
-      return currentSpeed === 0 ? -1e18 : 0;
+      return currentSpeed === 0 ? currentSpeed : 0;
     }
     const totalNativePerEpochMarkets = mainConfig.moonbeam.nativePerEpoch;
     const percentage = moonbeamPercentages[index];
     const supplyRatio = moonbeamSupplyRatios[index] ?? 0;
     const calculatedSpeed = Number((totalNativePerEpochMarkets * percentage * supplyRatio) / mainConfig.secondsPerEpoch);
 
-    // Return -1 if the speeds are the same, otherwise return the calculated speed
-    return Math.abs(calculatedSpeed - currentSpeed) < 1e-18 ? -1e-18 : calculatedSpeed;
+    // Return currentSpeed if the speeds are the same, otherwise return the calculated speed
+    return Math.abs(calculatedSpeed - currentSpeed) < 1e-18 ? currentSpeed : calculatedSpeed;
   });
 
   const moonbeamNewNativeBorrowSpeeds = moonbeamMarkets.map((market, index) => {
     const currentSpeed = Number(formatUnits(moonbeamNativeBorrowSpeeds[index], 18));
 
     if (!moonbeamEnabled[index]) { // Only include markets that are enabled
-      return currentSpeed === 1e-18 ? -1e-18 : 1e-18;
+      return currentSpeed === 1e-18 ? currentSpeed : 1e-18;
     }
     const totalNativePerEpochMarkets = mainConfig.moonbeam.nativePerEpoch;
     const percentage = moonbeamPercentages[index];
     const borrowRatio = moonbeamBorrowRatios[index] ?? 0;
     const calculatedSpeed = Number((totalNativePerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
 
-    // Return -1 if the speeds are the same
+    // Return currentSpeed if the speeds are the same
     if (Math.abs(calculatedSpeed - currentSpeed) < 1e-18) {
-      return -1e-18;
+      return currentSpeed;
     }
 
     // Special case: if speed is 0, return 1e-18 instead
