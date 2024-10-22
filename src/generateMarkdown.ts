@@ -84,8 +84,10 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
       markdown += `| Total LP (${networkDexInfo?.symbol} on ${networkDexInfo?.dex}) | ${formatUSD(networkDexInfo?.tvl || 0)} |\n`;
     }
 
+    const dexWell = networkId === '10' ? networkMarketData?.wellPerEpochDex : networkId === '1284' ? networkMarketData?.wellPerEpochDex : networkId === '8453' ? mainConfig.base.dexRelayerAmount : null;
+
     markdown += `| | |\n`;
-    markdown += `| Total WELL to distribute DEX | ${networkMarketData?.wellPerEpochDex} WELL |\n`;
+    markdown += `| Total WELL to distribute DEX | ${dexWell} WELL |\n`;
     markdown += `| Total WELL to distribute Safety Module | ${networkMarketData?.wellPerEpochSafetyModule} WELL |\n`;
     markdown += `| Total WELL to distribute Markets (Config) | ${networkMarketData?.wellPerEpochMarkets} WELL |\n`;
     markdown += `| Total WELL to distribute Markets (Sanity Check) | ${networkSummary?.totalWell.toFixed(18)} WELL |\n`;
