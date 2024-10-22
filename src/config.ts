@@ -13529,7 +13529,7 @@ export const marketConfigs = {
       nameOverride: 'wrsETH',
       alias: 'MOONWELL_wrsETH',
       digits: 18,
-      boost: 1_000_000,
+      boost: 2_000_000,
       deboost: 0,
       supply: 0.45,
       borrow: 0.55,
