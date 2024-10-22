@@ -49,7 +49,7 @@ export async function returnJson(marketData: any, network: string) {
       newBorrowSpeed: new BigNumber(market.newNativeBorrowSpeed).isEqualTo(new BigNumber('1e-6')) ? 1 : new BigNumber(market.newNativeBorrowSpeed)
         .shiftedBy(6)
         .integerValue().toNumber(),
-      newEndTime: marketData.epochEndTimestamp,
+      newEndTime: -1, // Don't update the end timestamp for USDC until new incentives are allocated
       newSupplySpeed: new BigNumber(market.newNativeSupplySpeed).isZero() ? 0 : new BigNumber(market.newNativeSupplySpeed)
         .shiftedBy(6)
         .integerValue().toNumber(),
