@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { MarketType, getMarketData } from "./markets";
-import { generateMarkdown } from "./generateMarkdown";
+import { mainConfig } from "./config";
 
 BigNumber.config({
   EXPONENTIAL_AT: 40
@@ -154,6 +154,7 @@ export async function returnJson(marketData: any, network: string) {
             network: 8453,
             target: "TEMPORAL_GOVERNOR"
           },
+          /* commented out until we exhaust the funds in F-AERO on Base
           { // Send Base DEX incentives to DEX Relayer
             amount: BigNumber(marketData.base.wellPerEpochDex)
               .shiftedBy(18)
@@ -163,7 +164,7 @@ export async function returnJson(marketData: any, network: string) {
               nativeValue: BigNumber(marketData.bridgeCost * 4).toNumber(), // pad bridgeCost by 4x in case of price fluctuations
             network: 8453,
             target: "DEX_RELAYER"
-          },
+          }, */
         ],
         transferFrom: [
           { // Transfer all Base incentives to the Multichain Governor for bridging
@@ -204,6 +205,16 @@ export async function returnJson(marketData: any, network: string) {
             to: "ECOSYSTEM_RESERVE_PROXY",
             token: "xWELL_PROXY",
           },
+          { // Extra transferFrom to DEX Relayer
+            amount: BigNumber(mainConfig.base.dexRelayerAmount)
+              .shiftedBy(18)
+              .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
+              .minus(1e16)
+              .toNumber(),
+            from: "F-AERO_MULTISIG",
+            to: "DEX_RELAYER",
+            token: "xWELL_PROXY",
+          }
         ]
       },
       endTimeSTamp: marketData.epochEndTimestamp,

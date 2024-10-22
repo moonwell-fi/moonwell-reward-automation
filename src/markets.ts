@@ -1106,6 +1106,11 @@ export async function getMarketData(timestamp: number) {
   const baseNewNativeSupplySpeeds = baseMarkets.map((market, index) => {
     const currentSpeed = Number(formatUnits(baseNativeSupplySpeeds[index], 6));
 
+    if (market === '0xEdc817A28E8B93B03976FBd4a3dDBc9f7D176c22') {
+      // Gauntlet is USDC emissions admin - don't change
+      return -1e-6;
+    }
+
     if (!baseEnabled[index]) { // Only include markets that are enabled
       return currentSpeed === 0 ? -1e-6 : 0;
     }
@@ -1121,6 +1126,11 @@ export async function getMarketData(timestamp: number) {
 
   const baseNewNativeBorrowSpeeds = baseMarkets.map((market, index) => {
     const currentSpeed = Number(formatUnits(baseNativeBorrowSpeeds[index], 6));
+
+    if (market === '0xEdc817A28E8B93B03976FBd4a3dDBc9f7D176c22') {
+      // Gauntlet is USDC emissions admin - don't change
+      return -1e-6;
+    }
 
     if (!baseEnabled[index]) { // Only include markets that are enabled
       return currentSpeed === 1e-6 ? -1e-6 : 1e-6;
