@@ -1,11 +1,13 @@
 import { BigNumber } from "bignumber.js"
 
 export const mainConfig = {
-  totalWellPerEpoch: new BigNumber(750_000_000) // 750 million
+  totalWellPerEpoch: 13_139_447.412450949,
+    /* Note: updated to reduce by 18M from currently remaining ~293M on 11/18/2024, original schedule below
+    new BigNumber(750_000_000) // 750 million
     .div(4) // 4 years emission schedule
     .div(13) // 13 epochs per year (4 weeks per epoch)
     .integerValue(BigNumber.ROUND_DOWN)
-    .toNumber(),
+    .toNumber(), */
   firstEpochTimestamp: 1723174200,
   secondsPerEpoch: 60 * 60 * 24 * 7 * 4, // 4 weeks
   moonbeam: {
@@ -23,7 +25,7 @@ export const mainConfig = {
     dexRelayerAmount: 600_191.93879185, // 7,202,303.2655022416 WELL / 12 4-week epochs
   },
   optimism: {
-    nativePerEpoch: 31_494.549665363914511988,
+    nativePerEpoch: 24_624.9617643529,
     markets: 0.83,
     safetyModule: 0.14,
     dex: 0.03,
@@ -13240,7 +13242,7 @@ export const marketConfigs = {
       alias: 'MOONWELL_wstETH',
       digits: 18,
       boost: 0,
-      deboost: 1_000_000,
+      deboost: 8_000_000,
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
@@ -13273,7 +13275,7 @@ export const marketConfigs = {
       alias: 'MOONWELL_weETH',
       digits: 18,
       boost: 0,
-      deboost: 100_000,
+      deboost: 500_000,
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
@@ -13305,8 +13307,8 @@ export const marketConfigs = {
       nameOverride: 'wrsETH',
       alias: 'MOONWELL_wrsETH',
       digits: 18,
-      boost: 500_000,
-      deboost: 0,
+      boost: 0,
+      deboost: 250_000,
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
@@ -13419,7 +13421,7 @@ export const marketConfigs = {
       nameOverride: 'ETH',
       alias: 'MOONWELL_WETH',
       digits: 18,
-      boost: 10_000_000,
+      boost: 0,
       deboost: 0,
       supply: 0.50,
       borrow: 0.50,
@@ -13431,7 +13433,7 @@ export const marketConfigs = {
       alias: 'MOONWELL_cbETH',
       digits: 18,
       boost: 0,
-      deboost: 4_000_000,
+      deboost: 20_000_000,
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
@@ -13452,10 +13454,10 @@ export const marketConfigs = {
       nameOverride: 'USDC',
       alias: 'MOONWELL_USDC',
       digits: 6,
-      boost: 5_000_000,
+      boost: 65_000_000,
       deboost: 0,
-      supply: 0.5,
-      borrow: 0.5,
+      supply: 1,
+      borrow: 0,
       enabled: true,
     },
     {
@@ -13464,7 +13466,7 @@ export const marketConfigs = {
       alias: 'MOONWELL_wstETH',
       digits: 18,
       boost: 0,
-      deboost: 8_000_000,
+      deboost: 30_000_000,
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
@@ -13475,7 +13477,7 @@ export const marketConfigs = {
       alias: 'MOONWELL_rETH',
       digits: 18,
       boost: 0,
-      deboost: 1_000_000,
+      deboost: 3_000_000,
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
@@ -13486,7 +13488,7 @@ export const marketConfigs = {
       alias: 'MOONWELL_weETH',
       digits: 18,
       boost: 0,
-      deboost: 500_000,
+      deboost: 3_000_000,
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
@@ -13508,7 +13510,7 @@ export const marketConfigs = {
       alias: 'MOONWELL_cbBTC',
       digits: 8,
       boost: 0,
-      deboost: 0,
+      deboost: 25_000_000,
       supply: 0.5,
       borrow: 0.5,
       enabled: true,
@@ -13518,7 +13520,7 @@ export const marketConfigs = {
       nameOverride: 'EURC',
       alias: 'MOONWELL_EURC',
       digits: 6,
-      boost: 0,
+      boost: 5_000_000,
       deboost: 0,
       supply: 0.5,
       borrow: 0.5,
@@ -13529,8 +13531,8 @@ export const marketConfigs = {
       nameOverride: 'wrsETH',
       alias: 'MOONWELL_wrsETH',
       digits: 18,
-      boost: 2_000_000,
-      deboost: 0,
+      boost: 0,
+      deboost: 1_000_000,
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
