@@ -134,7 +134,7 @@ export async function returnJson(marketData: any, network: string) {
             to: "ECOSYSTEM_RESERVE_PROXY",
             token: "GOVTOKEN",
           },
-        ],
+        ].filter(transfer => transfer.amount > 0),
       },
       endTimeSTamp: marketData.epochEndTimestamp,
       startTimeStamp: marketData.epochStartTimestamp,
@@ -177,7 +177,7 @@ export async function returnJson(marketData: any, network: string) {
             to: "MULTICHAIN_GOVERNOR_PROXY",
             token: "GOVTOKEN",
           },
-        ],
+        ].filter(transfer => transfer.amount > 0),
       },
       8453: {
         setMRDSpeeds: baseSetRewardSpeeds,
@@ -215,7 +215,7 @@ export async function returnJson(marketData: any, network: string) {
             to: "DEX_RELAYER",
             token: "xWELL_PROXY",
           }
-        ]
+        ].filter(transfer => transfer.amount > 0)
       },
       endTimeSTamp: marketData.epochEndTimestamp,
       startTimeStamp: marketData.epochStartTimestamp,
@@ -257,7 +257,7 @@ export async function returnJson(marketData: any, network: string) {
             to: "MULTICHAIN_GOVERNOR_PROXY",
             token: "GOVTOKEN",
           },
-        ],
+        ].filter(transfer => transfer.amount > 0),
       },
       10: {
         setMRDSpeeds: optimismSetRewardSpeeds,
@@ -296,7 +296,7 @@ export async function returnJson(marketData: any, network: string) {
             to: "ECOSYSTEM_RESERVE_PROXY",
             token: "xWELL_PROXY",
           },
-        ]
+        ].filter(transfer => transfer.amount > 0)
       },
       endTimeSTamp: marketData.epochEndTimestamp,
       startTimeStamp: marketData.epochStartTimestamp,
