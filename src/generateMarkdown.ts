@@ -32,7 +32,8 @@ function formatDate(timestamp: number): string {
 }
 
 function formatUSD(value: number): string {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+  const nonNegativeValue = Math.max(0, value);
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(nonNegativeValue);
 }
 
 export function generateMarkdown(marketData: MarketData, proposal: string, network: string, dexData: DexPoolInfo[]): string {
@@ -87,23 +88,23 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
     const dexWell = networkId === '10' ? networkMarketData?.wellPerEpochDex : networkId === '1284' ? networkMarketData?.wellPerEpochDex : networkId === '8453' ? mainConfig.base.dexRelayerAmount : null;
 
     markdown += `| | |\n`;
-    markdown += `| Total WELL to distribute DEX | ${dexWell} WELL |\n`;
-    markdown += `| Total WELL to distribute Safety Module | ${networkMarketData?.wellPerEpochSafetyModule} WELL |\n`;
-    markdown += `| Total WELL to distribute Markets (Config) | ${networkMarketData?.wellPerEpochMarkets} WELL |\n`;
-    markdown += `| Total WELL to distribute Markets (Sanity Check) | ${networkSummary?.totalWell.toFixed(18)} WELL |\n`;
-    markdown += `| Total WELL to distribute Markets (Supply Side) | ${networkSummary?.supplyWell.toFixed(18)} WELL |\n`;
-    markdown += `| Total WELL to distribute Markets (Borrow Side) | ${networkSummary?.borrowWell.toFixed(18)} WELL |\n`;
-    markdown += `| Total WELL to distribute Markets (Borrow + Supply) | ${(networkSummary?.borrowWell + networkSummary?.supplyWell).toFixed(18)} WELL |\n`;
-    markdown += `| Total WELL to distribute Markets (By Speed) | ${(networkSummary?.totalWellBySpeed).toFixed(18)} WELL |\n`;
-    markdown += `| Total WELL to distribute (Config) | ${networkMarketData.wellPerEpoch} WELL |\n`;
-    markdown += `| Total WELL to distribute (Sanity Check) | ${(Number(networkMarketData?.wellPerEpochDex) + Number(networkMarketData?.wellPerEpochSafetyModule) + Number(networkSummary?.totalWell)).toFixed(18)} WELL \n`;
+    markdown += `| Total WELL to distribute DEX | ${Math.max(0, Number(dexWell || 0))} WELL |\n`;
+    markdown += `| Total WELL to distribute Safety Module | ${Math.max(0, Number(networkMarketData?.wellPerEpochSafetyModule || 0))} WELL |\n`;
+    markdown += `| Total WELL to distribute Markets (Config) | ${Math.max(0, Number(networkMarketData?.wellPerEpochMarkets))} WELL |\n`;
+    markdown += `| Total WELL to distribute Markets (Sanity Check) | ${Math.max(0, Number(networkSummary?.totalWell)).toFixed(18)} WELL |\n`;
+    markdown += `| Total WELL to distribute Markets (Supply Side) | ${Math.max(0, Number(networkSummary?.supplyWell)).toFixed(18)} WELL |\n`;
+    markdown += `| Total WELL to distribute Markets (Borrow Side) | ${Math.max(0, Number(networkSummary?.borrowWell)).toFixed(18)} WELL |\n`;
+    markdown += `| Total WELL to distribute Markets (Borrow + Supply) | ${Math.max(0, Number(networkSummary?.borrowWell) + Number(networkSummary?.supplyWell)).toFixed(18)} WELL |\n`;
+    markdown += `| Total WELL to distribute Markets (By Speed) | ${Math.max(0, Number(networkSummary?.totalWellBySpeed)).toFixed(18)} WELL |\n`;
+    markdown += `| Total WELL to distribute (Config) | ${Math.max(0, Number(networkMarketData.wellPerEpoch))} WELL |\n`;
+    markdown += `| Total WELL to distribute (Sanity Check) | ${Math.max(0, Number(networkMarketData?.wellPerEpochDex) + Number(networkMarketData?.wellPerEpochSafetyModule) + Number(networkSummary?.totalWell)).toFixed(18)} WELL \n`;
 
     markdown += `| | |\n`;
-    markdown += `| Total ${nativeToken} to distribute Markets (Config) | ${networkMarketData?.nativePerEpoch.toFixed(18)} ${nativeToken} |\n`;
-    markdown += `| Total ${nativeToken} to distribute Markets (Sanity Check) | ${networkSummary?.totalNative.toFixed(18)} ${nativeToken} |\n`;
-    markdown += `| Total ${nativeToken} to distribute Markets (Supply Side) | ${networkSummary?.supplyNative.toFixed(18)} ${nativeToken} |\n`;
-    markdown += `| Total ${nativeToken} to distribute Markets (Borrow Side) | ${networkSummary?.borrowNative.toFixed(18)} ${nativeToken} |\n`;
-    markdown += `| Total ${nativeToken} to distribute Markets (Borrow + Supply) | ${(networkSummary?.borrowNative + networkSummary?.supplyNative).toFixed(18)} ${nativeToken} |\n`;
+    markdown += `| Total ${nativeToken} to distribute Markets (Config) | ${Math.max(0, Number(networkMarketData?.nativePerEpoch)).toFixed(18)} ${nativeToken} |\n`;
+    markdown += `| Total ${nativeToken} to distribute Markets (Sanity Check) | ${Math.max(0, Number(networkSummary?.totalNative)).toFixed(18)} ${nativeToken} |\n`;
+    markdown += `| Total ${nativeToken} to distribute Markets (Supply Side) | ${Math.max(0, Number(networkSummary?.supplyNative)).toFixed(18)} ${nativeToken} |\n`;
+    markdown += `| Total ${nativeToken} to distribute Markets (Borrow Side) | ${Math.max(0, Number(networkSummary?.borrowNative)).toFixed(18)} ${nativeToken} |\n`;
+    markdown += `| Total ${nativeToken} to distribute Markets (Borrow + Supply) | ${Math.max(0, Number(networkSummary?.borrowNative) + Number(networkSummary?.supplyNative)).toFixed(18)} ${nativeToken} |\n`;
     markdown += `| Total ${nativeToken} to distribute Markets (By Speed) | ${Math.max(0, Number(networkSummary?.totalNativeBySpeed)).toFixed(18)} ${nativeToken} |\n`;
     markdown += `\n`;
     // Iterate over the markets for the specific network
@@ -114,16 +115,16 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
       markdown += `Total Borrows in USD: ${formatUSD(market.totalBorrowsUSD)}\n\n`;
       markdown += `| Metric | Current Value | New Value |\n`;
       markdown += `| --- | --- | --- |\n`;
-      markdown += `| Supply APY | ${(market.supplyApy * 100).toFixed(2)}% | ${(market.supplyApy * 100).toFixed(2)}% |\n`;
-      markdown += `| Borrow APY | ${(market.borrowApy * 100).toFixed(2)}% | ${(market.borrowApy * 100).toFixed(2)}% |\n`;
-      markdown += `| WELL Supply APR | ${market.wellSupplyApr}% | ${market.newWellSupplyApr}% |\n`;
-      markdown += `| WELL Borrow APR | ${market.wellBorrowApr}% | ${market.newWellBorrowApr}% |\n`;
-      markdown += `| ${nativeToken} Supply APR | ${market.nativeSupplyApr}% | ${market.newNativeSupplyApr}% |\n`;
-      markdown += `| ${nativeToken} Borrow APR | ${market.nativeBorrowApr}% | ${market.newNativeBorrowApr}% |\n`;
-      markdown += `| Total Supply APR | ${((Number(market.supplyApy) + (market.wellSupplyApr / 100) + (market.nativeSupplyApr / 100)) * 100).toFixed(2)}% | ${((Number(market.supplyApy) + (market.newWellSupplyApr / 100) + (market.newNativeSupplyApr / 100)) * 100).toFixed(2)}% |\n`;
-      markdown += `| Total Borrow APR | ${((Number(market.borrowApy) - (market.wellBorrowApr / 100) - (market.nativeBorrowApr / 100)) * 100).toFixed(2)}% | ${((Number(market.borrowApy) - (market.newWellBorrowApr / 100) - (market.newNativeBorrowApr / 100)) * 100).toFixed(2)}% |\n`;
+      markdown += `| Supply APY | ${Math.max(0, market.supplyApy * 100).toFixed(2)}% | ${Math.max(0, market.supplyApy * 100).toFixed(2)}% |\n`;
+      markdown += `| Borrow APY | ${Math.max(0, market.borrowApy * 100).toFixed(2)}% | ${Math.max(0, market.borrowApy * 100).toFixed(2)}% |\n`;
+      markdown += `| WELL Supply APR | ${Math.max(0, market.wellSupplyApr)}% | ${Math.max(0, market.newWellSupplyApr)}% |\n`;
+      markdown += `| WELL Borrow APR | ${Math.max(0, market.wellBorrowApr)}% | ${Math.max(0, market.newWellBorrowApr)}% |\n`;
+      markdown += `| ${nativeToken} Supply APR | ${Math.max(0, market.nativeSupplyApr)}% | ${Math.max(0, market.newNativeSupplyApr)}% |\n`;
+      markdown += `| ${nativeToken} Borrow APR | ${Math.max(0, market.nativeBorrowApr)}% | ${Math.max(0, market.newNativeBorrowApr)}% |\n`;
+      markdown += `| Total Supply APR | ${Math.max(0, ((Number(market.supplyApy) + (market.wellSupplyApr / 100) + (market.nativeSupplyApr / 100)) * 100)).toFixed(2)}% | ${Math.max(0, ((Number(market.supplyApy) + (market.newWellSupplyApr / 100) + (market.newNativeSupplyApr / 100)) * 100)).toFixed(2)}% |\n`;
+      markdown += `| Total Borrow APR | ${Math.max(0, ((Number(market.borrowApy) - (market.wellBorrowApr / 100) - (market.nativeBorrowApr / 100)) * 100)).toFixed(2)}% | ${Math.max(0, ((Number(market.borrowApy) - (market.newWellBorrowApr / 100) - (market.newNativeBorrowApr / 100)) * 100)).toFixed(2)}% |\n`;
       markdown += `| Total Supply Incentives Per Day in USD | ${formatUSD(Math.max(0, (Number(market.wellSupplyPerDayUsd) + Number(market.nativeSupplyPerDayUsd))))} | ${formatUSD(Math.max(0, (Number(market.newWellSupplyPerDayUsd) + Number(market.newNativeSupplyPerDayUsd))))} |\n`;
-      markdown += `| Total Borrow Incentives Per Day in USD | ${formatUSD((Number(market.wellBorrowPerDayUsd) + Number(market.nativeBorrowPerDayUsd)))} | ${formatUSD((Number(market.newWellBorrowPerDayUsd) + Number(market.newNativeBorrowPerDayUsd)))} |\n`;
+      markdown += `| Total Borrow Incentives Per Day in USD | ${formatUSD(Math.max(0, (Number(market.wellBorrowPerDayUsd) + Number(market.nativeBorrowPerDayUsd))))} | ${formatUSD(Math.max(0, (Number(market.newWellBorrowPerDayUsd) + Number(market.newNativeBorrowPerDayUsd))))} |\n`;
       markdown += '\n';
       markdown += `| Metric | % Change |\n`;
       markdown += `| --- | --- |\n`;
