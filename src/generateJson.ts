@@ -104,6 +104,14 @@ export async function returnJson(marketData: any, network: string) {
             .toNumber(),
           target: "STELLASWAP_REWARDER",
         },
+        ...(hasReservesEnabled ? {
+          initSale: {
+            ...mainConfig.initSale,
+            reserveAutomationContracts: marketData["1284"]
+              .filter((market: MarketType) => market.reservesEnabled)
+              .map((market: MarketType) => `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`)
+          }
+        } : {}),
         setRewardSpeed: moonbeamSetRewardSpeeds,
         stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.moonbeam.wellPerEpochSafetyModule) / marketData.totalSeconds)
           .shiftedBy(18)
@@ -160,16 +168,6 @@ export async function returnJson(marketData: any, network: string) {
       startTimeStamp: marketData.epochStartTimestamp,
     };
 
-    // Add initSale if any market has reservesEnabled
-    if (hasReservesEnabled) {
-      result[1284].initSale = {
-        ...mainConfig.initSale,
-        reserveAutomationContracts: marketData["1284"]
-          .filter((market: MarketType) => market.reservesEnabled)
-          .map((market: MarketType) => `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`)
-      };
-    }
-
     return result;
   } else if (network === "Base") {
     // Check if any market has reservesEnabled=true
@@ -215,6 +213,14 @@ export async function returnJson(marketData: any, network: string) {
         ].filter(transfer => transfer.amount > 0),
       },
       8453: {
+        ...(hasReservesEnabled ? {
+          initSale: {
+            ...mainConfig.initSale,
+            reserveAutomationContracts: marketData["8453"]
+              .filter((market: MarketType) => market.reservesEnabled)
+              .map((market: MarketType) => `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`)
+          }
+        } : {}),
         setMRDSpeeds: baseSetRewardSpeeds,
         stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.base.wellPerEpochSafetyModule) / marketData.totalSeconds)
           .shiftedBy(18)
@@ -273,16 +279,6 @@ export async function returnJson(marketData: any, network: string) {
       startTimeStamp: marketData.epochStartTimestamp,
     };
 
-    // Add initSale if any market has reservesEnabled
-    if (hasReservesEnabled) {
-      result[8453].initSale = {
-        ...mainConfig.initSale,
-        reserveAutomationContracts: marketData["8453"]
-          .filter((market: MarketType) => market.reservesEnabled)
-          .map((market: MarketType) => `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`)
-      };
-    }
-
     return result;
   } else if (network === "Optimism") {
     // Check if any market has reservesEnabled=true
@@ -327,6 +323,14 @@ export async function returnJson(marketData: any, network: string) {
         ].filter(transfer => transfer.amount > 0),
       },
       10: {
+        ...(hasReservesEnabled ? {
+          initSale: {
+            ...mainConfig.initSale,
+            reserveAutomationContracts: marketData["10"]
+              .filter((market: MarketType) => market.reservesEnabled)
+              .map((market: MarketType) => `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`)
+          }
+        } : {}),
         setMRDSpeeds: optimismSetRewardSpeeds,
         stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.optimism.wellPerEpochSafetyModule) / marketData.totalSeconds)
           .shiftedBy(18)
@@ -385,16 +389,6 @@ export async function returnJson(marketData: any, network: string) {
       endTimeSTamp: marketData.epochEndTimestamp,
       startTimeStamp: marketData.epochStartTimestamp,
     };
-
-    // Add initSale if any market has reservesEnabled
-    if (hasReservesEnabled) {
-      result[10].initSale = {
-        ...mainConfig.initSale,
-        reserveAutomationContracts: marketData["10"]
-          .filter((market: MarketType) => market.reservesEnabled)
-          .map((market: MarketType) => `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`)
-      };
-    }
 
     return result;
   }
