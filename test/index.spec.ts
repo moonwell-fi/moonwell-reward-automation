@@ -1,25 +1,51 @@
-// test/index.spec.ts
-import { env, createExecutionContext, waitOnExecutionContext, SELF } from 'cloudflare:test';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import worker from '../src/index';
 
-// For now, you'll need to do something like this to get a correctly-typed
-// `Request` to pass to `worker.fetch()`.
-const IncomingRequest = Request<unknown, IncomingRequestCfProperties>;
+describe('Moonwell Reward Automation worker', () => {
+  const mockEnv = {
+    ENVIRONMENT: 'test',
+    ETHEREUM_RPC: 'http://localhost:8545',
+    MOONBEAM_RPC: 'http://localhost:8545',
+    BASE_RPC: 'http://localhost:8545',
+    OPTIMISM_RPC: 'http://localhost:8545',
+  };
 
-describe('Hello World worker', () => {
-	it('responds with Hello World! (unit style)', async () => {
-		const request = new IncomingRequest('http://example.com');
-		// Create an empty context to pass to `worker.fetch()`.
-		const ctx = createExecutionContext();
-		const response = await worker.fetch(request, env, ctx);
-		// Wait for all `Promise`s passed to `ctx.waitUntil()` to settle before running test assertions
-		await waitOnExecutionContext(ctx);
-		expect(await response.text()).toMatchInlineSnapshot(`"Hello World!"`);
-	});
+  const mockCtx = {
+    waitUntil: vi.fn(),
+    passThroughOnException: vi.fn(),
+    abort: vi.fn(),
+  };
 
-	it('responds with Hello World! (integration style)', async () => {
-		const response = await SELF.fetch('https://example.com');
-		expect(await response.text()).toMatchInlineSnapshot(`"Hello World!"`);
-	});
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('responds with markdown content for Moonbeam network', async () => {
+    vi.setConfig({ testTimeout: 30000 }); // Set 30 second timeout for this test
+    const mockRequest = new Request('http://example.com/?type=markdown&network=Moonbeam&timestamp=1707379200');
+    const response = await worker.fetch(mockRequest, mockEnv, mockCtx);
+    
+    expect(response.status).toBe(200);
+    const contentType = response.headers.get('content-type');
+    expect(contentType).toBeDefined();
+    expect(contentType).toContain('text/markdown');
+  });
+
+  it('returns 400 for missing required parameters', async () => {
+    const mockRequest = new Request('http://example.com/?network=Moonbeam');
+    const response = await worker.fetch(mockRequest, mockEnv, mockCtx);
+    
+    expect(response.status).toBe(400);
+    const text = await response.text();
+    expect(text).toContain('Missing required parameters');
+  });
+
+  it('returns 400 for invalid type parameter', async () => {
+    const mockRequest = new Request('http://example.com/?type=invalid&network=Moonbeam&timestamp=1707379200');
+    const response = await worker.fetch(mockRequest, mockEnv, mockCtx);
+    
+    expect(response.status).toBe(400);
+    const text = await response.text();
+    expect(text).toContain('Invalid type parameter');
+  });
 });

@@ -112,7 +112,14 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
       markdown += `### ${market.name} (${market.alias})\n\n`;
       // Cancel out boosts and deboosts so we don't show incorrect total supply in USD
       markdown += `Total Supply in USD: ${formatUSD(market.totalSupplyUSD - market.boost + market.deboost)}\n`;
-      markdown += `Total Borrows in USD: ${formatUSD(market.totalBorrowsUSD)}\n\n`;
+      markdown += `Total Borrows in USD: ${formatUSD(market.totalBorrowsUSD)}\n`;
+      
+      // Add reserves to auction if enabled and available
+      if (market.reservesEnabled && (market.reserves - market.minimumReserves) > 0) {
+        const reservesToAuction = (market.reserves - market.minimumReserves) * market.underlyingPrice;
+        markdown += `Reserves to auction: ${formatUSD(reservesToAuction)}\n`;
+      }
+      markdown += '\n';
       markdown += `| Metric | Current Value | New Value |\n`;
       markdown += `| --- | --- | --- |\n`;
       markdown += `| Supply APY | ${Math.max(0, market.supplyApy * 100).toFixed(2)}% | ${Math.max(0, market.supplyApy * 100).toFixed(2)}% |\n`;
