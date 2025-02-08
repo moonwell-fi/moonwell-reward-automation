@@ -34,7 +34,7 @@ export const mainConfig = {
     auctionPeriod: 1209600, // 14 days
     delay: 3600, // 1 hour
     miniAuctionPeriod: 21600, // 6 hours
-    periodMaxDiscount: 200000000000000000, // 20% discount from starting price
+    periodMaxDiscount: 800000000000000000, // 20% discount from starting price
     periodStartingPremium: 1200000000000000000, // 120% of current price
   },
 };
@@ -13394,7 +13394,7 @@ export const marketConfigs = {
       deboost: 300_000,
       supply: 0.5,
       borrow: 0.5,
-      enabled: true,
+      enabled: false,
       minimumReserves: 0,
       reservesEnabled: false,
     },

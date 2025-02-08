@@ -84,7 +84,10 @@ export async function returnJson(marketData: any, network: string) {
   });
 
   if (network === "Moonbeam") {
-    return {
+    // Check if any market has reservesEnabled=true
+    const hasReservesEnabled = marketData["1284"].some((market: MarketType) => market.reservesEnabled);
+
+    const result: any = {
       1284: {
         addRewardInfo: {
           amount: BigNumber(marketData.moonbeam.wellPerEpochDex)
@@ -135,12 +138,44 @@ export async function returnJson(marketData: any, network: string) {
             token: "GOVTOKEN",
           },
         ].filter(transfer => transfer.amount > 0),
+        ...(hasReservesEnabled ? {
+          transferReserves: marketData["1284"]
+            .filter((market: MarketType) => market.reservesEnabled)
+            .map((market: MarketType) => {
+              const reserves = market.reserves;
+              const minimumReserves = market.minimumReserves;
+              return {
+                amount: new BigNumber(reserves)
+                  .minus(new BigNumber(minimumReserves))
+                  .shiftedBy(market.digits)
+                  .decimalPlaces(0, BigNumber.ROUND_FLOOR)
+                  .toNumber(),
+                market: market.alias,
+                to: `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`
+              };
+            })
+        } : {}),
       },
       endTimeSTamp: marketData.epochEndTimestamp,
       startTimeStamp: marketData.epochStartTimestamp,
     };
+
+    // Add initSale if any market has reservesEnabled
+    if (hasReservesEnabled) {
+      result[1284].initSale = {
+        ...mainConfig.initSale,
+        reserveAutomationContracts: marketData["1284"]
+          .filter((market: MarketType) => market.reservesEnabled)
+          .map((market: MarketType) => `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`)
+      };
+    }
+
+    return result;
   } else if (network === "Base") {
-    return {
+    // Check if any market has reservesEnabled=true
+    const hasReservesEnabled = marketData["8453"].some((market: MarketType) => market.reservesEnabled);
+
+    const result: any = {
       1284: {
         bridgeToRecipient: [
           { // Send total well per epoch - the DEX incentives to Base Temporal Governor
@@ -214,14 +249,46 @@ export async function returnJson(marketData: any, network: string) {
             from: "F-AERO_MULTISIG",
             to: "DEX_RELAYER",
             token: "xWELL_PROXY",
-          }
-        ].filter(transfer => transfer.amount > 0)
+          },
+        ].filter(transfer => transfer.amount > 0),
+        ...(hasReservesEnabled ? {
+          transferReserves: marketData["8453"]
+            .filter((market: MarketType) => market.reservesEnabled)
+            .map((market: MarketType) => {
+              const reserves = market.reserves;
+              const minimumReserves = market.minimumReserves;
+              return {
+                amount: new BigNumber(reserves)
+                  .minus(new BigNumber(minimumReserves))
+                  .shiftedBy(market.digits)
+                  .decimalPlaces(0, BigNumber.ROUND_FLOOR)
+                  .toNumber(),
+                market: market.alias,
+                to: `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`
+              };
+            })
+        } : {})
       },
       endTimeSTamp: marketData.epochEndTimestamp,
       startTimeStamp: marketData.epochStartTimestamp,
     };
+
+    // Add initSale if any market has reservesEnabled
+    if (hasReservesEnabled) {
+      result[8453].initSale = {
+        ...mainConfig.initSale,
+        reserveAutomationContracts: marketData["8453"]
+          .filter((market: MarketType) => market.reservesEnabled)
+          .map((market: MarketType) => `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`)
+      };
+    }
+
+    return result;
   } else if (network === "Optimism") {
-    return {
+    // Check if any market has reservesEnabled=true
+    const hasReservesEnabled = marketData["10"].some((market: MarketType) => market.reservesEnabled);
+
+    const result: any = {
       1284: {
         bridgeToRecipient: [
           { // Send total well per epoch - the DEX incentives to Optimism Temporal Governor
@@ -296,10 +363,39 @@ export async function returnJson(marketData: any, network: string) {
             to: "ECOSYSTEM_RESERVE_PROXY",
             token: "xWELL_PROXY",
           },
-        ].filter(transfer => transfer.amount > 0)
+        ].filter(transfer => transfer.amount > 0),
+        ...(hasReservesEnabled ? {
+          transferReserves: marketData["10"]
+            .filter((market: MarketType) => market.reservesEnabled)
+            .map((market: MarketType) => {
+              const reserves = market.reserves;
+              const minimumReserves = market.minimumReserves;
+              return {
+                amount: new BigNumber(reserves)
+                  .minus(new BigNumber(minimumReserves))
+                  .shiftedBy(market.digits)
+                  .decimalPlaces(0, BigNumber.ROUND_FLOOR)
+                  .toNumber(),
+                market: market.alias,
+                to: `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`
+              };
+            })
+        } : {})
       },
       endTimeSTamp: marketData.epochEndTimestamp,
       startTimeStamp: marketData.epochStartTimestamp,
     };
+
+    // Add initSale if any market has reservesEnabled
+    if (hasReservesEnabled) {
+      result[10].initSale = {
+        ...mainConfig.initSale,
+        reserveAutomationContracts: marketData["10"]
+          .filter((market: MarketType) => market.reservesEnabled)
+          .map((market: MarketType) => `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`)
+      };
+    }
+
+    return result;
   }
 }

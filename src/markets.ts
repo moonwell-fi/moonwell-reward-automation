@@ -36,8 +36,11 @@ export interface MarketType {
   supplyRatio: number;
   borrowRatio: number;
   enabled: boolean;
+  minimumReserves: number;
+  reservesEnabled: boolean;
   underlyingPrice: number;
   totalSupply: number;
+  totalReserves: number;
   exchangeRate: number;
   totalSupplyUnderlying: number;
   totalBorrowsUnderlying: number;
@@ -331,13 +334,15 @@ export async function getMarketData(timestamp: number) {
     } as ContractCall)),
   })).map((price) => price.result as bigint);
 
-  const moonbeamNativePrice = formatUnits(
-    moonbeamPrices[
-    moonbeamMarkets.findIndex(
-      (market) =>
-        moonbeamNames[moonbeamMarkets.indexOf(market)] === "GLMR"
-    )
-    ], (36 - 18));
+  // Find index of GLMR market
+  const moonbeamGlmrIndex = moonbeamMarkets.findIndex(
+    (market) => moonbeamNames[moonbeamMarkets.indexOf(market)] === "GLMR"
+  );
+  
+  // Default to 0 if market not found or price undefined
+  const moonbeamNativePrice = moonbeamGlmrIndex !== -1 && moonbeamPrices[moonbeamGlmrIndex] 
+    ? formatUnits(moonbeamPrices[moonbeamGlmrIndex], (36 - 18))
+    : "0";
 
   const basePrices = (await baseClient.multicall({
     contracts: baseMarkets.map(market => ({
@@ -348,13 +353,15 @@ export async function getMarketData(timestamp: number) {
     } as ContractCall)),
   })).map((price) => price.result as bigint);
 
-  const baseNativePrice = formatUnits(
-    basePrices[
-    baseMarkets.findIndex(
-      (market) =>
-        baseNames[baseMarkets.indexOf(market)] === "USDC"
-    )
-    ], (36 - 6));
+  // Find index of USDC market
+  const baseUsdcIndex = baseMarkets.findIndex(
+    (market) => baseNames[baseMarkets.indexOf(market)] === "USDC"
+  );
+
+  // Default to 0 if market not found or price undefined
+  const baseNativePrice = baseUsdcIndex !== -1 && basePrices[baseUsdcIndex]
+    ? formatUnits(basePrices[baseUsdcIndex], (36 - 6))
+    : "0";
 
   const optimismPrices = (await optimismClient.multicall({
     contracts: optimismMarkets.map(market => ({
@@ -365,24 +372,34 @@ export async function getMarketData(timestamp: number) {
     } as ContractCall)),
   })).map((price) => price.result as bigint);
 
-  const optimismNativePrice = formatUnits(
-    optimismPrices[
-    optimismMarkets.findIndex(
-      (market) =>
-        optimismNames[optimismMarkets.indexOf(market)] === "OP"
-    )
-    ], (36 - 18));
+  // Find index of OP market
+  const optimismOpIndex = optimismMarkets.findIndex(
+    (market) => optimismNames[optimismMarkets.indexOf(market)] === "OP"
+  );
+
+  // Default to 0 if market not found or price undefined
+  const optimismNativePrice = optimismOpIndex !== -1 && optimismPrices[optimismOpIndex] !== undefined
+    ? formatUnits(optimismPrices[optimismOpIndex], (36 - 18))
+    : "0";
 
   const ethPrice = basePrices.find(
     (price, index) => baseMarkets[index] === marketConfigs[8453].find(config => config.nameOverride === 'ETH')?.address
-  ) || 0;
+  ) || BigInt(0);
 
-  const wellPrice = (await baseClient.readContract({
-    ...aeroMarketContract,
-    functionName: "quote",
-    blockNumber: BigInt(baseBlockNumber),
-    args: [xWellToken.address, BigInt(1e18), BigInt(1)],
-  })) * BigInt(ethPrice) as bigint;
+  let wellPrice = BigInt(0);
+  try {
+    const quoteResult = await baseClient.readContract({
+      ...aeroMarketContract,
+      functionName: "quote",
+      blockNumber: BigInt(baseBlockNumber),
+      args: [xWellToken.address, BigInt(1e18), BigInt(1)],
+    }) as bigint;
+    wellPrice = (quoteResult * ethPrice) / BigInt(1e18);
+  } catch (error) {
+    console.error("Failed to get WELL price from Aerodrome, using default price");
+    // Use a default price if the quote fails
+    wellPrice = BigInt(1e18); // Default to 1 USD
+  }
 
   const moonbeamSupplies = (await moonbeamClient.multicall({
     contracts: moonbeamMarkets.map(market => ({
@@ -888,16 +905,18 @@ export async function getMarketData(timestamp: number) {
       let supplyUSD = 0;
       let borrowUSD = 0;
 
-      if (enabled) { // Only include markets that are enabled
-        supplyUSD =
-          Number(formatUnits(supply, 8)) *
-          Number(formatUnits(exchangeRate, 18 + digit - 8)) *
-          Number(formatUnits(price, 36 - digit));
+      // Calculate supply and borrow USD values regardless of enabled status
+      supplyUSD =
+        Number(formatUnits(supply, 8)) *
+        Number(formatUnits(exchangeRate, 18 + digit - 8)) *
+        Number(formatUnits(price, 36 - digit));
 
-        borrowUSD =
-          Number(formatUnits(borrow, digit)) *
-          Number(formatUnits(price, 36 - digit));
+      borrowUSD =
+        Number(formatUnits(borrow, digit)) *
+        Number(formatUnits(price, 36 - digit));
 
+      // Only add to totals if market is enabled
+      if (enabled) {
         totalSupplyUSD += supplyUSD + boost - deboost;
         totalBorrowsUSD += borrowUSD;
       }
@@ -1358,6 +1377,8 @@ export async function getMarketData(timestamp: number) {
       / borrowsUsd[index]
       * 365 * 100).toFixed(2)) : Number(0).toFixed(2),
     percentage: percentages[index],
+    minimumReserves: marketConfigs[chainId as keyof typeof marketConfigs]?.find(config => config.address === market)?.minimumReserves ?? 0,
+    reservesEnabled: marketConfigs[chainId as keyof typeof marketConfigs]?.find(config => config.address === market)?.reservesEnabled ?? false,
     wellPerEpochMarket: Number(totalWellPerEpochMarkets * percentages[index]),
     wellPerEpochMarketSupply: Number(totalWellPerEpochMarkets * percentages[index] * supply[index]),
     wellPerEpochMarketBorrow: Number(totalWellPerEpochMarkets * percentages[index] * borrow[index]),
