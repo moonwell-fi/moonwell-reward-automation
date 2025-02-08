@@ -43,6 +43,7 @@ export interface MarketType {
   totalBorrowsUnderlying: number;
   totalSupplyUSD: number;
   totalBorrowsUSD: number;
+  reserves: number;
   supplyRate: number;
   borrowRate: number;
   currentWellSupplySpeed: number;
@@ -436,6 +437,33 @@ export async function getMarketData(timestamp: number) {
       blockNumber: BigInt(optimismBlockNumber),
     } as ContractCall)),
   })).map((borrow) => borrow.result as bigint);
+
+  const baseReserves = (await baseClient.multicall({
+    contracts: baseMarkets.map(market => ({
+      address: market as `0x${string}`,
+      abi: mTokenv2ABI,
+      functionName: "totalReserves",
+      blockNumber: BigInt(baseBlockNumber),
+    })),
+  })).map((reserves) => reserves.result as bigint);
+
+  const optimismReserves = (await optimismClient.multicall({
+    contracts: optimismMarkets.map(market => ({
+      address: market as `0x${string}`,
+      abi: mTokenv2ABI,
+      functionName: "totalReserves",
+      blockNumber: BigInt(optimismBlockNumber),
+    })),
+  })).map((reserves) => reserves.result as bigint);
+
+  const moonbeamReserves = (await moonbeamClient.multicall({
+    contracts: moonbeamMarkets.map(market => ({
+      address: market as `0x${string}`,
+      abi: mTokenv1ABI,
+      functionName: "totalReserves",
+      blockNumber: BigInt(moonbeamBlockNumber),
+    })),
+  })).map((reserves) => reserves.result as bigint);
 
   const moonbeamExchangeRates = (await moonbeamClient.multicall({
     contracts: moonbeamMarkets.map(market => ({
@@ -834,7 +862,6 @@ export async function getMarketData(timestamp: number) {
     );
   });
 
-
   function calculateNetworkTotalUSD(
     markets: any[],
     supplies: bigint[],
@@ -1188,7 +1215,7 @@ export async function getMarketData(timestamp: number) {
       return -1e-18;
     }
 
-    // Special case: if speed is 0, return 1e1-8 instead
+    // Special case: if speed is 0, return 1e-18 instead
     return calculatedSpeed === 0 ? 1e-18 : calculatedSpeed;
   });
 
@@ -1206,6 +1233,7 @@ export async function getMarketData(timestamp: number) {
     prices: bigint[],
     supplies: bigint[],
     borrows: bigint[],
+    reserves: bigint[],
     suppliesUsd: number[],
     borrowsUsd: number[],
     exchangeRates: any,
@@ -1263,6 +1291,7 @@ export async function getMarketData(timestamp: number) {
         )),
     totalSupplyUSD: Number(suppliesUsd[index].toFixed(2)),
     totalBorrowsUSD: Number(borrowsUsd[index].toFixed(2)),
+    reserves: Number(formatUnits(reserves[index], digits[index] as number)),
     currentWellSupplySpeed: Number(formatUnits(currentWellSupplySpeed[index], 18)),
     currentWellBorrowSpeed: Number(formatUnits(currentWellBorrowSpeed[index], 18)),
     currentNativeSupplySpeed: Number(formatUnits(currentNativeSupplySpeed[index], 18)),
@@ -1452,6 +1481,7 @@ export async function getMarketData(timestamp: number) {
       optimismPrices,
       optimismSupplies,
       optimismBorrows,
+      optimismReserves,
       optimismTotalSupplyUsd,
       optimismTotalBorrowsUsd,
       optimismExchangeRates,
@@ -1493,6 +1523,7 @@ export async function getMarketData(timestamp: number) {
       moonbeamPrices,
       moonbeamSupplies,
       moonbeamBorrows,
+      moonbeamReserves,
       moonbeamTotalSupplyUsd,
       moonbeamTotalBorrowsUsd,
       moonbeamExchangeRates,
@@ -1534,6 +1565,7 @@ export async function getMarketData(timestamp: number) {
       basePrices,
       baseSupplies,
       baseBorrows,
+      baseReserves,
       baseTotalSupplyUsd,
       baseTotalBorrowsUsd,
       baseExchangeRates,
