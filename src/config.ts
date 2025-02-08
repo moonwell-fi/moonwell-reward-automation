@@ -30,6 +30,13 @@ export const mainConfig = {
     safetyModule: 0.1,
     dex: 0.03,
   },
+  initSale: {
+    auctionPeriod: 1209600, // 14 days
+    delay: 3600, // 1 hour
+    miniAuctionPeriod: 21600, // 6 hours
+    periodMaxDiscount: 200000000000000000, // 20% discount from starting price
+    periodStartingPremium: 1200000000000000000, // 120% of current price
+  },
 };
 
 export const moonbeamComptroller = {
@@ -13191,6 +13198,8 @@ export const marketConfigs = {
       supply: 0.5,
       borrow: 0.5,
       enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0xa3A53899EE8f9f6E963437C5B3f805FEc538BF84',
@@ -13202,6 +13211,8 @@ export const marketConfigs = {
       supply: 0.5,
       borrow: 0.5,
       enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0x3FE782C2Fe7668C2F1Eb313ACf3022a31feaD6B2',
@@ -13213,6 +13224,8 @@ export const marketConfigs = {
       supply: 0.5,
       borrow: 0.5,
       enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0x6e6CA598A06E609c913551B729a228B023f06fDB',
@@ -13224,6 +13237,8 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: false,
+      minimumReserves: 0,
+      reservesEnabled: true,
     },
     {
       address: '0xb4104C02BBf4E9be85AAa41a62974E4e28D59A33',
@@ -13235,6 +13250,8 @@ export const marketConfigs = {
       supply: 0.5,
       borrow: 0.5,
       enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0xbb3b1aB66eFB43B10923b87460c0106643B83f9d',
@@ -13246,6 +13263,8 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: false,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0x95C84F369bd0251ca903052600A3C96838D78bA1',
@@ -13257,6 +13276,8 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: false,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0x4c2E35E3eC4A0C82849637BC04A4609Dbe53d321',
@@ -13268,6 +13289,8 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: false,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0xb8051464C8c92209C92F3a4CD9C73746C4c3CFb3',
@@ -13279,6 +13302,8 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: false,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0x9fc345a20541Bf8773988515c5950eD69aF01847',
@@ -13290,6 +13315,8 @@ export const marketConfigs = {
       supply: 0.75,
       borrow: 0.25,
       enabled: false,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0x866b838b97Ee43F2c818B3cb5Cc77A0dc22003Fc',
@@ -13301,6 +13328,8 @@ export const marketConfigs = {
       supply: 0,
       borrow: 1,
       enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0x181bA797ccF779D8aB339721ED6ee827E758668e',
@@ -13312,6 +13341,8 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: false,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
   ],
   1284: [
@@ -13325,6 +13356,8 @@ export const marketConfigs = {
       supply: 0.5,
       borrow: 0.5,
       enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0xD22Da948c0aB3A27f5570b604f3ADef5F68211C3',
@@ -13336,6 +13369,8 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0x1C55649f73CDA2f72CEf3DD6C5CA3d49EFcF484C',
@@ -13347,6 +13382,8 @@ export const marketConfigs = {
       supply: 0.5,
       borrow: 0.5,
       enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0xb6c94b3A378537300387B57ab1cC0d2083f9AeaC',
@@ -13358,6 +13395,8 @@ export const marketConfigs = {
       supply: 0.5,
       borrow: 0.5,
       enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0xaaa20c5a584a9fECdFEDD71E46DA7858B774A9ce',
@@ -13369,6 +13408,8 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: false,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0x744b1756e7651c6D57f5311767EAFE5E931D615b',
@@ -13380,6 +13421,8 @@ export const marketConfigs = {
       supply: 0.50,
       borrow: 0.50,
       enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0x42A96C0681B74838eC525AdbD13c37f66388f289',
@@ -13391,6 +13434,8 @@ export const marketConfigs = {
       supply: 0.50,
       borrow: 0.50,
       enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0x22b1a40e3178fe7C7109eFCc247C5bB2B34ABe32',
@@ -13402,6 +13447,8 @@ export const marketConfigs = {
       supply: 0.50,
       borrow: 0.50,
       enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
   ],
   8453: [
@@ -13415,6 +13462,8 @@ export const marketConfigs = {
       supply: 0.50,
       borrow: 0.50,
       enabled: false,
+      minimumReserves: 0,
+      reservesEnabled: true,
     },
     {
       address: '0x628ff693426583D9a7FB391E54366292F509D457',
@@ -13426,6 +13475,8 @@ export const marketConfigs = {
       supply: 0.50,
       borrow: 0.50,
       enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0x3bf93770f2d4a794c3d9EBEfBAeBAE2a8f09A5E5',
@@ -13437,6 +13488,8 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: false,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0x73b06D8d18De422E269645eaCe15400DE7462417',
@@ -13448,6 +13501,8 @@ export const marketConfigs = {
       supply: 0.50,
       borrow: 0.50,
       enabled: false,
+      minimumReserves: 0,
+      reservesEnabled: true,
     },
     {
       address: '0xEdc817A28E8B93B03976FBd4a3dDBc9f7D176c22',
@@ -13459,6 +13514,8 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0x627Fe393Bc6EdDA28e99AE648fD6fF362514304b',
@@ -13470,6 +13527,8 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: false,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0xCB1DaCd30638ae38F2B94eA64F066045B7D45f44',
@@ -13481,6 +13540,8 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: false,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0xb8051464C8c92209C92F3a4CD9C73746C4c3CFb3',
@@ -13492,6 +13553,8 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: false,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0x73902f619CEB9B31FD8EFecf435CbDf89E369Ba6',
@@ -13503,6 +13566,8 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0xF877ACaFA28c19b96727966690b2f44d35aD5976',
@@ -13514,6 +13579,8 @@ export const marketConfigs = {
       supply: 0.5,
       borrow: 0.5,
       enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0xb682c840B5F4FC58B20769E691A6fa1305A501a2',
@@ -13525,6 +13592,8 @@ export const marketConfigs = {
       supply: 0.5,
       borrow: 0.5,
       enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0xfC41B49d064Ac646015b459C522820DB9472F4B5',
@@ -13536,6 +13605,8 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: false,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0xdC7810B47eAAb250De623F0eE07764afa5F71ED1',
@@ -13547,6 +13618,8 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0xb6419c6C2e60c4025D6D06eE4F913ce89425a357',
@@ -13558,6 +13631,8 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: false,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0x9A858ebfF1bEb0D3495BB0e2897c1528eD84A218',
@@ -13569,6 +13644,8 @@ export const marketConfigs = {
       supply: 0.5,
       borrow: 0.5,
       enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0x10fF57877b79e9bd949B3815220eC87B9fc5D2ee',
@@ -13580,6 +13657,8 @@ export const marketConfigs = {
       supply: 0.5,
       borrow: 0.5,
       enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
     {
       address: '0xdE8Df9d942D78edE3Ca06e60712582F79CFfFC64',
@@ -13591,6 +13670,8 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
   ],
 }
