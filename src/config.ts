@@ -13637,7 +13637,7 @@ export const marketConfigs = {
     {
       address: '0x9A858ebfF1bEb0D3495BB0e2897c1528eD84A218',
       nameOverride: 'tBTC',
-      alias: 'MOONWELL_tBTC',
+      alias: 'MOONWELL_TBTC',
       digits: 18,
       boost: 2_000_000,
       deboost: 0,

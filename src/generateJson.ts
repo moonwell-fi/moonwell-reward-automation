@@ -163,6 +163,7 @@ export async function returnJson(marketData: any, network: string) {
               };
             })
         } : {}),
+        withdrawReserves: [],
       },
       endTimeSTamp: marketData.epochEndTimestamp,
       startTimeStamp: marketData.epochStartTimestamp,
@@ -273,7 +274,8 @@ export async function returnJson(marketData: any, network: string) {
                 to: `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`
               };
             })
-        } : {})
+        } : {}),
+        withdrawReserves: [],
       },
       endTimeSTamp: marketData.epochEndTimestamp,
       startTimeStamp: marketData.epochStartTimestamp,
@@ -384,7 +386,8 @@ export async function returnJson(marketData: any, network: string) {
                 to: `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`
               };
             })
-        } : {})
+        } : {}),
+        withdrawReserves: [],
       },
       endTimeSTamp: marketData.epochEndTimestamp,
       startTimeStamp: marketData.epochStartTimestamp,
