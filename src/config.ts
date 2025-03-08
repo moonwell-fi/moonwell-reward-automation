@@ -13186,6 +13186,10 @@ export const baseNativeToken = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' // U
 
 export const optimismNativeToken = '0x4200000000000000000000000000000000000042' // OP
 
+export const baseWellHolder = '0xE1bBF1304584895A215eB3478eAdEF2AaFF5D63f' // WELL holding contract
+
+export const optimismWellHolder = '0x03fB594Ff49883A6D0eE835010CAF63871a2902d' // WELL holding contract
+
 export const marketConfigs = {
   10: [
     {

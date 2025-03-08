@@ -20,7 +20,9 @@ import {
   baseViewsContract,
   optimismViewsContract,
   xWellRouterContract,
-  excludedMarkets
+  excludedMarkets,
+  baseWellHolder,
+  optimismWellHolder
 } from "./config";
 
 import { mTokenv1ABI, mTokenv2ABI } from "./constants";
@@ -1487,6 +1489,64 @@ export async function getMarketData(timestamp: number) {
     nativePerEpochMarketBorrow: Number(totalNativePerEpochMarkets * percentages[index] * borrow[index]),
   }));
 
+  // Get xWellToken balance for optimismWellHolder
+  const optimismWellHolderBalance = await optimismClient.readContract({
+    address: xWellToken.address,
+    abi: [
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          }
+        ],
+        "name": "balanceOf",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ],
+    functionName: "balanceOf",
+    args: [optimismWellHolder],
+    blockNumber: BigInt(optimismBlockNumber),
+  }) as bigint;
+
+  // Get xWellToken balance for baseWellHolder
+  const baseWellHolderBalance = await baseClient.readContract({
+    address: xWellToken.address,
+    abi: [
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          }
+        ],
+        "name": "balanceOf",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ],
+    functionName: "balanceOf",
+    args: [baseWellHolder],
+    blockNumber: BigInt(baseBlockNumber),
+  }) as bigint;
+
   return {
     10: formatResults(
       optimismMarkets,
@@ -1646,6 +1706,7 @@ export async function getMarketData(timestamp: number) {
       wellPerEpochMarkets: Number((mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.markets).toFixed(18),
       wellPerEpochSafetyModule: Number((mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.safetyModule).toFixed(18),
       wellPerEpochDex: Number((mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.dex).toFixed(18),
+      wellHolderBalance: baseWellHolderBalance.toString(),
     },
     optimism: {
       ...mainConfig.optimism,
@@ -1656,6 +1717,7 @@ export async function getMarketData(timestamp: number) {
       wellPerEpochMarkets: Number((mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage) * mainConfig.optimism.markets).toFixed(18),
       wellPerEpochSafetyModule: Number((mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage) * mainConfig.optimism.safetyModule).toFixed(18),
       wellPerEpochDex: Number((mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage) * mainConfig.optimism.dex).toFixed(18),
+      wellHolderBalance: optimismWellHolderBalance.toString(),
     },
     safetyModule: safetyModuleData,
   };
