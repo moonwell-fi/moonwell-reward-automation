@@ -174,7 +174,7 @@ export async function returnJson(marketData: any, network: string) {
             })
             .filter((item: { amount: number; market: string; to: string }) => item.amount > 0)
         } : {}),
-        withdrawReserves: [],
+        withdrawWell: [],
       },
       endTimeSTamp: marketData.epochEndTimestamp,
       startTimeStamp: marketData.epochStartTimestamp,
@@ -297,7 +297,12 @@ export async function returnJson(marketData: any, network: string) {
             })
             .filter((item: { amount: number; market: string; to: string }) => item.amount > 0)
         } : {}),
-        withdrawReserves: [],
+        withdrawWell: marketData.base.wellHolderBalance === "0" ? [] : [
+          {
+            amount: marketData.base.wellHolderBalance,
+            to: "ECOSYSTEM_RESERVE_PROXY"
+          }
+        ],
       },
       endTimeSTamp: marketData.epochEndTimestamp,
       startTimeStamp: marketData.epochStartTimestamp,
@@ -420,7 +425,12 @@ export async function returnJson(marketData: any, network: string) {
             })
             .filter((item: { amount: number; market: string; to: string }) => item.amount > 0)
         } : {}),
-        withdrawReserves: [],
+        withdrawWell: marketData.optimism.wellHolderBalance === "0" ? [] : [
+          {
+            amount: marketData.optimism.wellHolderBalance,
+            to: "ECOSYSTEM_RESERVE_PROXY"
+          }
+        ],
       },
       endTimeSTamp: marketData.epochEndTimestamp,
       startTimeStamp: marketData.epochStartTimestamp,
