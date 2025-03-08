@@ -400,7 +400,7 @@ export async function returnJson(marketData: any, network: string) {
           { // Transfer bridged Safety Module rewards to the Multi Reward Distributor
             amount: BigNumber(marketData.optimism.wellPerEpochSafetyModule)
               .shiftedBy(18)
-              .minus(marketData.base.optimismHolderBalance)
+              .minus(marketData.optimism.wellHolderBalance)
               .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
               .minus(1e16)
               .toNumber(),
