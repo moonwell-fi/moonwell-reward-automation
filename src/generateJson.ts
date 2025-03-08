@@ -108,7 +108,17 @@ export async function returnJson(marketData: any, network: string) {
           initSale: {
             ...mainConfig.initSale,
             reserveAutomationContracts: marketData["1284"]
-              .filter((market: MarketType) => market.reservesEnabled)
+              .filter((market: MarketType) => {
+                if (!market.reservesEnabled) return false;
+                const reserves = market.reserves;
+                const minimumReserves = market.minimumReserves;
+                const amount = new BigNumber(reserves)
+                  .minus(new BigNumber(minimumReserves))
+                  .shiftedBy(market.digits)
+                  .decimalPlaces(0, BigNumber.ROUND_FLOOR)
+                  .toNumber();
+                return amount > 0;
+              })
               .map((market: MarketType) => `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`)
           }
         } : {}),
@@ -162,6 +172,7 @@ export async function returnJson(marketData: any, network: string) {
                 to: `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`
               };
             })
+            .filter((item: { amount: number; market: string; to: string }) => item.amount > 0)
         } : {}),
         withdrawReserves: [],
       },
@@ -218,7 +229,17 @@ export async function returnJson(marketData: any, network: string) {
           initSale: {
             ...mainConfig.initSale,
             reserveAutomationContracts: marketData["8453"]
-              .filter((market: MarketType) => market.reservesEnabled)
+              .filter((market: MarketType) => {
+                if (!market.reservesEnabled) return false;
+                const reserves = market.reserves;
+                const minimumReserves = market.minimumReserves;
+                const amount = new BigNumber(reserves)
+                  .minus(new BigNumber(minimumReserves))
+                  .shiftedBy(market.digits)
+                  .decimalPlaces(0, BigNumber.ROUND_FLOOR)
+                  .toNumber();
+                return amount > 0;
+              })
               .map((market: MarketType) => `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`)
           }
         } : {}),
@@ -274,6 +295,7 @@ export async function returnJson(marketData: any, network: string) {
                 to: `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`
               };
             })
+            .filter((item: { amount: number; market: string; to: string }) => item.amount > 0)
         } : {}),
         withdrawReserves: [],
       },
@@ -329,7 +351,17 @@ export async function returnJson(marketData: any, network: string) {
           initSale: {
             ...mainConfig.initSale,
             reserveAutomationContracts: marketData["10"]
-              .filter((market: MarketType) => market.reservesEnabled)
+              .filter((market: MarketType) => {
+                if (!market.reservesEnabled) return false;
+                const reserves = market.reserves;
+                const minimumReserves = market.minimumReserves;
+                const amount = new BigNumber(reserves)
+                  .minus(new BigNumber(minimumReserves))
+                  .shiftedBy(market.digits)
+                  .decimalPlaces(0, BigNumber.ROUND_FLOOR)
+                  .toNumber();
+                return amount > 0;
+              })
               .map((market: MarketType) => `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`)
           }
         } : {}),
@@ -386,6 +418,7 @@ export async function returnJson(marketData: any, network: string) {
                 to: `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`
               };
             })
+            .filter((item: { amount: number; market: string; to: string }) => item.amount > 0)
         } : {}),
         withdrawReserves: [],
       },
