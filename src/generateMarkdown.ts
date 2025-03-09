@@ -77,7 +77,7 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
     markdown += `| ------ | ----- |\n`;
     markdown += `| Timestamp of capture | ${marketData.timestamp} |\n`;
     markdown += `| Closest block number | ${blockNumber} |\n`;
-    markdown += `| Total Supply in USD | ${formatUSD(networkSummary.supplyUSD)} |\n`;
+    markdown += `| Total Supply in USD for incentivized markets | ${formatUSD(networkSummary.supplyUSD)} |\n`;
     markdown += `| Total Borrows in USD | ${formatUSD(networkSummary.borrowUSD)} |\n`;
 
     if (networkDexInfo) {
@@ -107,8 +107,13 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
     markdown += `| Total ${nativeToken} to distribute Markets (Borrow + Supply) | ${Math.max(0, Number(networkSummary?.borrowNative) + Number(networkSummary?.supplyNative)).toFixed(18)} ${nativeToken} |\n`;
     markdown += `| Total ${nativeToken} to distribute Markets (By Speed) | ${Math.max(0, Number(networkSummary?.totalNativeBySpeed)).toFixed(18)} ${nativeToken} |\n`;
     markdown += `\n`;
-    // Iterate over the markets for the specific network
+    // Iterate over the markets for the specific network, but only include enabled markets
     for (const market of Object.values(marketData[networkId])) {
+      // Skip markets that are not enabled
+      if (!market.enabled) {
+        continue;
+      }
+      
       markdown += `### ${market.name} (${market.alias})\n\n`;
       // Cancel out boosts and deboosts so we don't show incorrect total supply in USD
       markdown += `Total Supply in USD: ${formatUSD(market.totalSupplyUSD - market.boost + market.deboost)}\n`;
