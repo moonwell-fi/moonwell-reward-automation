@@ -21,6 +21,9 @@ import {
   optimismViewsContract,
   xWellRouterContract,
   excludedMarkets,
+  baseStkWELL,
+  optimismStkWELL,
+  moonbeamStkWELL,
   baseWellHolder,
   optimismWellHolder
 } from "./config";
@@ -1574,6 +1577,44 @@ export async function getMarketData(timestamp: number) {
     blockNumber: BigInt(baseBlockNumber),
   }) as bigint;
 
+  // Get totalSupply from each stkWELL contract
+  const erc20TotalSupplyAbi = [
+    {
+      "inputs": [],
+      "name": "totalSupply",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ];
+
+  const baseStkWELLTotalSupply = await baseClient.readContract({
+    address: baseStkWELL,
+    abi: erc20TotalSupplyAbi,
+    functionName: "totalSupply",
+    blockNumber: BigInt(baseBlockNumber),
+  }) as bigint;
+
+  const optimismStkWELLTotalSupply = await optimismClient.readContract({
+    address: optimismStkWELL,
+    abi: erc20TotalSupplyAbi,
+    functionName: "totalSupply",
+    blockNumber: BigInt(optimismBlockNumber),
+  }) as bigint;
+
+  const moonbeamStkWELLTotalSupply = await moonbeamClient.readContract({
+    address: moonbeamStkWELL,
+    abi: erc20TotalSupplyAbi,
+    functionName: "totalSupply",
+    blockNumber: BigInt(moonbeamBlockNumber),
+  }) as bigint;
+
   return {
     10: formatResults(
       optimismMarkets,
@@ -1747,5 +1788,8 @@ export async function getMarketData(timestamp: number) {
       wellHolderBalance: optimismWellHolderBalance.toString(),
     },
     safetyModule: safetyModuleData,
+    baseStkWELLTotalSupply: baseStkWELLTotalSupply.toString(),
+    optimismStkWELLTotalSupply: optimismStkWELLTotalSupply.toString(),
+    moonbeamStkWELLTotalSupply: moonbeamStkWELLTotalSupply.toString(),
   };
 }

@@ -13190,6 +13190,12 @@ export const baseWellHolder = '0xE1bBF1304584895A215eB3478eAdEF2AaFF5D63f' // WE
 
 export const optimismWellHolder = '0x03fB594Ff49883A6D0eE835010CAF63871a2902d' // WELL holding contract
 
+export const baseStkWELL = '0xe66E3A37C3274Ac24FE8590f7D84A2427194DC17' // Base stkWELL proxy contract
+
+export const optimismStkWELL = '0xfb26a4947a38cb53e2d083c6490060ccce7438c5' // Optimism stkWELL proxy contract
+
+export const moonbeamStkWELL = '0x8568a675384d761f36ec269d695d6ce4423cfab1' // Moonbeam stkWELL proxy contract
+
 export const marketConfigs = {
   10: [
     {

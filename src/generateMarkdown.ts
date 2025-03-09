@@ -80,6 +80,60 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
     markdown += `| Total Supply in USD for incentivized markets | ${formatUSD(networkSummary.supplyUSD)} |\n`;
     markdown += `| Total Borrows in USD | ${formatUSD(networkSummary.borrowUSD)} |\n`;
     
+    // Calculate and display Safety Module APR
+    if (networkId === '1284') {
+      const stkWellTotalSupply = parseFloat(marketData.moonbeamStkWELLTotalSupply) / 10**18;
+      if (stkWellTotalSupply > 0) {
+        const rewardsPerSecond = parseFloat(networkMarketData.wellPerEpochSafetyModule) / mainConfig.secondsPerEpoch;
+        const annualRewards = rewardsPerSecond * 31536000; // seconds in a year
+        const safetyModuleAPR = (annualRewards / stkWellTotalSupply) * 100;
+        markdown += `| Safety Module APR | ${safetyModuleAPR.toFixed(2)}% |\n`;
+        
+        // Add Safety Module Boosted APR if wellHolderBalance exists and is > 0
+        if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
+          const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 10**18;
+          const totalRewardsPerSecond = (parseFloat(networkMarketData.wellPerEpochSafetyModule) + wellBalance) / mainConfig.secondsPerEpoch;
+          const totalAnnualRewards = totalRewardsPerSecond * 31536000; // seconds in a year
+          const boostedSafetyModuleAPR = (totalAnnualRewards / stkWellTotalSupply) * 100;
+          markdown += `| **Safety Module Boosted APR** | **${boostedSafetyModuleAPR.toFixed(2)}%** |\n`;
+        }
+      }
+    } else if (networkId === '8453') {
+      const stkWellTotalSupply = parseFloat(marketData.baseStkWELLTotalSupply) / 10**18;
+      if (stkWellTotalSupply > 0) {
+        const rewardsPerSecond = parseFloat(networkMarketData.wellPerEpochSafetyModule) / mainConfig.secondsPerEpoch;
+        const annualRewards = rewardsPerSecond * 31536000; // seconds in a year
+        const safetyModuleAPR = (annualRewards / stkWellTotalSupply) * 100;
+        markdown += `| Safety Module APR | ${safetyModuleAPR.toFixed(2)}% |\n`;
+        
+        // Add Safety Module Boosted APR if wellHolderBalance exists and is > 0
+        if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
+          const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 10**18;
+          const totalRewardsPerSecond = (parseFloat(networkMarketData.wellPerEpochSafetyModule) + wellBalance) / mainConfig.secondsPerEpoch;
+          const totalAnnualRewards = totalRewardsPerSecond * 31536000; // seconds in a year
+          const boostedSafetyModuleAPR = (totalAnnualRewards / stkWellTotalSupply) * 100;
+          markdown += `| **Safety Module Boosted APR** | **${boostedSafetyModuleAPR.toFixed(2)}%** |\n`;
+        }
+      }
+    } else if (networkId === '10') {
+      const stkWellTotalSupply = parseFloat(marketData.optimismStkWELLTotalSupply) / 10**18;
+      if (stkWellTotalSupply > 0) {
+        const rewardsPerSecond = parseFloat(networkMarketData.wellPerEpochSafetyModule) / mainConfig.secondsPerEpoch;
+        const annualRewards = rewardsPerSecond * 31536000; // seconds in a year
+        const safetyModuleAPR = (annualRewards / stkWellTotalSupply) * 100;
+        markdown += `| Safety Module APR | ${safetyModuleAPR.toFixed(2)}% |\n`;
+        
+        // Add Safety Module Boosted APR if wellHolderBalance exists and is > 0
+        if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
+          const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 10**18;
+          const totalRewardsPerSecond = (parseFloat(networkMarketData.wellPerEpochSafetyModule) + wellBalance) / mainConfig.secondsPerEpoch;
+          const totalAnnualRewards = totalRewardsPerSecond * 31536000; // seconds in a year
+          const boostedSafetyModuleAPR = (totalAnnualRewards / stkWellTotalSupply) * 100;
+          markdown += `| **Safety Module Boosted APR** | **${boostedSafetyModuleAPR.toFixed(2)}%** |\n`;
+        }
+      }
+    }
+    
     // Add USD value of WELL from auctions if non-zero
     if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
       // Calculate USD value by first adjusting for 18 decimal places in the token amount

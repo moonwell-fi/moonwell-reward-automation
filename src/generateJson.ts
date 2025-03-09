@@ -244,7 +244,8 @@ export async function returnJson(marketData: any, network: string) {
           }
         } : {}),
         setMRDSpeeds: baseSetRewardSpeeds,
-        stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.base.wellPerEpochSafetyModule) / marketData.totalSeconds)
+        stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.base.wellPerEpochSafetyModule) + parseFloat(marketData.base.wellHolderBalance) / 1e18)
+          .div(marketData.totalSeconds)
           .shiftedBy(18)
           .integerValue().toNumber(),
         transferFrom: [
@@ -375,7 +376,8 @@ export async function returnJson(marketData: any, network: string) {
           }
         } : {}),
         setMRDSpeeds: optimismSetRewardSpeeds,
-        stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.optimism.wellPerEpochSafetyModule) / marketData.totalSeconds)
+        stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.optimism.wellPerEpochSafetyModule) + parseFloat(marketData.optimism.wellHolderBalance) / 1e18)
+          .div(marketData.totalSeconds)
           .shiftedBy(18)
           .integerValue()
           .toNumber(),
