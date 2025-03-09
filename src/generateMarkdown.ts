@@ -97,45 +97,45 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
     const dexWell = networkId === '10' ? networkMarketData?.wellPerEpochDex : networkId === '1284' ? networkMarketData?.wellPerEpochDex : networkId === '8453' ? mainConfig.base.dexRelayerAmount : null;
 
     markdown += `| | |\n`;
-    markdown += `| Total WELL to distribute DEX | ${Math.max(0, Number(dexWell || 0))} WELL |\n`;
-    markdown += `| Total WELL to distribute Safety Module | ${Math.max(0, Number(networkMarketData?.wellPerEpochSafetyModule || 0))} WELL |\n`;
+    markdown += `| Total WELL to distribute DEX | ${Math.max(0, Number(dexWell || 0)).toLocaleString()} WELL |\n`;
+    markdown += `| Total WELL to distribute Safety Module | ${Math.max(0, Number(networkMarketData?.wellPerEpochSafetyModule || 0)).toLocaleString()} WELL |\n`;
     
     // Add quantity of WELL from auctions if non-zero
     if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
       // Adjust for 18 decimal places to show human-readable amount
       const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 10**18;
-      markdown += `| Total WELL to distribute Safety Module (Auctions) | ${wellBalance} WELL |\n`;
+      markdown += `| Total WELL to distribute Safety Module (Auctions) | ${wellBalance.toLocaleString()} WELL |\n`;
     }
-    markdown += `| Total WELL to distribute Markets (Config) | ${Math.max(0, Number(networkMarketData?.wellPerEpochMarkets))} WELL |\n`;
-    markdown += `| Total WELL to distribute Markets (Sanity Check) | ${Math.max(0, Number(networkSummary?.totalWell)).toFixed(18)} WELL |\n`;
-    markdown += `| Total WELL to distribute Markets (Supply Side) | ${Math.max(0, Number(networkSummary?.supplyWell)).toFixed(18)} WELL |\n`;
-    markdown += `| Total WELL to distribute Markets (Borrow Side) | ${Math.max(0, Number(networkSummary?.borrowWell)).toFixed(18)} WELL |\n`;
-    markdown += `| Total WELL to distribute Markets (Borrow + Supply) | ${Math.max(0, Number(networkSummary?.borrowWell) + Number(networkSummary?.supplyWell)).toFixed(18)} WELL |\n`;
-    markdown += `| Total WELL to distribute Markets (By Speed) | ${Math.max(0, Number(networkSummary?.totalWellBySpeed)).toFixed(18)} WELL |\n`;
+    markdown += `| Total WELL to distribute Markets (Config) | ${Math.max(0, Number(networkMarketData?.wellPerEpochMarkets)).toLocaleString()} WELL |\n`;
+    markdown += `| Total WELL to distribute Markets (Sanity Check) | ${Math.max(0, Number(networkSummary?.totalWell)).toFixed(4).toLocaleString()} WELL |\n`;
+    markdown += `| Total WELL to distribute Markets (Supply Side) | ${Math.max(0, Number(networkSummary?.supplyWell)).toFixed(4).toLocaleString()} WELL |\n`;
+    markdown += `| Total WELL to distribute Markets (Borrow Side) | ${Math.max(0, Number(networkSummary?.borrowWell)).toFixed(4).toLocaleString()} WELL |\n`;
+    markdown += `| Total WELL to distribute Markets (Borrow + Supply) | ${Math.max(0, Number(networkSummary?.borrowWell) + Number(networkSummary?.supplyWell)).toFixed(4).toLocaleString()} WELL |\n`;
+    markdown += `| Total WELL to distribute Markets (By Speed) | ${Math.max(0, Number(networkSummary?.totalWellBySpeed)).toFixed(4).toLocaleString()} WELL |\n`;
     // Check if wellHolderBalance is non-zero and adjust the display accordingly
     if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
       const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 10**18;
       const totalWell = Math.max(0, Number(networkMarketData.wellPerEpoch) + wellBalance);
-      markdown += `| Total WELL to distribute (Config + Auctions) | ${totalWell} WELL |\n`;
+      markdown += `| Total WELL to distribute (Config + Auctions) | ${totalWell.toFixed(4).toLocaleString()} WELL |\n`;
     } else {
-      markdown += `| Total WELL to distribute (Config) | ${Math.max(0, Number(networkMarketData.wellPerEpoch))} WELL |\n`;
+      markdown += `| Total WELL to distribute (Config) | ${Math.max(0, Number(networkMarketData.wellPerEpoch)).toFixed(4).toLocaleString()} WELL |\n`;
     }
     // For Sanity Check, also add wellBalance if it exists
     if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
       const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 10**18;
-      markdown += `| Total WELL to distribute (Sanity Check) | ${Math.max(0, Number(networkMarketData?.wellPerEpochDex) + Number(networkMarketData?.wellPerEpochSafetyModule) + Number(networkSummary?.totalWell) + wellBalance).toFixed(18)} WELL \n`;
+      markdown += `| Total WELL to distribute (Sanity Check) | ${Math.max(0, Number(networkMarketData?.wellPerEpochDex) + Number(networkMarketData?.wellPerEpochSafetyModule) + Number(networkSummary?.totalWell) + wellBalance).toFixed(4).toLocaleString()} WELL \n`;
     } else {
-      markdown += `| Total WELL to distribute (Sanity Check) | ${Math.max(0, Number(networkMarketData?.wellPerEpochDex) + Number(networkMarketData?.wellPerEpochSafetyModule) + Number(networkSummary?.totalWell)).toFixed(18)} WELL \n`;
+      markdown += `| Total WELL to distribute (Sanity Check) | ${Math.max(0, Number(networkMarketData?.wellPerEpochDex) + Number(networkMarketData?.wellPerEpochSafetyModule) + Number(networkSummary?.totalWell)).toFixed(4).toLocaleString()} WELL \n`;
     }
 
     markdown += `| | |\n`;
     if (Number(networkMarketData?.nativePerEpoch) !== 0) {
-      markdown += `| Total ${nativeToken} to distribute Markets (Config) | ${Math.max(0, Number(networkMarketData?.nativePerEpoch)).toFixed(18)} ${nativeToken} |\n`;
-      markdown += `| Total ${nativeToken} to distribute Markets (Sanity Check) | ${Math.max(0, Number(networkSummary?.totalNative)).toFixed(18)} ${nativeToken} |\n`;
-      markdown += `| Total ${nativeToken} to distribute Markets (Supply Side) | ${Math.max(0, Number(networkSummary?.supplyNative)).toFixed(18)} ${nativeToken} |\n`;
-      markdown += `| Total ${nativeToken} to distribute Markets (Borrow Side) | ${Math.max(0, Number(networkSummary?.borrowNative)).toFixed(18)} ${nativeToken} |\n`;
-      markdown += `| Total ${nativeToken} to distribute Markets (Borrow + Supply) | ${Math.max(0, Number(networkSummary?.borrowNative) + Number(networkSummary?.supplyNative)).toFixed(18)} ${nativeToken} |\n`;
-      markdown += `| Total ${nativeToken} to distribute Markets (By Speed) | ${Math.max(0, Number(networkSummary?.totalNativeBySpeed)).toFixed(18)} ${nativeToken} |\n`;
+      markdown += `| Total ${nativeToken} to distribute Markets (Config) | ${Math.max(0, Number(networkMarketData?.nativePerEpoch)).toFixed(4).toLocaleString()} ${nativeToken} |\n`;
+      markdown += `| Total ${nativeToken} to distribute Markets (Sanity Check) | ${Math.max(0, Number(networkSummary?.totalNative)).toFixed(4).toLocaleString()} ${nativeToken} |\n`;
+      markdown += `| Total ${nativeToken} to distribute Markets (Supply Side) | ${Math.max(0, Number(networkSummary?.supplyNative)).toFixed(4).toLocaleString()} ${nativeToken} |\n`;
+      markdown += `| Total ${nativeToken} to distribute Markets (Borrow Side) | ${Math.max(0, Number(networkSummary?.borrowNative)).toFixed(4).toLocaleString()} ${nativeToken} |\n`;
+      markdown += `| Total ${nativeToken} to distribute Markets (Borrow + Supply) | ${Math.max(0, Number(networkSummary?.borrowNative) + Number(networkSummary?.supplyNative)).toFixed(4).toLocaleString()} ${nativeToken} |\n`;
+      markdown += `| Total ${nativeToken} to distribute Markets (By Speed) | ${Math.max(0, Number(networkSummary?.totalNativeBySpeed)).toFixed(4).toLocaleString()} ${nativeToken} |\n`;
     }
     markdown += `\n`;
     // Iterate over the markets for the specific network, but only include enabled markets
@@ -153,7 +153,7 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
       // Add reserves to auction if enabled and available
       if (market.reservesEnabled && (market.reserves - market.minimumReserves) > 0) {
         const reservesToAuction = (market.reserves - market.minimumReserves) * market.underlyingPrice;
-        markdown += `Reserves to auction: ${formatUSD(reservesToAuction)}\n`;
+        markdown += `**Reserves to auction: ${formatUSD(reservesToAuction)}**\n`;
       }
       markdown += '\n';
       markdown += `| Metric | Current Value | New Value |\n`;
