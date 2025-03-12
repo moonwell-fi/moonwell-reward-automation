@@ -301,7 +301,10 @@ export async function returnJson(marketData: any, network: string) {
         } : {}),
         withdrawWell: marketData.base.wellHolderBalance === "0" ? [] : [
           {
-            amount: new BigNumber(marketData.base.wellHolderBalance).toNumber(),
+            amount: new BigNumber(marketData.base.wellHolderBalance)
+              .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
+              .minus(1e15)
+              .toNumber(),
             to: "ECOSYSTEM_RESERVE_PROXY"
           }
         ],
@@ -431,7 +434,10 @@ export async function returnJson(marketData: any, network: string) {
         } : {}),
         withdrawWell: marketData.optimism.wellHolderBalance === "0" ? [] : [
           {
-            amount: new BigNumber(marketData.optimism.wellHolderBalance).toNumber(),
+            amount: new BigNumber(marketData.optimism.wellHolderBalance)
+              .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
+              .minus(1e15)
+              .toNumber(),
             to: "ECOSYSTEM_RESERVE_PROXY"
           }
         ],
