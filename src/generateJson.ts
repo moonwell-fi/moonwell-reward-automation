@@ -108,7 +108,17 @@ export async function returnJson(marketData: any, network: string) {
           initSale: {
             ...mainConfig.initSale,
             reserveAutomationContracts: marketData["1284"]
-              .filter((market: MarketType) => market.reservesEnabled)
+              .filter((market: MarketType) => {
+                if (!market.reservesEnabled) return false;
+                const reserves = market.reserves;
+                const minimumReserves = market.minimumReserves;
+                const amount = new BigNumber(reserves)
+                  .minus(new BigNumber(minimumReserves))
+                  .shiftedBy(market.digits)
+                  .decimalPlaces(0, BigNumber.ROUND_FLOOR)
+                  .toNumber();
+                return amount > 0;
+              })
               .map((market: MarketType) => `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`)
           }
         } : {}),
@@ -162,8 +172,9 @@ export async function returnJson(marketData: any, network: string) {
                 to: `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`
               };
             })
+            .filter((item: { amount: number; market: string; to: string }) => item.amount > 0)
         } : {}),
-        withdrawReserves: [],
+        withdrawWell: [],
       },
       endTimeSTamp: marketData.epochEndTimestamp,
       startTimeStamp: marketData.epochStartTimestamp,
@@ -218,12 +229,23 @@ export async function returnJson(marketData: any, network: string) {
           initSale: {
             ...mainConfig.initSale,
             reserveAutomationContracts: marketData["8453"]
-              .filter((market: MarketType) => market.reservesEnabled)
+              .filter((market: MarketType) => {
+                if (!market.reservesEnabled) return false;
+                const reserves = market.reserves;
+                const minimumReserves = market.minimumReserves;
+                const amount = new BigNumber(reserves)
+                  .minus(new BigNumber(minimumReserves))
+                  .shiftedBy(market.digits)
+                  .decimalPlaces(0, BigNumber.ROUND_FLOOR)
+                  .toNumber();
+                return amount > 0;
+              })
               .map((market: MarketType) => `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`)
           }
         } : {}),
         setMRDSpeeds: baseSetRewardSpeeds,
-        stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.base.wellPerEpochSafetyModule) / marketData.totalSeconds)
+        stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.base.wellPerEpochSafetyModule) + parseFloat(marketData.base.wellHolderBalance) / 1e18)
+          .div(marketData.totalSeconds)
           .shiftedBy(18)
           .integerValue().toNumber(),
         transferFrom: [
@@ -240,6 +262,7 @@ export async function returnJson(marketData: any, network: string) {
           { // Transfer bridged Safety Module rewards to the Ecosystem reserve
             amount: BigNumber(marketData.base.wellPerEpochSafetyModule)
               .shiftedBy(18)
+              .minus(marketData.base.wellHolderBalance)
               .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
               .minus(1e16)
               .toNumber(),
@@ -274,8 +297,17 @@ export async function returnJson(marketData: any, network: string) {
                 to: `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`
               };
             })
+            .filter((item: { amount: number; market: string; to: string }) => item.amount > 0)
         } : {}),
-        withdrawReserves: [],
+        withdrawWell: marketData.base.wellHolderBalance === "0" ? [] : [
+          {
+            amount: new BigNumber(marketData.base.wellHolderBalance)
+              .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
+              .minus(1e15)
+              .toNumber(),
+            to: "ECOSYSTEM_RESERVE_PROXY"
+          }
+        ],
       },
       endTimeSTamp: marketData.epochEndTimestamp,
       startTimeStamp: marketData.epochStartTimestamp,
@@ -329,12 +361,23 @@ export async function returnJson(marketData: any, network: string) {
           initSale: {
             ...mainConfig.initSale,
             reserveAutomationContracts: marketData["10"]
-              .filter((market: MarketType) => market.reservesEnabled)
+              .filter((market: MarketType) => {
+                if (!market.reservesEnabled) return false;
+                const reserves = market.reserves;
+                const minimumReserves = market.minimumReserves;
+                const amount = new BigNumber(reserves)
+                  .minus(new BigNumber(minimumReserves))
+                  .shiftedBy(market.digits)
+                  .decimalPlaces(0, BigNumber.ROUND_FLOOR)
+                  .toNumber();
+                return amount > 0;
+              })
               .map((market: MarketType) => `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`)
           }
         } : {}),
         setMRDSpeeds: optimismSetRewardSpeeds,
-        stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.optimism.wellPerEpochSafetyModule) / marketData.totalSeconds)
+        stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.optimism.wellPerEpochSafetyModule) + parseFloat(marketData.optimism.wellHolderBalance) / 1e18)
+          .div(marketData.totalSeconds)
           .shiftedBy(18)
           .integerValue()
           .toNumber(),
@@ -362,6 +405,7 @@ export async function returnJson(marketData: any, network: string) {
           { // Transfer bridged Safety Module rewards to the Multi Reward Distributor
             amount: BigNumber(marketData.optimism.wellPerEpochSafetyModule)
               .shiftedBy(18)
+              .minus(marketData.optimism.wellHolderBalance)
               .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
               .minus(1e16)
               .toNumber(),
@@ -386,8 +430,17 @@ export async function returnJson(marketData: any, network: string) {
                 to: `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`
               };
             })
+            .filter((item: { amount: number; market: string; to: string }) => item.amount > 0)
         } : {}),
-        withdrawReserves: [],
+        withdrawWell: marketData.optimism.wellHolderBalance === "0" ? [] : [
+          {
+            amount: new BigNumber(marketData.optimism.wellHolderBalance)
+              .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
+              .minus(1e15)
+              .toNumber(),
+            to: "ECOSYSTEM_RESERVE_PROXY"
+          }
+        ],
       },
       endTimeSTamp: marketData.epochEndTimestamp,
       startTimeStamp: marketData.epochStartTimestamp,

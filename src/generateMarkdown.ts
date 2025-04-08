@@ -77,8 +77,71 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
     markdown += `| ------ | ----- |\n`;
     markdown += `| Timestamp of capture | ${marketData.timestamp} |\n`;
     markdown += `| Closest block number | ${blockNumber} |\n`;
-    markdown += `| Total Supply in USD | ${formatUSD(networkSummary.supplyUSD)} |\n`;
+    markdown += `| Total Supply in USD for incentivized markets | ${formatUSD(networkSummary.supplyUSD)} |\n`;
     markdown += `| Total Borrows in USD | ${formatUSD(networkSummary.borrowUSD)} |\n`;
+    
+    // Calculate and display Safety Module APR
+    if (networkId === '1284') {
+      const stkWellTotalSupply = parseFloat(marketData.moonbeamStkWELLTotalSupply) / 10**18;
+      if (stkWellTotalSupply > 0) {
+        const rewardsPerSecond = parseFloat(networkMarketData.wellPerEpochSafetyModule) / mainConfig.secondsPerEpoch;
+        const annualRewards = rewardsPerSecond * 31536000; // seconds in a year
+        const safetyModuleAPR = (annualRewards / stkWellTotalSupply) * 100;
+        markdown += `| Safety Module APR | ${safetyModuleAPR.toFixed(2)}% |\n`;
+        
+        // Add Safety Module Boosted APR if wellHolderBalance exists and is > 0
+        if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
+          const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 10**18;
+          const totalRewardsPerSecond = (parseFloat(networkMarketData.wellPerEpochSafetyModule) + wellBalance) / mainConfig.secondsPerEpoch;
+          const totalAnnualRewards = totalRewardsPerSecond * 31536000; // seconds in a year
+          const boostedSafetyModuleAPR = (totalAnnualRewards / stkWellTotalSupply) * 100;
+          markdown += `| **Safety Module Boosted APR** | **${boostedSafetyModuleAPR.toFixed(2)}%** |\n`;
+        }
+      }
+    } else if (networkId === '8453') {
+      const stkWellTotalSupply = parseFloat(marketData.baseStkWELLTotalSupply) / 10**18;
+      if (stkWellTotalSupply > 0) {
+        const rewardsPerSecond = parseFloat(networkMarketData.wellPerEpochSafetyModule) / mainConfig.secondsPerEpoch;
+        const annualRewards = rewardsPerSecond * 31536000; // seconds in a year
+        const safetyModuleAPR = (annualRewards / stkWellTotalSupply) * 100;
+        markdown += `| Safety Module APR | ${safetyModuleAPR.toFixed(2)}% |\n`;
+        
+        // Add Safety Module Boosted APR if wellHolderBalance exists and is > 0
+        if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
+          const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 10**18;
+          const totalRewardsPerSecond = (parseFloat(networkMarketData.wellPerEpochSafetyModule) + wellBalance) / mainConfig.secondsPerEpoch;
+          const totalAnnualRewards = totalRewardsPerSecond * 31536000; // seconds in a year
+          const boostedSafetyModuleAPR = (totalAnnualRewards / stkWellTotalSupply) * 100;
+          markdown += `| **Safety Module Boosted APR** | **${boostedSafetyModuleAPR.toFixed(2)}%** |\n`;
+        }
+      }
+    } else if (networkId === '10') {
+      const stkWellTotalSupply = parseFloat(marketData.optimismStkWELLTotalSupply) / 10**18;
+      if (stkWellTotalSupply > 0) {
+        const rewardsPerSecond = parseFloat(networkMarketData.wellPerEpochSafetyModule) / mainConfig.secondsPerEpoch;
+        const annualRewards = rewardsPerSecond * 31536000; // seconds in a year
+        const safetyModuleAPR = (annualRewards / stkWellTotalSupply) * 100;
+        markdown += `| Safety Module APR | ${safetyModuleAPR.toFixed(2)}% |\n`;
+        
+        // Add Safety Module Boosted APR if wellHolderBalance exists and is > 0
+        if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
+          const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 10**18;
+          const totalRewardsPerSecond = (parseFloat(networkMarketData.wellPerEpochSafetyModule) + wellBalance) / mainConfig.secondsPerEpoch;
+          const totalAnnualRewards = totalRewardsPerSecond * 31536000; // seconds in a year
+          const boostedSafetyModuleAPR = (totalAnnualRewards / stkWellTotalSupply) * 100;
+          markdown += `| **Safety Module Boosted APR** | **${boostedSafetyModuleAPR.toFixed(2)}%** |\n`;
+        }
+      }
+    }
+    
+    // Add USD value of WELL from auctions if non-zero
+    if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
+      // Calculate USD value by first adjusting for 18 decimal places in the token amount
+      const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 10**18; // Adjust for 18 decimal places
+      const wellPrice = parseFloat(marketData.wellPrice);
+      const wellUsdValue = wellBalance * wellPrice;
+      markdown += `| **Total WELL acquired in auctions (USD)** | **${formatUSD(wellUsdValue)}** |\n`;
+    }
 
     if (networkDexInfo) {
       markdown += `| | |\n`;
@@ -88,27 +151,54 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
     const dexWell = networkId === '10' ? networkMarketData?.wellPerEpochDex : networkId === '1284' ? networkMarketData?.wellPerEpochDex : networkId === '8453' ? mainConfig.base.dexRelayerAmount : null;
 
     markdown += `| | |\n`;
-    markdown += `| Total WELL to distribute DEX | ${Math.max(0, Number(dexWell || 0))} WELL |\n`;
-    markdown += `| Total WELL to distribute Safety Module | ${Math.max(0, Number(networkMarketData?.wellPerEpochSafetyModule || 0))} WELL |\n`;
-    markdown += `| Total WELL to distribute Markets (Config) | ${Math.max(0, Number(networkMarketData?.wellPerEpochMarkets))} WELL |\n`;
-    markdown += `| Total WELL to distribute Markets (Sanity Check) | ${Math.max(0, Number(networkSummary?.totalWell)).toFixed(18)} WELL |\n`;
-    markdown += `| Total WELL to distribute Markets (Supply Side) | ${Math.max(0, Number(networkSummary?.supplyWell)).toFixed(18)} WELL |\n`;
-    markdown += `| Total WELL to distribute Markets (Borrow Side) | ${Math.max(0, Number(networkSummary?.borrowWell)).toFixed(18)} WELL |\n`;
-    markdown += `| Total WELL to distribute Markets (Borrow + Supply) | ${Math.max(0, Number(networkSummary?.borrowWell) + Number(networkSummary?.supplyWell)).toFixed(18)} WELL |\n`;
-    markdown += `| Total WELL to distribute Markets (By Speed) | ${Math.max(0, Number(networkSummary?.totalWellBySpeed)).toFixed(18)} WELL |\n`;
-    markdown += `| Total WELL to distribute (Config) | ${Math.max(0, Number(networkMarketData.wellPerEpoch))} WELL |\n`;
-    markdown += `| Total WELL to distribute (Sanity Check) | ${Math.max(0, Number(networkMarketData?.wellPerEpochDex) + Number(networkMarketData?.wellPerEpochSafetyModule) + Number(networkSummary?.totalWell)).toFixed(18)} WELL \n`;
+    markdown += `| Total WELL to distribute DEX | ${Math.max(0, Number(dexWell || 0)).toLocaleString()} WELL |\n`;
+    markdown += `| Total WELL to distribute Safety Module | ${Math.max(0, Number(networkMarketData?.wellPerEpochSafetyModule || 0)).toLocaleString()} WELL |\n`;
+    
+    // Add quantity of WELL from auctions if non-zero
+    if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
+      // Adjust for 18 decimal places to show human-readable amount
+      const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 10**18;
+      markdown += `| Total WELL to distribute Safety Module (Auctions) | ${wellBalance.toLocaleString()} WELL |\n`;
+    }
+    markdown += `| Total WELL to distribute Markets (Config) | ${Math.max(0, Number(networkMarketData?.wellPerEpochMarkets)).toLocaleString()} WELL |\n`;
+    markdown += `| Total WELL to distribute Markets (Sanity Check) | ${Math.max(0, Number(networkSummary?.totalWell)).toFixed(4).toLocaleString()} WELL |\n`;
+    markdown += `| Total WELL to distribute Markets (Supply Side) | ${Math.max(0, Number(networkSummary?.supplyWell)).toFixed(4).toLocaleString()} WELL |\n`;
+    markdown += `| Total WELL to distribute Markets (Borrow Side) | ${Math.max(0, Number(networkSummary?.borrowWell)).toFixed(4).toLocaleString()} WELL |\n`;
+    markdown += `| Total WELL to distribute Markets (Borrow + Supply) | ${Math.max(0, Number(networkSummary?.borrowWell) + Number(networkSummary?.supplyWell)).toFixed(4).toLocaleString()} WELL |\n`;
+    markdown += `| Total WELL to distribute Markets (By Speed) | ${Math.max(0, Number(networkSummary?.totalWellBySpeed)).toFixed(4).toLocaleString()} WELL |\n`;
+    // Check if wellHolderBalance is non-zero and adjust the display accordingly
+    if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
+      const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 10**18;
+      const totalWell = Math.max(0, Number(networkMarketData.wellPerEpoch) + wellBalance);
+      markdown += `| Total WELL to distribute (Config + Auctions) | ${totalWell.toFixed(4).toLocaleString()} WELL |\n`;
+    } else {
+      markdown += `| Total WELL to distribute (Config) | ${Math.max(0, Number(networkMarketData.wellPerEpoch)).toFixed(4).toLocaleString()} WELL |\n`;
+    }
+    // For Sanity Check, also add wellBalance if it exists
+    if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
+      const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 10**18;
+      markdown += `| Total WELL to distribute (Sanity Check) | ${Math.max(0, Number(networkMarketData?.wellPerEpochDex) + Number(networkMarketData?.wellPerEpochSafetyModule) + Number(networkSummary?.totalWell) + wellBalance).toFixed(4).toLocaleString()} WELL \n`;
+    } else {
+      markdown += `| Total WELL to distribute (Sanity Check) | ${Math.max(0, Number(networkMarketData?.wellPerEpochDex) + Number(networkMarketData?.wellPerEpochSafetyModule) + Number(networkSummary?.totalWell)).toFixed(4).toLocaleString()} WELL \n`;
+    }
 
     markdown += `| | |\n`;
-    markdown += `| Total ${nativeToken} to distribute Markets (Config) | ${Math.max(0, Number(networkMarketData?.nativePerEpoch)).toFixed(18)} ${nativeToken} |\n`;
-    markdown += `| Total ${nativeToken} to distribute Markets (Sanity Check) | ${Math.max(0, Number(networkSummary?.totalNative)).toFixed(18)} ${nativeToken} |\n`;
-    markdown += `| Total ${nativeToken} to distribute Markets (Supply Side) | ${Math.max(0, Number(networkSummary?.supplyNative)).toFixed(18)} ${nativeToken} |\n`;
-    markdown += `| Total ${nativeToken} to distribute Markets (Borrow Side) | ${Math.max(0, Number(networkSummary?.borrowNative)).toFixed(18)} ${nativeToken} |\n`;
-    markdown += `| Total ${nativeToken} to distribute Markets (Borrow + Supply) | ${Math.max(0, Number(networkSummary?.borrowNative) + Number(networkSummary?.supplyNative)).toFixed(18)} ${nativeToken} |\n`;
-    markdown += `| Total ${nativeToken} to distribute Markets (By Speed) | ${Math.max(0, Number(networkSummary?.totalNativeBySpeed)).toFixed(18)} ${nativeToken} |\n`;
+    if (Number(networkMarketData?.nativePerEpoch) !== 0) {
+      markdown += `| Total ${nativeToken} to distribute Markets (Config) | ${Math.max(0, Number(networkMarketData?.nativePerEpoch)).toFixed(4).toLocaleString()} ${nativeToken} |\n`;
+      markdown += `| Total ${nativeToken} to distribute Markets (Sanity Check) | ${Math.max(0, Number(networkSummary?.totalNative)).toFixed(4).toLocaleString()} ${nativeToken} |\n`;
+      markdown += `| Total ${nativeToken} to distribute Markets (Supply Side) | ${Math.max(0, Number(networkSummary?.supplyNative)).toFixed(4).toLocaleString()} ${nativeToken} |\n`;
+      markdown += `| Total ${nativeToken} to distribute Markets (Borrow Side) | ${Math.max(0, Number(networkSummary?.borrowNative)).toFixed(4).toLocaleString()} ${nativeToken} |\n`;
+      markdown += `| Total ${nativeToken} to distribute Markets (Borrow + Supply) | ${Math.max(0, Number(networkSummary?.borrowNative) + Number(networkSummary?.supplyNative)).toFixed(4).toLocaleString()} ${nativeToken} |\n`;
+      markdown += `| Total ${nativeToken} to distribute Markets (By Speed) | ${Math.max(0, Number(networkSummary?.totalNativeBySpeed)).toFixed(4).toLocaleString()} ${nativeToken} |\n`;
+    }
     markdown += `\n`;
-    // Iterate over the markets for the specific network
+    // Iterate over the markets for the specific network, but only include enabled markets
     for (const market of Object.values(marketData[networkId])) {
+      // Skip markets that are not enabled
+      if (!market.enabled) {
+        continue;
+      }
+      
       markdown += `### ${market.name} (${market.alias})\n\n`;
       // Cancel out boosts and deboosts so we don't show incorrect total supply in USD
       markdown += `Total Supply in USD: ${formatUSD(market.totalSupplyUSD - market.boost + market.deboost)}\n`;
@@ -117,7 +207,7 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
       // Add reserves to auction if enabled and available
       if (market.reservesEnabled && (market.reserves - market.minimumReserves) > 0) {
         const reservesToAuction = (market.reserves - market.minimumReserves) * market.underlyingPrice;
-        markdown += `Reserves to auction: ${formatUSD(reservesToAuction)}\n`;
+        markdown += `**Reserves to auction: ${formatUSD(reservesToAuction)}**\n`;
       }
       markdown += '\n';
       markdown += `| Metric | Current Value | New Value |\n`;
@@ -126,19 +216,33 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
       markdown += `| Borrow APY | ${Math.max(0, market.borrowApy * 100).toFixed(2)}% | ${Math.max(0, market.borrowApy * 100).toFixed(2)}% |\n`;
       markdown += `| WELL Supply APR | ${Math.max(0, market.wellSupplyApr)}% | ${Math.max(0, market.newWellSupplyApr)}% |\n`;
       markdown += `| WELL Borrow APR | ${Math.max(0, market.wellBorrowApr)}% | ${Math.max(0, market.newWellBorrowApr)}% |\n`;
-      markdown += `| ${nativeToken} Supply APR | ${Math.max(0, market.nativeSupplyApr)}% | ${Math.max(0, market.newNativeSupplyApr)}% |\n`;
-      markdown += `| ${nativeToken} Borrow APR | ${Math.max(0, market.nativeBorrowApr)}% | ${Math.max(0, market.newNativeBorrowApr)}% |\n`;
-      markdown += `| Total Supply APR | ${Math.max(0, ((Number(market.supplyApy) + (market.wellSupplyApr / 100) + (market.nativeSupplyApr / 100)) * 100)).toFixed(2)}% | ${Math.max(0, ((Number(market.supplyApy) + (market.newWellSupplyApr / 100) + (market.newNativeSupplyApr / 100)) * 100)).toFixed(2)}% |\n`;
-      markdown += `| Total Borrow APR | ${Math.max(0, ((Number(market.borrowApy) - (market.wellBorrowApr / 100) - (market.nativeBorrowApr / 100)) * 100)).toFixed(2)}% | ${Math.max(0, ((Number(market.borrowApy) - (market.newWellBorrowApr / 100) - (market.newNativeBorrowApr / 100)) * 100)).toFixed(2)}% |\n`;
-      markdown += `| Total Supply Incentives Per Day in USD | ${formatUSD(Math.max(0, (Number(market.wellSupplyPerDayUsd) + Number(market.nativeSupplyPerDayUsd))))} | ${formatUSD(Math.max(0, (Number(market.newWellSupplyPerDayUsd) + Number(market.newNativeSupplyPerDayUsd))))} |\n`;
-      markdown += `| Total Borrow Incentives Per Day in USD | ${formatUSD(Math.max(0, (Number(market.wellBorrowPerDayUsd) + Number(market.nativeBorrowPerDayUsd))))} | ${formatUSD(Math.max(0, (Number(market.newWellBorrowPerDayUsd) + Number(market.newNativeBorrowPerDayUsd))))} |\n`;
+      if (Number(networkMarketData?.nativePerEpoch) !== 0) {
+        markdown += `| ${nativeToken} Supply APR | ${Math.max(0, market.nativeSupplyApr)}% | ${Math.max(0, market.newNativeSupplyApr)}% |\n`;
+        markdown += `| ${nativeToken} Borrow APR | ${Math.max(0, market.nativeBorrowApr)}% | ${Math.max(0, market.newNativeBorrowApr)}% |\n`;
+      }
+      if (Number(networkMarketData?.nativePerEpoch) !== 0) {
+        markdown += `| Total Supply APR | ${Math.max(0, ((Number(market.supplyApy) + (market.wellSupplyApr / 100) + (market.nativeSupplyApr / 100)) * 100)).toFixed(2)}% | ${Math.max(0, ((Number(market.supplyApy) + (market.newWellSupplyApr / 100) + (market.newNativeSupplyApr / 100)) * 100)).toFixed(2)}% |\n`;
+        markdown += `| Total Borrow APR | ${Math.max(0, ((Number(market.borrowApy) - (market.wellBorrowApr / 100) - (market.nativeBorrowApr / 100)) * 100)).toFixed(2)}% | ${Math.max(0, ((Number(market.borrowApy) - (market.newWellBorrowApr / 100) - (market.newNativeBorrowApr / 100)) * 100)).toFixed(2)}% |\n`;
+      } else {
+        markdown += `| Total Supply APR | ${Math.max(0, ((Number(market.supplyApy) + (market.wellSupplyApr / 100)) * 100)).toFixed(2)}% | ${Math.max(0, ((Number(market.supplyApy) + (market.newWellSupplyApr / 100)) * 100)).toFixed(2)}% |\n`;
+        markdown += `| Total Borrow APR | ${Math.max(0, ((Number(market.borrowApy) - (market.wellBorrowApr / 100)) * 100)).toFixed(2)}% | ${Math.max(0, ((Number(market.borrowApy) - (market.newWellBorrowApr / 100)) * 100)).toFixed(2)}% |\n`;
+      }
+      if (Number(networkMarketData?.nativePerEpoch) !== 0) {
+        markdown += `| Total Supply Incentives Per Day in USD | ${formatUSD(Math.max(0, (Number(market.wellSupplyPerDayUsd) + Number(market.nativeSupplyPerDayUsd))))} | ${formatUSD(Math.max(0, (Number(market.newWellSupplyPerDayUsd) + Number(market.newNativeSupplyPerDayUsd))))} |\n`;
+        markdown += `| Total Borrow Incentives Per Day in USD | ${formatUSD(Math.max(0, (Number(market.wellBorrowPerDayUsd) + Number(market.nativeBorrowPerDayUsd))))} | ${formatUSD(Math.max(0, (Number(market.newWellBorrowPerDayUsd) + Number(market.newNativeBorrowPerDayUsd))))} |\n`;
+      } else {
+        markdown += `| Total Supply Incentives Per Day in USD | ${formatUSD(Math.max(0, Number(market.wellSupplyPerDayUsd)))} | ${formatUSD(Math.max(0, Number(market.newWellSupplyPerDayUsd)))} |\n`;
+        markdown += `| Total Borrow Incentives Per Day in USD | ${formatUSD(Math.max(0, Number(market.wellBorrowPerDayUsd)))} | ${formatUSD(Math.max(0, Number(market.newWellBorrowPerDayUsd)))} |\n`;
+      }
       markdown += '\n';
       markdown += `| Metric | % Change |\n`;
       markdown += `| --- | --- |\n`;
       markdown += `| WELL Supply | ${market.wellChangeSupplySpeedPercentage}% |\n`;
       markdown += `| WELL Borrow | ${market.wellChangeBorrowSpeedPercentage}% |\n`;
-      markdown += `| ${nativeToken} Supply | ${market.nativeChangeSupplySpeedPercentage}% |\n`;
-      markdown += `| ${nativeToken} Borrow | ${market.nativeChangeBorrowSpeedPercentage === 99999999999900 ? '0%' : `${market.nativeChangeBorrowSpeedPercentage}%`} |\n`;
+      if (Number(networkMarketData?.nativePerEpoch) !== 0) {
+        markdown += `| ${nativeToken} Supply | ${market.nativeChangeSupplySpeedPercentage}% |\n`;
+        markdown += `| ${nativeToken} Borrow | ${market.nativeChangeBorrowSpeedPercentage === 99999999999900 ? '0%' : `${market.nativeChangeBorrowSpeedPercentage}%`} |\n`;
+      }
     }
   } else {
     markdown += 'Invalid network provided.\n';

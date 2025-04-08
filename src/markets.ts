@@ -20,7 +20,12 @@ import {
   baseViewsContract,
   optimismViewsContract,
   xWellRouterContract,
-  excludedMarkets
+  excludedMarkets,
+  baseStkWELL,
+  optimismStkWELL,
+  moonbeamStkWELL,
+  baseWellHolder,
+  optimismWellHolder
 } from "./config";
 
 import { mTokenv1ABI, mTokenv2ABI } from "./constants";
@@ -325,81 +330,100 @@ export async function getMarketData(timestamp: number) {
     return config ? config.enabled : null;
   });
 
-  const moonbeamPrices = (await moonbeamClient.multicall({
+  // Fetch prices from oracle
+  const moonbeamPricesResponse = await moonbeamClient.multicall({
     contracts: moonbeamMarkets.map(market => ({
       ...moonbeamOracleContract,
       functionName: "getUnderlyingPrice",
       blockNumber: BigInt(moonbeamBlockNumber),
       args: [market],
     } as ContractCall)),
-  })).map((price) => price.result as bigint);
+  });
+  
+  // Check for zero prices and log them
+  const moonbeamPrices = moonbeamPricesResponse.map((price, index) => {
+    const priceValue = price.result as bigint;
+    if (priceValue === BigInt(0)) {
+      console.log(`⚠️ ZERO PRICE ALERT: Moonbeam market ${moonbeamNames[index]} (${moonbeamMarkets[index]}) has price = 0`);
+    }
+    return priceValue;
+  });
 
-  // Find index of GLMR market
-  const moonbeamGlmrIndex = moonbeamMarkets.findIndex(
+  const glmrIndex = moonbeamMarkets.findIndex(
     (market) => moonbeamNames[moonbeamMarkets.indexOf(market)] === "GLMR"
   );
   
-  // Default to 0 if market not found or price undefined
-  const moonbeamNativePrice = moonbeamGlmrIndex !== -1 && moonbeamPrices[moonbeamGlmrIndex] 
-    ? formatUnits(moonbeamPrices[moonbeamGlmrIndex], (36 - 18))
-    : "0";
+  const moonbeamNativePrice = formatUnits(
+    moonbeamPrices[glmrIndex], 
+    (36 - 18)
+  );
 
-  const basePrices = (await baseClient.multicall({
+  // Fetch prices from oracle for Base
+  const basePricesResponse = await baseClient.multicall({
     contracts: baseMarkets.map(market => ({
       ...baseOracleContract,
       functionName: "getUnderlyingPrice",
       blockNumber: BigInt(baseBlockNumber),
       args: [market],
     } as ContractCall)),
-  })).map((price) => price.result as bigint);
+  });
+  
+  // Check for zero prices and log them
+  const basePrices = basePricesResponse.map((price, index) => {
+    const priceValue = price.result as bigint;
+    if (priceValue === BigInt(0)) {
+      console.log(`⚠️ ZERO PRICE ALERT: Base market ${baseNames[index]} (${baseMarkets[index]}) has price = 0`);
+    }
+    return priceValue;
+  });
 
-  // Find index of USDC market
-  const baseUsdcIndex = baseMarkets.findIndex(
+  const usdcIndex = baseMarkets.findIndex(
     (market) => baseNames[baseMarkets.indexOf(market)] === "USDC"
   );
+  
+  const baseNativePrice = formatUnits(
+    basePrices[usdcIndex], 
+    (36 - 6)
+  );
 
-  // Default to 0 if market not found or price undefined
-  const baseNativePrice = baseUsdcIndex !== -1 && basePrices[baseUsdcIndex]
-    ? formatUnits(basePrices[baseUsdcIndex], (36 - 6))
-    : "0";
-
-  const optimismPrices = (await optimismClient.multicall({
+  // Fetch prices from oracle for Optimism
+  const optimismPricesResponse = await optimismClient.multicall({
     contracts: optimismMarkets.map(market => ({
       ...optimismOracleContract,
       functionName: "getUnderlyingPrice",
       blockNumber: BigInt(optimismBlockNumber),
       args: [market],
     } as ContractCall)),
-  })).map((price) => price.result as bigint);
+  });
+  
+  // Check for zero prices and log them
+  const optimismPrices = optimismPricesResponse.map((price, index) => {
+    const priceValue = price.result as bigint;
+    if (priceValue === BigInt(0)) {
+      console.log(`⚠️ ZERO PRICE ALERT: Optimism market ${optimismNames[index]} (${optimismMarkets[index]}) has price = 0`);
+    }
+    return priceValue;
+  });
 
-  // Find index of OP market
-  const optimismOpIndex = optimismMarkets.findIndex(
+  const opIndex = optimismMarkets.findIndex(
     (market) => optimismNames[optimismMarkets.indexOf(market)] === "OP"
   );
-
-  // Default to 0 if market not found or price undefined
-  const optimismNativePrice = optimismOpIndex !== -1 && optimismPrices[optimismOpIndex] !== undefined
-    ? formatUnits(optimismPrices[optimismOpIndex], (36 - 18))
-    : "0";
+  
+  const optimismNativePrice = formatUnits(
+    optimismPrices[opIndex], 
+    (36 - 18)
+  );
 
   const ethPrice = basePrices.find(
     (price, index) => baseMarkets[index] === marketConfigs[8453].find(config => config.nameOverride === 'ETH')?.address
   ) || BigInt(0);
 
-  let wellPrice = BigInt(0);
-  try {
-    const quoteResult = await baseClient.readContract({
-      ...aeroMarketContract,
-      functionName: "quote",
-      blockNumber: BigInt(baseBlockNumber),
-      args: [xWellToken.address, BigInt(1e18), BigInt(1)],
-    }) as bigint;
-    wellPrice = (quoteResult * ethPrice) / BigInt(1e18);
-  } catch (error) {
-    console.error("Failed to get WELL price from Aerodrome, using default price");
-    // Use a default price if the quote fails
-    wellPrice = BigInt(1e18); // Default to 1 USD
-  }
+  const wellPrice = (await baseClient.readContract({
+    ...aeroMarketContract,
+    functionName: "quote",
+    blockNumber: BigInt(baseBlockNumber),
+    args: [xWellToken.address, BigInt(1e18), BigInt(1)],
+  })) * BigInt(ethPrice) as bigint;
 
   const moonbeamSupplies = (await moonbeamClient.multicall({
     contracts: moonbeamMarkets.map(market => ({
@@ -902,21 +926,17 @@ export async function getMarketData(timestamp: number) {
       const deboost = deboosts[index];
       const borrow = borrows[index];
       const enabled = enabledMarkets[index];
-      let supplyUSD = 0;
-      let borrowUSD = 0;
 
-      // Calculate supply and borrow USD values regardless of enabled status
-      supplyUSD =
-        Number(formatUnits(supply, 8)) *
-        Number(formatUnits(exchangeRate, 18 + digit - 8)) *
-        Number(formatUnits(price, 36 - digit));
+      if (enabled) { // Only include markets that are enabled
+        const supplyUSD =
+          Number(formatUnits(supply, 8)) *
+          Number(formatUnits(exchangeRate, 18 + digit - 8)) *
+          Number(formatUnits(price, 36 - digit));
 
-      borrowUSD =
-        Number(formatUnits(borrow, digit)) *
-        Number(formatUnits(price, 36 - digit));
+        const borrowUSD =
+          Number(formatUnits(borrow, digit)) *
+          Number(formatUnits(price, 36 - digit));
 
-      // Only add to totals if market is enabled
-      if (enabled) {
         totalSupplyUSD += supplyUSD + boost - deboost;
         totalBorrowsUSD += borrowUSD;
       }
@@ -1308,8 +1328,20 @@ export async function getMarketData(timestamp: number) {
           borrows[index] as bigint,
           digits[index] as number
         )),
-    totalSupplyUSD: Number(suppliesUsd[index].toFixed(2)),
-    totalBorrowsUSD: Number(borrowsUsd[index].toFixed(2)),
+    totalSupplyUSD: (() => {
+      const value = Number(suppliesUsd[index].toFixed(2));
+      if (value === 0 && enabled[index]) {
+        console.log(`⚠️ ZERO SUPPLY USD ALERT: ${chainId === 1284 ? 'Moonbeam' : chainId === 8453 ? 'Base' : 'Optimism'} market ${names[index]} (${market}) has totalSupplyUSD = 0`);
+      }
+      return value;
+    })(),
+    totalBorrowsUSD: (() => {
+      const value = Number(borrowsUsd[index].toFixed(2));
+      if (value === 0 && enabled[index]) {
+        console.log(`⚠️ ZERO BORROW USD ALERT: ${chainId === 1284 ? 'Moonbeam' : chainId === 8453 ? 'Base' : 'Optimism'} market ${names[index]} (${market}) has totalBorrowsUSD = 0`);
+      }
+      return value;
+    })(),
     reserves: Number(formatUnits(reserves[index], digits[index] as number)),
     currentWellSupplySpeed: Number(formatUnits(currentWellSupplySpeed[index], 18)),
     currentWellBorrowSpeed: Number(formatUnits(currentWellBorrowSpeed[index], 18)),
@@ -1487,6 +1519,102 @@ export async function getMarketData(timestamp: number) {
     nativePerEpochMarketBorrow: Number(totalNativePerEpochMarkets * percentages[index] * borrow[index]),
   }));
 
+  // Get xWellToken balance for optimismWellHolder
+  const optimismWellHolderBalance = await optimismClient.readContract({
+    address: xWellToken.address,
+    abi: [
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          }
+        ],
+        "name": "balanceOf",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ],
+    functionName: "balanceOf",
+    args: [optimismWellHolder],
+    blockNumber: BigInt(optimismBlockNumber),
+  }) as bigint;
+
+  // Get xWellToken balance for baseWellHolder
+  const baseWellHolderBalance = await baseClient.readContract({
+    address: xWellToken.address,
+    abi: [
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          }
+        ],
+        "name": "balanceOf",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ],
+    functionName: "balanceOf",
+    args: [baseWellHolder],
+    blockNumber: BigInt(baseBlockNumber),
+  }) as bigint;
+
+  // Get totalSupply from each stkWELL contract
+  const erc20TotalSupplyAbi = [
+    {
+      "inputs": [],
+      "name": "totalSupply",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ];
+
+  const baseStkWELLTotalSupply = await baseClient.readContract({
+    address: baseStkWELL,
+    abi: erc20TotalSupplyAbi,
+    functionName: "totalSupply",
+    blockNumber: BigInt(baseBlockNumber),
+  }) as bigint;
+
+  const optimismStkWELLTotalSupply = await optimismClient.readContract({
+    address: optimismStkWELL,
+    abi: erc20TotalSupplyAbi,
+    functionName: "totalSupply",
+    blockNumber: BigInt(optimismBlockNumber),
+  }) as bigint;
+
+  const moonbeamStkWELLTotalSupply = await moonbeamClient.readContract({
+    address: moonbeamStkWELL,
+    abi: erc20TotalSupplyAbi,
+    functionName: "totalSupply",
+    blockNumber: BigInt(moonbeamBlockNumber),
+  }) as bigint;
+
   return {
     10: formatResults(
       optimismMarkets,
@@ -1644,8 +1772,9 @@ export async function getMarketData(timestamp: number) {
       wellPerEpoch: Number(mainConfig.totalWellPerEpoch * baseTotalMarketPercentage).toFixed(18),
       nativePerEpoch: mainConfig.base.nativePerEpoch,
       wellPerEpochMarkets: Number((mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.markets).toFixed(18),
-      wellPerEpochSafetyModule: Number((mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.safetyModule).toFixed(18),
+      wellPerEpochSafetyModule: Number(((mainConfig.totalWellPerEpoch) * baseTotalMarketPercentage) * mainConfig.base.safetyModule).toFixed(18),
       wellPerEpochDex: Number((mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.dex).toFixed(18),
+      wellHolderBalance: baseWellHolderBalance.toString(),
     },
     optimism: {
       ...mainConfig.optimism,
@@ -1654,9 +1783,13 @@ export async function getMarketData(timestamp: number) {
       wellPerEpoch: Number(mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage).toFixed(18),
       nativePerEpoch: mainConfig.optimism.nativePerEpoch,
       wellPerEpochMarkets: Number((mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage) * mainConfig.optimism.markets).toFixed(18),
-      wellPerEpochSafetyModule: Number((mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage) * mainConfig.optimism.safetyModule).toFixed(18),
+      wellPerEpochSafetyModule: Number(((mainConfig.totalWellPerEpoch) * optimismTotalMarketPercentage) * mainConfig.optimism.safetyModule).toFixed(18),
       wellPerEpochDex: Number((mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage) * mainConfig.optimism.dex).toFixed(18),
+      wellHolderBalance: optimismWellHolderBalance.toString(),
     },
     safetyModule: safetyModuleData,
+    baseStkWELLTotalSupply: baseStkWELLTotalSupply.toString(),
+    optimismStkWELLTotalSupply: optimismStkWELLTotalSupply.toString(),
+    moonbeamStkWELLTotalSupply: moonbeamStkWELLTotalSupply.toString(),
   };
 }
