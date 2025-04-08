@@ -375,6 +375,28 @@ export async function returnJson(marketData: any, network: string) {
               .map((market: MarketType) => `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`)
           }
         } : {}),
+        multiRewards: mainConfig.optimism.multirewarderUsdcOPAmount === 0 ? [] : [
+          {
+            addRewards: [
+              {
+                distributor: "USDC_MULTI_REWARDER",
+                duration: mainConfig.secondsPerEpoch,
+                rewardToken: "OP"
+              }
+            ],
+            notifyRewardAmount: [
+              {
+                reward: BigNumber(mainConfig.optimism.multirewarderUsdcOPAmount)
+                .shiftedBy(18)
+                .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
+                .minus(1e16)
+                .toNumber(),
+                rewardToken: "OP"
+              }
+            ],
+            vault: "USDC_METAMORPHO_VAULT",
+          }
+        ],
         setMRDSpeeds: optimismSetRewardSpeeds,
         stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.optimism.wellPerEpochSafetyModule) + parseFloat(marketData.optimism.wellHolderBalance) / 1e18)
           .div(marketData.totalSeconds)
@@ -392,6 +414,18 @@ export async function returnJson(marketData: any, network: string) {
             to: "MRD_PROXY",
             token: "OP",
           },
+          ...(mainConfig.optimism.multirewarderUsdcOPAmount !== 0 ? [
+            { // Transfer native OP rewards to the MultiRewarder
+              amount: BigNumber(mainConfig.optimism.multirewarderUsdcOPAmount)
+                .shiftedBy(18)
+                .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
+                .minus(1e16)
+                .toNumber(),
+              from: "FOUNDATION_OP_MULTISIG",
+              to: "USDC_MULTI_REWARDER",
+              token: "OP",
+            }
+          ] : []),
           { // Transfer bridged market rewards to the Multi Reward Distributor
             amount: BigNumber(marketData.optimism.wellPerEpochMarkets)
               .shiftedBy(18)

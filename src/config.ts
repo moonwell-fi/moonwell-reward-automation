@@ -25,10 +25,11 @@ export const mainConfig = {
     dexRelayerAmount: 600_191.93879185, // 7,202,303.2655022416 WELL / 12 4-week epochs
   },
   optimism: {
-    nativePerEpoch: 0,
+    nativePerEpoch: 33_333,
     markets: 0.87,
     safetyModule: 0.1,
     dex: 0.03,
+    multirewarderUsdcOPAmount: 1234,
   },
   initSale: {
     auctionPeriod: 1209600, // 14 days
@@ -13682,6 +13683,19 @@ export const marketConfigs = {
       enabled: true,
       minimumReserves: 39_200,
       reservesEnabled: true,
+    },
+    {
+      address: '0x6308204872BdB7432dF97b04B42443c714904F3E',
+      nameOverride: 'MORPHO',
+      alias: 'MOONWELL_MORPHO',
+      digits: 18,
+      boost: 5_000_000,
+      deboost: 0,
+      supply: 0.45,
+      borrow: 0.55,
+      enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
   ],
 }
