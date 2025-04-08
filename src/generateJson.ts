@@ -379,7 +379,7 @@ export async function returnJson(marketData: any, network: string) {
           {
             addRewards: [
               {
-                distributor: "USDC_MULTI_REWARDER",
+                distributor: "TEMPORAL_GOVERNOR",
                 duration: mainConfig.secondsPerEpoch,
                 rewardToken: "OP"
               }
@@ -422,7 +422,7 @@ export async function returnJson(marketData: any, network: string) {
                 .minus(1e16)
                 .toNumber(),
               from: "FOUNDATION_OP_MULTISIG",
-              to: "USDC_MULTI_REWARDER",
+              to: "TEMPORAL_GOVERNOR",
               token: "OP",
             }
           ] : []),
