@@ -25,6 +25,9 @@ export const mainConfig = {
     dexRelayerAmount: 600_191.93879185, // 7,202,303.2655022416 WELL / 12 4-week epochs
   },
   optimism: {
+    /* April 2025 Grant history (200,000 OP, 40,000 to vaults, 160,000 to markets)
+    1. 20,000 depleted in April for core markets only
+    2. 20,000 in May for core markets and 10,000 for the USDC vault */
     nativePerEpoch: 20_000, // 200,000 total grant - 20,000 (April) - 30,000 (May includes current) = 150,000 remaining
     vaultNativePerEpoch: 10_000, // uses up to 40,000 of the total 200,000 grant above (currently only 10,000 spent in current)
     vaults: 0.1, // 10% of the WELL allocation to the vault staking contract
@@ -13197,6 +13200,8 @@ export const baseStkWELL = '0xe66E3A37C3274Ac24FE8590f7D84A2427194DC17' // Base 
 export const optimismStkWELL = '0xfb26a4947a38cb53e2d083c6490060ccce7438c5' // Optimism stkWELL proxy contract
 
 export const moonbeamStkWELL = '0x8568a675384d761f36ec269d695d6ce4423cfab1' // Moonbeam stkWELL proxy contract
+
+export const optimismUSDCRewarder = '0x2EED2b7d44E2cF64a41B6b3f78bE2Fdc56223d2B' // Optimism USDC vault rewarder contract
 
 export const marketConfigs = {
   10: [
