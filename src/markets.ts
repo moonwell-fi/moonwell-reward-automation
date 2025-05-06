@@ -1,7 +1,12 @@
 import { formatUnits } from "viem";
-import { ContractCall, moonbeamClient, baseClient, optimismClient } from "./utils";
+import { ContractCall, createClients, moonbeamClient as defaultMoonbeamClient, baseClient as defaultBaseClient, optimismClient as defaultOptimismClient } from "./utils";
 import { mainConfig, marketConfigs } from "./config";
 import { getSafetyModuleDataForAllChains } from "./safetyModule";
+
+// These will be set in getMarketData
+let moonbeamClient = defaultMoonbeamClient;
+let baseClient = defaultBaseClient;
+let optimismClient = defaultOptimismClient;
 
 import {
   moonbeamComptroller,
@@ -181,7 +186,14 @@ async function getOptimismMarkets() {
   return await filterExcludedMarkets(markets as string[], 10);
 }
 
-export async function getMarketData(timestamp: number) {
+export async function getMarketData(timestamp: number, env?: any) {
+  // If environment variables are provided, create clients with them
+  if (env) {
+    const clients = createClients(env);
+    moonbeamClient = clients.moonbeamClient;
+    baseClient = clients.baseClient;
+    optimismClient = clients.optimismClient;
+  }
   const moonbeamBlockNumber = await getClosestBlockNumber(
     moonbeamClient,
     timestamp,
@@ -200,7 +212,8 @@ export async function getMarketData(timestamp: number) {
   const safetyModuleData = await getSafetyModuleDataForAllChains(
     BigInt(moonbeamBlockNumber),
     BigInt(baseBlockNumber),
-    BigInt(optimismBlockNumber)
+    BigInt(optimismBlockNumber),
+    env
   );
   const moonbeamMarkets = await getMoonbeamMarkets();
   const baseMarkets = await getBaseMarkets();
@@ -688,8 +701,21 @@ export async function getMarketData(timestamp: number) {
     } as ContractCall)),
   }));
 
-  const moonbeamSupplyRates = moonbeamMarketInfo.map((market) => (market.result as { supplyRate: bigint }).supplyRate);
-  const moonbeamBorrowRates = moonbeamMarketInfo.map((market) => (market.result as { borrowRate: bigint }).borrowRate);
+  const moonbeamSupplyRates = moonbeamMarketInfo.map((market, index) => {
+    if (!market || !market.result) {
+      console.log(`⚠️ UNDEFINED RESULT: Moonbeam market at index ${index} has undefined result`, moonbeamMarkets[index]);
+      return BigInt(0); // Provide a default value to prevent the error
+    }
+    return (market.result as { supplyRate: bigint }).supplyRate;
+  });
+  
+  const moonbeamBorrowRates = moonbeamMarketInfo.map((market, index) => {
+    if (!market || !market.result) {
+      console.log(`⚠️ UNDEFINED RESULT: Moonbeam market at index ${index} has undefined result`, moonbeamMarkets[index]);
+      return BigInt(0); // Provide a default value to prevent the error
+    }
+    return (market.result as { borrowRate: bigint }).borrowRate;
+  });
 
   const baseMarketInfo = (await baseClient.multicall({
     contracts: baseMarkets.map(market => ({
@@ -701,8 +727,22 @@ export async function getMarketData(timestamp: number) {
     } as ContractCall)),
   }));
 
-  const baseSupplyRates = baseMarketInfo.map((market) => (market.result as { supplyRate: bigint }).supplyRate);
-  const baseBorrowRates = baseMarketInfo.map((market) => (market.result as { borrowRate: bigint }).borrowRate);
+  // Add logging to identify which market has undefined result
+  const baseSupplyRates = baseMarketInfo.map((market, index) => {
+    if (!market || !market.result) {
+      console.log(`⚠️ UNDEFINED RESULT: Base market at index ${index} has undefined result`, baseMarkets[index]);
+      return BigInt(0); // Provide a default value to prevent the error
+    }
+    return (market.result as { supplyRate: bigint }).supplyRate;
+  });
+  
+  const baseBorrowRates = baseMarketInfo.map((market, index) => {
+    if (!market || !market.result) {
+      console.log(`⚠️ UNDEFINED RESULT: Base market at index ${index} has undefined result`, baseMarkets[index]);
+      return BigInt(0); // Provide a default value to prevent the error
+    }
+    return (market.result as { borrowRate: bigint }).borrowRate;
+  });
 
   const optimismMarketInfo = (await optimismClient.multicall({
     contracts: optimismMarkets.map(market => ({
@@ -714,8 +754,21 @@ export async function getMarketData(timestamp: number) {
     } as ContractCall)),
   }));
 
-  const optimismSupplyRates = optimismMarketInfo.map((market) => (market.result as { supplyRate: bigint }).supplyRate);
-  const optimismBorrowRates = optimismMarketInfo.map((market) => (market.result as { borrowRate: bigint }).borrowRate);
+  const optimismSupplyRates = optimismMarketInfo.map((market, index) => {
+    if (!market || !market.result) {
+      console.log(`⚠️ UNDEFINED RESULT: Optimism market at index ${index} has undefined result`, optimismMarkets[index]);
+      return BigInt(0); // Provide a default value to prevent the error
+    }
+    return (market.result as { supplyRate: bigint }).supplyRate;
+  });
+  
+  const optimismBorrowRates = optimismMarketInfo.map((market, index) => {
+    if (!market || !market.result) {
+      console.log(`⚠️ UNDEFINED RESULT: Optimism market at index ${index} has undefined result`, optimismMarkets[index]);
+      return BigInt(0); // Provide a default value to prevent the error
+    }
+    return (market.result as { borrowRate: bigint }).borrowRate;
+  });
 
   const moonbeamWellSupplyPerDay = moonbeamWellSupplySpeeds.map((speed) => speed * BigInt(86400));
   const moonbeamWellBorrowPerDay = moonbeamWellBorrowSpeeds.map((speed) => speed * BigInt(86400));
@@ -805,7 +858,14 @@ export async function getMarketData(timestamp: number) {
     const digit = moonbeamDigits.filter((digit): digit is number => digit !== null)[index];
     const boost = moonbeamBoosts.filter((boost): boost is number => boost !== null)[index];
     const deboost = moonbeamDeboosts.filter((deboost): deboost is number => deboost !== null)[index];
-
+    
+    // Add null checks before using formatUnits
+    if (supply === undefined || exchangeRate === undefined || price === undefined ||
+        digit === undefined || boost === undefined || deboost === undefined) {
+      console.log(`⚠️ MISSING DATA: Moonbeam market ${index} missing data for totalSupplyUSD calculation`);
+      return 0;
+    }
+    
     return ((
       Number(formatUnits(supply, 8)) *
       Number(formatUnits(exchangeRate, 18 + digit - 8)) *
@@ -824,7 +884,14 @@ export async function getMarketData(timestamp: number) {
     const digit = baseDigits.filter((digit): digit is number => digit !== null)[index];
     const boost = baseBoosts.filter((boost): boost is number => boost !== null)[index];
     const deboost = baseDeboosts.filter((deboost): deboost is number => deboost !== null)[index];
-
+    
+    // Add null checks before using formatUnits
+    if (supply === undefined || exchangeRate === undefined || price === undefined ||
+        digit === undefined || boost === undefined || deboost === undefined) {
+      console.log(`⚠️ MISSING DATA: Base market ${index} missing data for totalSupplyUSD calculation`);
+      return 0;
+    }
+    
     return ((
       Number(formatUnits(supply, 8)) *
       Number(formatUnits(exchangeRate, 18 + digit - 8)) *
@@ -843,7 +910,14 @@ export async function getMarketData(timestamp: number) {
     const digit = optimismDigits.filter((digit): digit is number => digit !== null)[index];
     const boost = optimismBoosts.filter((boost): boost is number => boost !== null)[index];
     const deboost = optimismDeboosts.filter((deboost): deboost is number => deboost !== null)[index];
-
+    
+    // Add null checks before using formatUnits
+    if (supply === undefined || exchangeRate === undefined || price === undefined ||
+        digit === undefined || boost === undefined || deboost === undefined) {
+      console.log(`⚠️ MISSING DATA: Optimism market ${index} missing data for totalSupplyUSD calculation`);
+      return 0;
+    }
+    
     return ((
       Number(formatUnits(supply, 8)) *
       Number(formatUnits(exchangeRate, 18 + digit - 8)) *
@@ -868,7 +942,13 @@ export async function getMarketData(timestamp: number) {
     const borrow = moonbeamBorrows[index];
     const price = moonbeamPrices[index];
     const digit = moonbeamDigits.filter((digit): digit is number => digit !== null)[index];
-
+    
+    // Add null checks before using formatUnits
+    if (borrow === undefined || price === undefined || digit === undefined) {
+      console.log(`⚠️ MISSING DATA: Moonbeam market ${index} missing data for totalBorrowsUSD calculation`);
+      return 0;
+    }
+    
     return (
       Number(formatUnits(borrow, digit)) *
       Number(formatUnits(price, 36 - digit))
@@ -882,7 +962,13 @@ export async function getMarketData(timestamp: number) {
     const borrow = baseBorrows[index];
     const price = basePrices[index];
     const digit = baseDigits.filter((digit): digit is number => digit !== null)[index];
-
+    
+    // Add null checks before using formatUnits
+    if (borrow === undefined || price === undefined || digit === undefined) {
+      console.log(`⚠️ MISSING DATA: Base market ${index} missing data for totalBorrowsUSD calculation`);
+      return 0;
+    }
+    
     return (
       Number(formatUnits(borrow, digit)) *
       Number(formatUnits(price, 36 - digit))
@@ -896,7 +982,13 @@ export async function getMarketData(timestamp: number) {
     const borrow = optimismBorrows[index];
     const price = optimismPrices[index];
     const digit = optimismDigits.filter((digit): digit is number => digit !== null)[index];
-
+    
+    // Add null checks before using formatUnits
+    if (borrow === undefined || price === undefined || digit === undefined) {
+      console.log(`⚠️ MISSING DATA: Optimism market ${index} missing data for totalBorrowsUSD calculation`);
+      return 0;
+    }
+    
     return (
       Number(formatUnits(borrow, digit)) *
       Number(formatUnits(price, 36 - digit))

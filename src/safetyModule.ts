@@ -1,5 +1,10 @@
 import { formatUnits } from "viem";
-import { ContractCall, moonbeamClient, baseClient, optimismClient } from "./utils";
+import { ContractCall, moonbeamClient as defaultMoonbeamClient, baseClient as defaultBaseClient, optimismClient as defaultOptimismClient } from "./utils";
+
+// These will be set in getSafetyModuleDataForAllChains
+let moonbeamClient = defaultMoonbeamClient;
+let baseClient = defaultBaseClient;
+let optimismClient = defaultOptimismClient;
 
 import {
   moonbeamViewsContract,
@@ -73,7 +78,16 @@ export async function getSafetyModuleDataForAllChains(
   moonbeamBlockNumber: bigint,
   baseBlockNumber: bigint,
   optimismBlockNumber: bigint,
+  env?: any
 ) {
+  // If environment variables are provided, create clients with them
+  if (env) {
+    const { createClients } = await import('./utils');
+    const clients = createClients(env);
+    moonbeamClient = clients.moonbeamClient;
+    baseClient = clients.baseClient;
+    optimismClient = clients.optimismClient;
+  }
   const moonbeamSafetyModuleData = await getSafetyModuleData("moonbeam", moonbeamBlockNumber);
   const baseSafetyModuleData = await getSafetyModuleData("base", baseBlockNumber);
   const optimismSafetyModuleData = await getSafetyModuleData("optimism", optimismBlockNumber);
