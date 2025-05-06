@@ -191,6 +191,14 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
       markdown += `| Total ${nativeToken} to distribute Markets (Borrow + Supply) | ${Math.max(0, Number(networkSummary?.borrowNative) + Number(networkSummary?.supplyNative)).toFixed(4).toLocaleString()} ${nativeToken} |\n`;
       markdown += `| Total ${nativeToken} to distribute Markets (By Speed) | ${Math.max(0, Number(networkSummary?.totalNativeBySpeed)).toFixed(4).toLocaleString()} ${nativeToken} |\n`;
     }
+    
+    // Add USDC vault allocation information for Optimism
+    if (networkId === '10' && marketData.optimism.optimismUSDCVaultWellRewardAmount) {
+      markdown += `| | |\n`;
+      markdown += `| Total WELL allocated to USDC vault depositors | ${Math.max(0, Number(marketData.optimism.optimismUSDCVaultWellRewardAmount)).toLocaleString()} WELL |\n`;
+      markdown += `| Total OP allocated to USDC vault depositors | ${Math.max(0, Number(marketData.optimism.vaultNativePerEpoch)).toLocaleString()} OP |\n`;
+    }
+    
     markdown += `\n`;
     // Iterate over the markets for the specific network, but only include enabled markets
     for (const market of Object.values(marketData[networkId])) {

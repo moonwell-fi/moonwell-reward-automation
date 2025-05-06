@@ -18,21 +18,24 @@ export const mainConfig = {
   },
   base: {
     nativePerEpoch: 0,
-    markets: 0.65,
-    safetyModule: 0.35,
+    markets: 0.7,
+    safetyModule: 0.30,
     dex: 0.00,
     // below is an extra manual transfer from the F-AERO multisig to the DEX relayer
     dexRelayerAmount: 600_191.93879185, // 7,202,303.2655022416 WELL / 12 4-week epochs
   },
   optimism: {
-    /* April 2025 Grant history (200,000 OP, 40,000 to vaults, 160,000 to markets)
+    /* OP Grants 2025
+    April 2025 Grant history (200,000 OP to markets, 100,000 to vaults (40,000 delivered so far))
+    Retro funding 71,383.46 OP made available for Feb / Mar 2025 (not delivered yet)
     1. 20,000 depleted in April for core markets only
-    2. 20,000 in May for core markets and 10,000 for the USDC vault */
-    nativePerEpoch: 20_000, // 200,000 total grant - 20,000 (April) - 30,000 (May includes current) = 150,000 remaining
-    vaultNativePerEpoch: 10_000, // uses up to 40,000 of the total 200,000 grant above (currently only 10,000 spent in current)
+    2. 40,000 in May for core markets and 10,000 for the USDC vault */
+    nativePerEpoch: 40_000,
+    vaultNativePerEpoch: 10_000,
     vaults: 0.1, // 10% of the WELL allocation to the vault staking contract
-    markets: 0.75,
-    safetyModule: 0.1,
+    vaultNames: ['USDC_METAMORPHO_VAULT'], // Names of vaults to distribute rewards to
+    markets: 0.85,
+    safetyModule: 0,
     dex: 0.05,
   },
   initSale: {
@@ -13487,7 +13490,7 @@ export const marketConfigs = {
       nameOverride: 'ETH',
       alias: 'MOONWELL_WETH',
       digits: 18,
-      boost: 0,
+      boost: 20_000_000,
       deboost: 0,
       supply: 0.50,
       borrow: 0.50,
@@ -13526,7 +13529,7 @@ export const marketConfigs = {
       nameOverride: 'USDC',
       alias: 'MOONWELL_USDC',
       digits: 6,
-      boost: 65_000_000,
+      boost: 75_000_000,
       deboost: 0,
       supply: 1,
       borrow: 0,
@@ -13656,7 +13659,7 @@ export const marketConfigs = {
       nameOverride: 'tBTC',
       alias: 'MOONWELL_TBTC',
       digits: 18,
-      boost: 1_000_000,
+      boost: 0,
       deboost: 0,
       supply: 0.5,
       borrow: 0.5,
@@ -13669,7 +13672,7 @@ export const marketConfigs = {
       nameOverride: 'LBTC',
       alias: 'MOONWELL_LBTC',
       digits: 8,
-      boost: 1_000_000,
+      boost: 0,
       deboost: 0,
       supply: 0.5,
       borrow: 0.5,

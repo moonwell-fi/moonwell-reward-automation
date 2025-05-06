@@ -1878,6 +1878,7 @@ export async function getMarketData(timestamp: number, env?: any) {
       wellPerEpochSafetyModule: Number(((mainConfig.totalWellPerEpoch) * optimismTotalMarketPercentage) * mainConfig.optimism.safetyModule).toFixed(18),
       wellPerEpochDex: Number((mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage) * mainConfig.optimism.dex).toFixed(18),
       wellHolderBalance: optimismWellHolderBalance.toString(),
+      optimismUSDCVaultWellRewardAmount: Number((mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage) * mainConfig.optimism.vaults),
     },
     safetyModule: safetyModuleData,
     baseStkWELLTotalSupply: baseStkWELLTotalSupply.toString(),
