@@ -13638,7 +13638,7 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
-      minimumReserves: 413_700,
+      minimumReserves: 413_700_000,
       reservesEnabled: true,
     },
     {
