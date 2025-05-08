@@ -211,7 +211,6 @@ export async function returnJson(marketData: any, network: string) {
             target: "DEX_RELAYER"
           }, */
         ],
-        multiRewarder: [],
         transferFrom: [
           { // Transfer all Base incentives to the Multichain Governor for bridging
             amount: BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
