@@ -18,17 +18,25 @@ export const mainConfig = {
   },
   base: {
     nativePerEpoch: 0,
-    markets: 0.65,
-    safetyModule: 0.35,
+    markets: 0.7,
+    safetyModule: 0.30,
     dex: 0.00,
     // below is an extra manual transfer from the F-AERO multisig to the DEX relayer
     dexRelayerAmount: 600_191.93879185, // 7,202,303.2655022416 WELL / 12 4-week epochs
   },
   optimism: {
-    nativePerEpoch: 20_000, // 80,000 total OP initial + 120,000 if we hit our milestone of $1.86M average OP growth in core markets
-    markets: 0.87,
-    safetyModule: 0.1,
-    dex: 0.03,
+    /* OP Grants 2025
+    April 2025 Grant history (200,000 OP to markets, 100,000 to vaults (40,000 delivered so far))
+    Retro funding 71,383.46 OP made available for Feb / Mar 2025 (not delivered yet)
+    1. 20,000 depleted in April for core markets only
+    2. 40,000 in May for core markets and 10,000 for the USDC vault */
+    nativePerEpoch: 40_000,
+    vaultNativePerEpoch: 10_000,
+    vaults: 0.1, // 10% of the WELL allocation to the vault staking contract
+    vaultNames: ['USDC_METAMORPHO_VAULT'], // Names of vaults to distribute rewards to
+    markets: 0.85,
+    safetyModule: 0,
+    dex: 0.05,
   },
   initSale: {
     auctionPeriod: 1209600, // 14 days
@@ -13196,6 +13204,8 @@ export const optimismStkWELL = '0xfb26a4947a38cb53e2d083c6490060ccce7438c5' // O
 
 export const moonbeamStkWELL = '0x8568a675384d761f36ec269d695d6ce4423cfab1' // Moonbeam stkWELL proxy contract
 
+export const optimismUSDCRewarder = '0x2EED2b7d44E2cF64a41B6b3f78bE2Fdc56223d2B' // Optimism USDC vault rewarder contract
+
 export const marketConfigs = {
   10: [
     {
@@ -13208,7 +13218,7 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: true,
-      minimumReserves: 43_600,
+      minimumReserves: 62_700,
       reservesEnabled: true,
     },
     {
@@ -13221,7 +13231,7 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: true,
-      minimumReserves: 12_300,
+      minimumReserves: 10_000,
       reservesEnabled: true,
     },
     {
@@ -13234,7 +13244,7 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: true,
-      minimumReserves: 6_200,
+      minimumReserves: 4_100,
       reservesEnabled: true,
     },
     {
@@ -13260,7 +13270,7 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: true,
-      minimumReserves: 29.27,
+      minimumReserves: 5.85,
       reservesEnabled: true,
     },
     {
@@ -13273,7 +13283,7 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: true,
-      minimumReserves: 10.31,
+      minimumReserves: 1.49,
       reservesEnabled: true,
     },
     {
@@ -13299,7 +13309,7 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: true,
-      minimumReserves: 1.24,
+      minimumReserves: 0.21,
       reservesEnabled: true,
     },
     {
@@ -13312,7 +13322,7 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: true,
-      minimumReserves: 1.94,
+      minimumReserves: 0.39,
       reservesEnabled: true,
     },
     {
@@ -13325,7 +13335,7 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: true,
-      minimumReserves: 5_300,
+      minimumReserves: 1_100,
       reservesEnabled: true,
     },
     {
@@ -13338,7 +13348,7 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: true,
-      minimumReserves: 128_400,
+      minimumReserves: 25_300,
       reservesEnabled: true,
     },
     {
@@ -13351,7 +13361,7 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: true,
-      minimumReserves: 0.8,
+      minimumReserves: 0.05,
       reservesEnabled: true,
     },
   ],
@@ -13480,12 +13490,12 @@ export const marketConfigs = {
       nameOverride: 'ETH',
       alias: 'MOONWELL_WETH',
       digits: 18,
-      boost: 0,
+      boost: 20_000_000,
       deboost: 0,
       supply: 0.50,
       borrow: 0.50,
       enabled: true,
-      minimumReserves: 476.60,
+      minimumReserves: 309.96,
       reservesEnabled: true,
     },
     {
@@ -13498,7 +13508,7 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: false,
-      minimumReserves: 45.01,
+      minimumReserves: 49.32,
       reservesEnabled: true,
     },
     {
@@ -13519,7 +13529,7 @@ export const marketConfigs = {
       nameOverride: 'USDC',
       alias: 'MOONWELL_USDC',
       digits: 6,
-      boost: 65_000_000,
+      boost: 75_000_000,
       deboost: 0,
       supply: 1,
       borrow: 0,
@@ -13537,7 +13547,7 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: false,
-      minimumReserves: 67.74,
+      minimumReserves: 44.37,
       reservesEnabled: true,
     },
     {
@@ -13550,7 +13560,7 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: false,
-      minimumReserves: 14.83,
+      minimumReserves: 8.01,
       reservesEnabled: true,
     },
     {
@@ -13563,7 +13573,7 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: false,
-      minimumReserves: 22.97,
+      minimumReserves: 11.87,
       reservesEnabled: true,
     },
     {
@@ -13576,7 +13586,7 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
-      minimumReserves: 309_300,
+      minimumReserves: 186_900,
       reservesEnabled: true,
     },
     {
@@ -13589,7 +13599,7 @@ export const marketConfigs = {
       supply: 0.5,
       borrow: 0.5,
       enabled: true,
-      minimumReserves: 5.98,
+      minimumReserves: 4.62,
       reservesEnabled: true,
     },
     {
@@ -13602,7 +13612,7 @@ export const marketConfigs = {
       supply: 0.5,
       borrow: 0.5,
       enabled: true,
-      minimumReserves: 54_400,
+      minimumReserves: 69_800,
       reservesEnabled: true,
     },
     {
@@ -13628,7 +13638,7 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
-      minimumReserves: 1_050_000,
+      minimumReserves: 413_700_000,
       reservesEnabled: true,
     },
     {
@@ -13649,12 +13659,12 @@ export const marketConfigs = {
       nameOverride: 'tBTC',
       alias: 'MOONWELL_TBTC',
       digits: 18,
-      boost: 1_000_000,
+      boost: 0,
       deboost: 0,
       supply: 0.5,
       borrow: 0.5,
       enabled: true,
-      minimumReserves: 0.21,
+      minimumReserves: 0.28,
       reservesEnabled: true,
     },
     {
@@ -13662,12 +13672,12 @@ export const marketConfigs = {
       nameOverride: 'LBTC',
       alias: 'MOONWELL_LBTC',
       digits: 8,
-      boost: 1_000_000,
+      boost: 0,
       deboost: 0,
       supply: 0.5,
       borrow: 0.5,
       enabled: true,
-      minimumReserves: 0.41,
+      minimumReserves: 0.30,
       reservesEnabled: true,
     },
     {
@@ -13680,7 +13690,7 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
-      minimumReserves: 19_300,
+      minimumReserves: 12_600,
       reservesEnabled: true,
     },
     {

@@ -441,6 +441,40 @@ export async function returnJson(marketData: any, network: string) {
             to: "ECOSYSTEM_RESERVE_PROXY"
           }
         ],
+        multiRewarder: [
+          {
+            addRewards: [
+              {
+                distributor: "USDC_MULTI_REWARDER",
+                duration: mainConfig.secondsPerEpoch,
+                rewardToken: "WELL"
+              },
+              {
+                distributor: "USDC_MULTI_REWARDER",
+                duration: mainConfig.secondsPerEpoch,
+                rewardToken: "OP"
+              }
+            ],
+            notifyRewardAmount: [
+              {
+                reward: new BigNumber(marketData.optimism.optimismUSDCVaultWellRewardAmount)
+                  .shiftedBy(18)
+                  .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
+                  .minus(1e15)
+                  .toNumber(),
+                rewardToken: "WELL"
+              },
+              {
+                reward: new BigNumber(mainConfig.optimism.vaultNativePerEpoch)
+                  .shiftedBy(18)
+                  .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
+                  .toNumber(),
+                rewardToken: "OP"
+              }
+            ],
+            vault: mainConfig.optimism.vaultNames[0]
+          }
+        ],
       },
       endTimeSTamp: marketData.epochEndTimestamp,
       startTimeStamp: marketData.epochStartTimestamp,

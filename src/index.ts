@@ -49,7 +49,7 @@ export default {
 
 		try {
 			if (type === 'json') {
-				const marketData = await getMarketData(Number(timestamp));
+				const marketData = await getMarketData(Number(timestamp), env);
 				let json = '';
 				const networks = network ? [network] : ['Base', 'Optimism', 'Moonbeam'];
 
@@ -66,7 +66,7 @@ export default {
 				});
 			} else if (type === 'markdown') {
 				const proposalNumber = searchParams.get('proposal') || 'X??';
-				const marketData = await getMarketData(Number(timestamp));
+				const marketData = await getMarketData(Number(timestamp), env);
 				const dexData = await getDexInfo();
 				let markdown = '';
 				if (network) {
