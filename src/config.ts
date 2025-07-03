@@ -29,13 +29,14 @@ export const mainConfig = {
     April 2025 Grant history (200,000 OP to markets, 100,000 to vaults (40,000 delivered so far))
     Retro funding 71,383.46 OP made available for Feb / Mar 2025 (not delivered yet)
     1. 20,000 depleted in April for core markets only
-    2. 40,000 in May for core markets and 10,000 for the USDC vault */
+    2. 40,000 in May for core markets and 10,000 for the USDC vault
+    3. 40,000 in June for core markets and 10,000 for the USDC vault */
     nativePerEpoch: 40_000,
     vaultNativePerEpoch: 10_000,
-    vaults: 0.1, // 10% of the WELL allocation to the vault staking contract
+    vaults: 0.05, // 5% of the WELL allocation to the vault staking contract
     vaultNames: ['USDC_METAMORPHO_VAULT'], // Names of vaults to distribute rewards to
     markets: 0.85,
-    safetyModule: 0,
+    safetyModule: 0.05,
     dex: 0.05,
   },
   initSale: {
@@ -13218,7 +13219,7 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: true,
-      minimumReserves: 62_700,
+      minimumReserves: 321_300,
       reservesEnabled: true,
     },
     {
@@ -13231,7 +13232,20 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: true,
-      minimumReserves: 10_000,
+      minimumReserves: 195_600,
+      reservesEnabled: true,
+    },
+    {
+      address: '0xed37cD7872c6fe4020982d35104bE7919b8f8b33',
+      nameOverride: 'USDT0',
+      alias: 'MOONWELL_USDT0',
+      digits: 6,
+      boost: 0,
+      deboost: 0,
+      supply: 1,
+      borrow: 0,
+      enabled: true,
+      minimumReserves: 366_600,
       reservesEnabled: true,
     },
     {
@@ -13244,7 +13258,7 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: true,
-      minimumReserves: 4_100,
+      minimumReserves: 789.91,
       reservesEnabled: true,
     },
     {
@@ -13270,8 +13284,8 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: true,
-      minimumReserves: 5.85,
-      reservesEnabled: true,
+      minimumReserves: 264.67,
+      reservesEnabled: false,
     },
     {
       address: '0xbb3b1aB66eFB43B10923b87460c0106643B83f9d',
@@ -13283,7 +13297,7 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: true,
-      minimumReserves: 1.49,
+      minimumReserves: 0.8,
       reservesEnabled: true,
     },
     {
@@ -13309,7 +13323,7 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: true,
-      minimumReserves: 0.21,
+      minimumReserves: 0.12,
       reservesEnabled: true,
     },
     {
@@ -13322,7 +13336,7 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: true,
-      minimumReserves: 0.39,
+      minimumReserves: 0.13,
       reservesEnabled: true,
     },
     {
@@ -13335,7 +13349,7 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: true,
-      minimumReserves: 1_100,
+      minimumReserves: 361.53,
       reservesEnabled: true,
     },
     {
@@ -13348,7 +13362,7 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: true,
-      minimumReserves: 25_300,
+      minimumReserves: 8_500,
       reservesEnabled: true,
     },
     {
@@ -13361,7 +13375,7 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: true,
-      minimumReserves: 0.05,
+      minimumReserves: 0.06,
       reservesEnabled: true,
     },
   ],
@@ -13482,7 +13496,7 @@ export const marketConfigs = {
       supply: 0.50,
       borrow: 0.50,
       enabled: false,
-      minimumReserves: 0,
+      minimumReserves: 55.45,
       reservesEnabled: true,
     },
     {
@@ -13495,8 +13509,8 @@ export const marketConfigs = {
       supply: 0.50,
       borrow: 0.50,
       enabled: true,
-      minimumReserves: 309.96,
-      reservesEnabled: true,
+      minimumReserves: 176.63,
+      reservesEnabled: false,
     },
     {
       address: '0x3bf93770f2d4a794c3d9EBEfBAeBAE2a8f09A5E5',
@@ -13508,7 +13522,7 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: false,
-      minimumReserves: 49.32,
+      minimumReserves: 9.56,
       reservesEnabled: true,
     },
     {
@@ -13521,7 +13535,7 @@ export const marketConfigs = {
       supply: 0.50,
       borrow: 0.50,
       enabled: false,
-      minimumReserves: 2_400,
+      minimumReserves: 460.11,
       reservesEnabled: true,
     },
     {
@@ -13534,7 +13548,7 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: true,
-      minimumReserves: 756_100,
+      minimumReserves: 444_300,
       reservesEnabled: true,
     },
     {
@@ -13547,7 +13561,7 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: false,
-      minimumReserves: 44.37,
+      minimumReserves: 6.66,
       reservesEnabled: true,
     },
     {
@@ -13560,7 +13574,7 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: false,
-      minimumReserves: 8.01,
+      minimumReserves: 4.31,
       reservesEnabled: true,
     },
     {
@@ -13573,7 +13587,7 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: false,
-      minimumReserves: 11.87,
+      minimumReserves: 6.66,
       reservesEnabled: true,
     },
     {
@@ -13586,7 +13600,7 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
-      minimumReserves: 186_900,
+      minimumReserves: 86_500,
       reservesEnabled: true,
     },
     {
@@ -13599,7 +13613,7 @@ export const marketConfigs = {
       supply: 0.5,
       borrow: 0.5,
       enabled: true,
-      minimumReserves: 4.62,
+      minimumReserves: 3.51,
       reservesEnabled: true,
     },
     {
@@ -13612,7 +13626,7 @@ export const marketConfigs = {
       supply: 0.5,
       borrow: 0.5,
       enabled: true,
-      minimumReserves: 69_800,
+      minimumReserves: 16_400,
       reservesEnabled: true,
     },
     {
@@ -13625,7 +13639,7 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: false,
-      minimumReserves: 4.44,
+      minimumReserves: 0.9,
       reservesEnabled: true,
     },
     {
@@ -13638,8 +13652,8 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
-      minimumReserves: 413_700_000,
-      reservesEnabled: true,
+      minimumReserves: 297_700,
+      reservesEnabled: false,
     },
     {
       address: '0xb6419c6C2e60c4025D6D06eE4F913ce89425a357',
@@ -13651,7 +13665,7 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: false,
-      minimumReserves: 0,
+      minimumReserves: 57.85,
       reservesEnabled: true,
     },
     {
@@ -13664,7 +13678,7 @@ export const marketConfigs = {
       supply: 0.5,
       borrow: 0.5,
       enabled: true,
-      minimumReserves: 0.28,
+      minimumReserves: 0.05,
       reservesEnabled: true,
     },
     {
@@ -13677,7 +13691,7 @@ export const marketConfigs = {
       supply: 0.5,
       borrow: 0.5,
       enabled: true,
-      minimumReserves: 0.30,
+      minimumReserves: 0.16,
       reservesEnabled: true,
     },
     {
@@ -13690,7 +13704,7 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
-      minimumReserves: 12_600,
+      minimumReserves: 5_300,
       reservesEnabled: true,
     },
     {
@@ -13703,8 +13717,8 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
-      minimumReserves: 0,
-      reservesEnabled: false,
+      minimumReserves: 6_500,
+      reservesEnabled: true,
     },
   ],
 }
