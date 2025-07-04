@@ -30,11 +30,12 @@ export const mainConfig = {
     Retro funding 71,383.46 OP made available for Feb / Mar 2025 (not delivered yet)
     1. 20,000 depleted in April for core markets only
     2. 40,000 in May for core markets and 10,000 for the USDC vault
-    3. 40,000 in June for core markets and 10,000 for the USDC vault */
-    nativePerEpoch: 40_000,
+    3. 40,000 in June for core markets and 10,000 for the USDC vault 
+    4. 50,000 in July for core markets and 10,000 for the USDC vault */
+    nativePerEpoch: 50_000,
+    rewarderNames: ['USDC_MULTI_REWARDER'], // Names of multi-rewarders to distribute rewards to
     vaultNativePerEpoch: 10_000,
     vaults: 0.05, // 5% of the WELL allocation to the vault staking contract
-    vaultNames: ['USDC_METAMORPHO_VAULT'], // Names of vaults to distribute rewards to
     markets: 0.85,
     safetyModule: 0.05,
     dex: 0.05,
@@ -13228,7 +13229,7 @@ export const marketConfigs = {
       alias: 'MOONWELL_USDT',
       digits: 6,
       boost: 0,
-      deboost: 250_000,
+      deboost: 0,
       supply: 1,
       borrow: 0,
       enabled: true,
@@ -13548,7 +13549,7 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: true,
-      minimumReserves: 444_300,
+      minimumReserves: 320_000,
       reservesEnabled: true,
     },
     {
@@ -13719,6 +13720,19 @@ export const marketConfigs = {
       enabled: true,
       minimumReserves: 6_500,
       reservesEnabled: true,
+    },
+    {
+      address: '0xb4fb8fed5b3AaA8434f0B19b1b623d977e07e86d',
+      nameOverride: 'cbXRP',
+      alias: 'MOONWELL_cbXRP',
+      digits: 18,
+      boost: 5_000_000,
+      deboost: 0,
+      supply: 0.45,
+      borrow: 0.55,
+      enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
   ],
 }

@@ -243,6 +243,8 @@ export async function returnJson(marketData: any, network: string) {
               .map((market: MarketType) => `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`)
           }
         } : {}),
+        multiRewarder: [],
+        // No multi-rewarder on Base, so we don't need to add any rewards
         setMRDSpeeds: baseSetRewardSpeeds,
         stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.base.wellPerEpochSafetyModule) + parseFloat(marketData.base.wellHolderBalance) / 1e18)
           .div(marketData.totalSeconds)
@@ -443,36 +445,25 @@ export async function returnJson(marketData: any, network: string) {
         ],
         multiRewarder: [
           {
-            addRewards: [
-              {
-                distributor: "USDC_MULTI_REWARDER",
-                duration: mainConfig.secondsPerEpoch,
-                rewardToken: "WELL"
-              },
-              {
-                distributor: "USDC_MULTI_REWARDER",
-                duration: mainConfig.secondsPerEpoch,
-                rewardToken: "OP"
-              }
-            ],
-            notifyRewardAmount: [
-              {
-                reward: new BigNumber(marketData.optimism.optimismUSDCVaultWellRewardAmount)
-                  .shiftedBy(18)
-                  .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
-                  .minus(1e15)
-                  .toNumber(),
-                rewardToken: "WELL"
-              },
-              {
-                reward: new BigNumber(mainConfig.optimism.vaultNativePerEpoch)
-                  .shiftedBy(18)
-                  .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
-                  .toNumber(),
-                rewardToken: "OP"
-              }
-            ],
-            vault: mainConfig.optimism.vaultNames[0]
+            distributor: "TEMPORAL_GOVERNOR",
+            duration: mainConfig.secondsPerEpoch,
+            reward: new BigNumber(marketData.optimism.optimismUSDCVaultWellRewardAmount)
+              .shiftedBy(18)
+              .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
+              .minus(1e15)
+              .toNumber(),
+            rewardToken: "xWELL_PROXY",
+            vault: mainConfig.optimism.rewarderNames[0]
+          },
+          {
+            distributor: "TEMPORAL_GOVERNOR",
+            duration: mainConfig.secondsPerEpoch,
+            reward: new BigNumber(mainConfig.optimism.vaultNativePerEpoch)
+              .shiftedBy(18)
+              .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
+              .toNumber(),
+            rewardToken: "OP",
+            vault: mainConfig.optimism.rewarderNames[0]
           }
         ],
       },
