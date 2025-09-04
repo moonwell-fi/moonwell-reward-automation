@@ -394,16 +394,6 @@ export async function returnJson(marketData: any, network: string) {
           .integerValue()
           .toNumber(),
         transferFrom: [
-          { // Transfer native OP rewards to the Multi Reward Distributor
-            amount: BigNumber(marketData.optimism.nativePerEpoch)
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
-              .minus(1e16)
-              .toNumber(),
-            from: "FOUNDATION_OP_MULTISIG",
-            to: "MRD_PROXY",
-            token: "OP",
-          },
           { // Transfer bridged market rewards to the Multi Reward Distributor
             amount: BigNumber(marketData.optimism.wellPerEpochMarkets)
               .shiftedBy(18)
