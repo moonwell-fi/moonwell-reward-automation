@@ -124,7 +124,7 @@ export async function returnJson(marketData: any, network: string) {
         } : {}),
         setRewardSpeed: moonbeamSetRewardSpeeds,
         stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.moonbeam.wellPerEpochSafetyModule))
-          .div(mainConfig.secondsPerEpoch)
+          .div(marketData.totalSeconds)
           .shiftedBy(18)
           .integerValue().toNumber(),
         transferFrom: [
