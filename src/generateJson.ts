@@ -304,7 +304,7 @@ export async function returnJson(marketData: any, network: string) {
                     .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
                     .minus(1e15)
                     .toNumber(),
-                  to: "TEMPORAL_GOVERNOR",
+                  to: "TEMPORAL_GOVERNOR", // we now should transfer to temporal governor as the merkle createCampaign call will pull the funds from the temporal governor
                 },
               ],
         mekleCampaign: {
