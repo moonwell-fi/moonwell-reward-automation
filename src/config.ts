@@ -13524,7 +13524,7 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: false,
-      minimumReserves: 38.4,
+      minimumReserves: 9,
       reservesEnabled: true,
     },
     {
@@ -13537,7 +13537,7 @@ export const marketConfigs = {
       supply: 0.50,
       borrow: 0.50,
       enabled: false,
-      minimumReserves: 1200,
+      minimumReserves: 900,
       reservesEnabled: true,
     },
     {
@@ -13550,7 +13550,7 @@ export const marketConfigs = {
       supply: 1,
       borrow: 0,
       enabled: true,
-      minimumReserves: 552_000,
+      minimumReserves: 430_000,
       reservesEnabled: true,
     },
     {
@@ -13563,7 +13563,7 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: false,
-      minimumReserves: 28.8,
+      minimumReserves: 6.6,
       reservesEnabled: true,
     },
     {
@@ -13576,7 +13576,7 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: false,
-      minimumReserves: 5.4,
+      minimumReserves: 4,
       reservesEnabled: true,
     },
     {
@@ -13589,7 +13589,7 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: false,
-      minimumReserves: 7,
+      minimumReserves: 6,
       reservesEnabled: true,
     },
     {
@@ -13602,7 +13602,7 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
-      minimumReserves: 300_000,
+      minimumReserves: 130_000,
       reservesEnabled: true,
     },
     {
@@ -13615,7 +13615,7 @@ export const marketConfigs = {
       supply: 0.5,
       borrow: 0.5,
       enabled: true,
-      minimumReserves: 2.56,
+      minimumReserves: 3,
       reservesEnabled: true,
     },
     {
@@ -13641,7 +13641,7 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: false,
-      minimumReserves: 4.3,
+      minimumReserves: 1,
       reservesEnabled: true,
     },
     {
@@ -13654,7 +13654,7 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
-      minimumReserves: 1_350_000,
+      minimumReserves: 1_200_000,
       reservesEnabled: false,
     },
     {
@@ -13706,7 +13706,7 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
-      minimumReserves: 27_600,
+      minimumReserves: 6_000,
       reservesEnabled: true,
     },
     {
@@ -13732,7 +13732,7 @@ export const marketConfigs = {
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
-      minimumReserves: 3_000,
+      minimumReserves: 6_000,
       reservesEnabled: true,
     },
   ],
