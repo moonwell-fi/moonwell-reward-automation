@@ -307,7 +307,7 @@ export async function returnJson(marketData: any, network: string) {
                   to: "TEMPORAL_GOVERNOR", // we now should transfer to temporal governor as the merkle createCampaign call will pull the funds from the temporal governor
                 },
               ],
-        mekleCampaign: {
+        merkleCampaigns: [{
           amount: new BigNumber(parseFloat(marketData.base.wellPerEpochSafetyModule) + parseFloat(marketData.base.wellHolderBalance) / 1e18)
             .shiftedBy(18)
             .plus(11669037203603279001600000) // Add missing rewards from last month
@@ -319,7 +319,7 @@ export async function returnJson(marketData: any, network: string) {
           rewardToken: "xWELL_PROXY",
           // Use last month's timestamp instead of current epoch
           startTimestamp: marketData.epochStartTimestamp - mainConfig.secondsPerEpoch,
-        },
+        }],
       },
       endTimeSTamp: marketData.epochEndTimestamp,
       startTimeStamp: marketData.epochStartTimestamp,
@@ -476,6 +476,7 @@ export async function returnJson(marketData: any, network: string) {
             vault: mainConfig.optimism.rewarderNames[0]
           }
         ],
+        merkleCampaigns: [],
       },
       endTimeSTamp: marketData.epochEndTimestamp,
       startTimeStamp: marketData.epochStartTimestamp,
