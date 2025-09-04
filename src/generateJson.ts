@@ -195,6 +195,8 @@ export async function returnJson(marketData: any, network: string) {
 							.shiftedBy(18)
 							.decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
 							.plus(1e16)
+						// Subtract reserve balance since those funds are already available on Base
+							.minus(marketData.base.wellHolderBalance === '0' ? 0 : new BigNumber(marketData.base.wellHolderBalance).minus(1e15))
 							.toNumber(),
 						nativeValue: BigNumber(marketData.bridgeCost * 4).toNumber(), // pad bridgeCost by 4x in case of price fluctuations
 						network: 8453,
@@ -336,11 +338,13 @@ export async function returnJson(marketData: any, network: string) {
       1284: {
         bridgeToRecipient: [
           { // Send total well per epoch - the DEX incentives to Optimism Temporal Governor
+            // Subtract reserve balance since those funds are already available on Optimism
             amount: BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18))
               .minus(parseFloat(marketData.optimism.wellPerEpochDex).toFixed(18))
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .plus(1e16)
+              .minus(marketData.optimism.wellHolderBalance === '0' ? 0 : new BigNumber(marketData.optimism.wellHolderBalance).minus(1e15))
               .toNumber(),
               nativeValue: BigNumber(marketData.bridgeCost * 4).toNumber(), // pad bridgeCost by 4x in case of price fluctuations
             network: 10,
