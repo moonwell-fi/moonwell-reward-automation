@@ -315,9 +315,12 @@ export async function returnJson(marketData: any, network: string) {
 						.shiftedBy(18)
 						.decimalPlaces(0, BigNumber.ROUND_CEIL)
 						.toNumber(),
-					duration: mainConfig.secondsPerEpoch,
+					// TEMPORARY FIX: Use 2 epochs duration to cover missing rewards from last month
+					// TODO: Update next month to use single epoch (mainConfig.secondsPerEpoch)
+					duration: mainConfig.secondsPerEpoch * 2,
 					rewardToken: 'xWELL_PROXY',
-					startTimestamp: marketData.epochStartTimestamp,
+					// Use last month's timestamp instead of current epoch
+					startTimestamp: marketData.epochStartTimestamp - mainConfig.secondsPerEpoch,
 				},
 			},
 			endTimeSTamp: marketData.epochEndTimestamp,
