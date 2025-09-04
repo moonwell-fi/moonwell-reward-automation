@@ -196,8 +196,6 @@ export async function returnJson(marketData: any, network: string) {
 							.shiftedBy(18)
 							.decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
 							.plus(1e16)
-						// Subtract reserve balance since those funds are already available on Base
-							.minus(marketData.base.wellHolderBalance === '0' ? 0 : new BigNumber(marketData.base.wellHolderBalance).minus(1e15))
 							.toNumber(),
 						nativeValue: BigNumber(marketData.bridgeCost * 4).toNumber(), // pad bridgeCost by 4x in case of price fluctuations
 						network: 8453,
@@ -341,7 +339,6 @@ export async function returnJson(marketData: any, network: string) {
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .plus(1e16)
-              .minus(marketData.optimism.wellHolderBalance === '0' ? 0 : new BigNumber(marketData.optimism.wellHolderBalance).minus(1e15))
               .toNumber(),
               nativeValue: BigNumber(marketData.bridgeCost * 4).toNumber(), // pad bridgeCost by 4x in case of price fluctuations
             network: 10,
@@ -392,7 +389,7 @@ export async function returnJson(marketData: any, network: string) {
         } : {}),
         setMRDSpeeds: optimismSetRewardSpeeds,
         stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.optimism.wellPerEpochSafetyModule) + parseFloat(marketData.optimism.wellHolderBalance) / 1e18)
-          .div(mainConfig.secondsPerEpoch)
+          .div(marketData.totalSeconds)
           .shiftedBy(18)
           .integerValue()
           .toNumber(),
