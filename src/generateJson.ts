@@ -333,7 +333,6 @@ export async function returnJson(marketData: any, network: string) {
       1284: {
         bridgeToRecipient: [
           { // Send total well per epoch - the DEX incentives to Optimism Temporal Governor
-            // Subtract reserve balance since those funds are already available on Optimism
             amount: BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18))
               .minus(parseFloat(marketData.optimism.wellPerEpochDex).toFixed(18))
               .shiftedBy(18)
