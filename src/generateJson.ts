@@ -123,7 +123,8 @@ export async function returnJson(marketData: any, network: string) {
           }
         } : {}),
         setRewardSpeed: moonbeamSetRewardSpeeds,
-        stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.moonbeam.wellPerEpochSafetyModule) / marketData.totalSeconds)
+        stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.moonbeam.wellPerEpochSafetyModule))
+          .div(mainConfig.secondsPerEpoch)
           .shiftedBy(18)
           .integerValue().toNumber(),
         transferFrom: [
@@ -309,11 +310,7 @@ export async function returnJson(marketData: any, network: string) {
 								},
 						  ],
 				mekleCampaign: {
-					// Fixed: Only use wellPerEpochSafetyModule to avoid double-counting wellHolderBalance
-					// (wellHolderBalance is withdrawn separately and shouldn't be included in safety module emissions)
-					amount: BigNumber(parseFloat(marketData.base.wellPerEpochSafetyModule))
-						.div(marketData.totalSeconds)
-						.multipliedBy(mainConfig.secondsPerEpoch)
+					amount: BigNumber(parseFloat(marketData.base.wellPerEpochSafetyModule) + parseFloat(marketData.base.wellHolderBalance) / 1e18)
 						.shiftedBy(18)
 						.decimalPlaces(0, BigNumber.ROUND_CEIL)
 						.toNumber(),
@@ -394,10 +391,8 @@ export async function returnJson(marketData: any, network: string) {
           }
         } : {}),
         setMRDSpeeds: optimismSetRewardSpeeds,
-        // Fixed: Only use wellPerEpochSafetyModule to avoid double-counting wellHolderBalance
-        // (wellHolderBalance is withdrawn separately and shouldn't be included in safety module emissions)
-        stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.optimism.wellPerEpochSafetyModule))
-          .div(marketData.totalSeconds)
+        stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.optimism.wellPerEpochSafetyModule) + parseFloat(marketData.optimism.wellHolderBalance) / 1e18)
+          .div(mainConfig.secondsPerEpoch)
           .shiftedBy(18)
           .integerValue()
           .toNumber(),
