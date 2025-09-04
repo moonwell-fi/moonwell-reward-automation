@@ -199,7 +199,7 @@ export async function returnJson(marketData: any, network: string) {
               .toNumber(),
             nativeValue: new BigNumber(marketData.bridgeCost * 4).toNumber(), // pad bridgeCost by 4x in case of price fluctuations
             network: 8453,
-            target: 'TEMPORAL_GOVERNOR',
+            target: "TEMPORAL_GOVERNOR",
           },
           /* commented out until we exhaust the funds in F-AERO on Base
           { // Send Base DEX incentives to DEX Relayer
@@ -221,9 +221,9 @@ export async function returnJson(marketData: any, network: string) {
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .plus(1e17)
               .toNumber(),
-            from: 'MGLIMMER_MULTISIG',
-            to: 'MULTICHAIN_GOVERNOR_PROXY',
-            token: 'GOVTOKEN',
+            from: "MGLIMMER_MULTISIG",
+            to: "MULTICHAIN_GOVERNOR_PROXY",
+            token: "GOVTOKEN",
           },
         ].filter((transfer) => transfer.amount > 0),
       },
@@ -232,7 +232,7 @@ export async function returnJson(marketData: any, network: string) {
           ? {
               initSale: {
                 ...mainConfig.initSale,
-                reserveAutomationContracts: marketData['8453']
+                reserveAutomationContracts: marketData["8453"]
                   .filter((market: MarketType) => {
                     if (!market.reservesEnabled) return false;
                     const reserves = market.reserves;
@@ -259,9 +259,9 @@ export async function returnJson(marketData: any, network: string) {
               .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
               .minus(1e16)
               .toNumber(),
-            from: 'TEMPORAL_GOVERNOR',
-            to: 'MRD_PROXY',
-            token: 'xWELL_PROXY',
+            from: "TEMPORAL_GOVERNOR",
+            to: "MRD_PROXY",
+            token: "xWELL_PROXY",
           },
           {
             // Extra transferFrom to DEX Relayer
@@ -270,14 +270,14 @@ export async function returnJson(marketData: any, network: string) {
               .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
               .minus(1e16)
               .toNumber(),
-            from: 'F-AERO_MULTISIG',
-            to: 'DEX_RELAYER',
-            token: 'xWELL_PROXY',
+            from: "F-AERO_MULTISIG",
+            to: "DEX_RELAYER",
+            token: "xWELL_PROXY",
           },
         ].filter((transfer) => transfer.amount > 0),
         ...(hasReservesEnabled
           ? {
-              transferReserves: marketData['8453']
+              transferReserves: marketData["8453"]
                 .filter((market: MarketType) => market.reservesEnabled)
                 .map((market: MarketType) => {
                   const reserves = market.reserves;
@@ -296,7 +296,7 @@ export async function returnJson(marketData: any, network: string) {
             }
           : {}),
         withdrawWell:
-          marketData.base.wellHolderBalance === '0'
+          marketData.base.wellHolderBalance === "0"
             ? []
             : [
                 {
@@ -304,7 +304,7 @@ export async function returnJson(marketData: any, network: string) {
                     .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
                     .minus(1e15)
                     .toNumber(),
-                  to: 'TEMPORAL_GOVERNOR',
+                  to: "TEMPORAL_GOVERNOR",
                 },
               ],
         mekleCampaign: {
@@ -315,7 +315,7 @@ export async function returnJson(marketData: any, network: string) {
           // TEMPORARY FIX: Use 2 epochs duration to cover missing rewards from last month
           // TODO: Update next month to use single epoch (mainConfig.secondsPerEpoch)
           duration: mainConfig.secondsPerEpoch * 2,
-          rewardToken: 'xWELL_PROXY',
+          rewardToken: "xWELL_PROXY",
           // Use last month's timestamp instead of current epoch
           startTimestamp: marketData.epochStartTimestamp - mainConfig.secondsPerEpoch,
         },
