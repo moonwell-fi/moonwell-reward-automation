@@ -69,18 +69,7 @@ export async function returnJson(marketData: any, network: string) {
         .shiftedBy(18)
         .integerValue().toNumber(),
     };
-    const nativeRewardSpeeds = {
-      emissionToken: "OP",
-      market: market.alias,
-      newBorrowSpeed: new BigNumber(market.newNativeBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? 1 : new BigNumber(market.newNativeBorrowSpeed)
-        .shiftedBy(18)
-        .integerValue().toNumber(),
-      newEndTime: marketData.epochEndTimestamp,
-      newSupplySpeed: new BigNumber(market.newNativeSupplySpeed).isZero() ? 0 : new BigNumber(market.newNativeSupplySpeed)
-        .shiftedBy(18)
-        .integerValue().toNumber(),
-    };
-    return [wellRewardSpeeds, nativeRewardSpeeds];
+    return [wellRewardSpeeds];
   });
 
   if (network === "Moonbeam") {
@@ -221,6 +210,7 @@ export async function returnJson(marketData: any, network: string) {
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .plus(1e17)
+              .plus(11669037203603279001600000) // TODO remove this after September. Adding missing amount from last month
               .toNumber(),
             from: "MGLIMMER_MULTISIG",
             to: "MULTICHAIN_GOVERNOR_PROXY",
@@ -454,16 +444,6 @@ export async function returnJson(marketData: any, network: string) {
               .minus(1e15)
               .toNumber(),
             rewardToken: "xWELL_PROXY",
-            vault: mainConfig.optimism.rewarderNames[0]
-          },
-          {
-            distributor: "TEMPORAL_GOVERNOR",
-            duration: mainConfig.secondsPerEpoch,
-            reward: new BigNumber(mainConfig.optimism.vaultNativePerEpoch)
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
-              .toNumber(),
-            rewardToken: "OP",
             vault: mainConfig.optimism.rewarderNames[0]
           }
         ],
