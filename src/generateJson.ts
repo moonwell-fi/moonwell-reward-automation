@@ -310,6 +310,7 @@ export async function returnJson(marketData: any, network: string) {
         mekleCampaign: {
           amount: new BigNumber(parseFloat(marketData.base.wellPerEpochSafetyModule) + parseFloat(marketData.base.wellHolderBalance) / 1e18)
             .shiftedBy(18)
+            .plus(11669037203603279001600000) // Add missing rewards from last month
             .decimalPlaces(0, BigNumber.ROUND_CEIL)
             .toNumber(),
           // TEMPORARY FIX: Use 2 epochs duration to cover missing rewards from last month
