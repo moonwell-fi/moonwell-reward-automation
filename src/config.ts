@@ -1,31 +1,30 @@
-import { BigNumber } from "bignumber.js"
 
 export const mainConfig = {
-  totalWellPerEpoch: 13_139_447.412450949,
-    /* Note: updated to reduce by 18M from currently remaining ~293M on 11/18/2024, original schedule below
+	totalWellPerEpoch: 13_139_447.412450949,
+	/* Note: updated to reduce by 18M from currently remaining ~293M on 11/18/2024, original schedule below
     new BigNumber(750_000_000) // 750 million
     .div(4) // 4 years emission schedule
     .div(13) // 13 epochs per year (4 weeks per epoch)
     .integerValue(BigNumber.ROUND_DOWN)
     .toNumber(), */
-  firstEpochTimestamp: 1757043000,
-  secondsPerEpoch: 60 * 60 * 24 * 7 * 4, // 4 weeks
-  moonbeam: {
-    nativePerEpoch: 187_500, // 1,125,000 GLMR / 6 months (extra 2 weeks from Dec. 1 to Dec. 14th to fund out of treasury)
-    markets: 0.48,
-    safetyModule: 0.47,
-    dex: 0.05,
-  },
-  base: {
-    nativePerEpoch: 0,
-    markets: 0.7,
-    safetyModule: 0.30,
-    dex: 0.00,
-    // below is an extra manual transfer from the F-AERO multisig to the DEX relayer
-    dexRelayerAmount: 600_191.93879185, // 7,202,303.2655022416 WELL / 12 4-week epochs
-  },
-  optimism: {
-    /* OP Grants 2025
+	firstEpochTimestamp: 1757441843,
+	secondsPerEpoch: 60 * 60 * 24 * 7 * 4, // 4 weeks
+	moonbeam: {
+		nativePerEpoch: 187_500, // 1,125,000 GLMR / 6 months (extra 2 weeks from Dec. 1 to Dec. 14th to fund out of treasury)
+		markets: 0.48,
+		safetyModule: 0.47,
+		dex: 0.05,
+	},
+	base: {
+		nativePerEpoch: 0,
+		markets: 0.7,
+		safetyModule: 0.3,
+		dex: 0.0,
+		// below is an extra manual transfer from the F-AERO multisig to the DEX relayer
+		dexRelayerAmount: 600_191.93879185, // 7,202,303.2655022416 WELL / 12 4-week epochs
+	},
+	optimism: {
+		/* OP Grants 2025
     April 2025 Grant history (200,000 OP to markets, 100,000 to vaults (40,000 delivered so far))
     Retro funding 71,383.46 OP made available for Feb / Mar 2025 (not delivered yet)
     1. 20,000 depleted in April for core markets only
@@ -33,21 +32,21 @@ export const mainConfig = {
     3. 40,000 in June for core markets and 10,000 for the USDC vault 
     4. 50,000 in July for core markets and 10,000 for the USDC vault
     5. 50,000 in August for core markets and 10,000 for the USDC vault */
-    nativePerEpoch: 50_000,
-    rewarderNames: ['USDC_MULTI_REWARDER'], // Names of multi-rewarders to distribute rewards to
-    vaultNativePerEpoch: 10_000,
-    vaults: 0.05, // 5% of the WELL allocation to the vault staking contract
-    markets: 0.85,
-    safetyModule: 0.05,
-    dex: 0.05,
-  },
-  initSale: {
-    auctionPeriod: 1209600, // 14 days
-    delay: 3600, // 1 hour
-    miniAuctionPeriod: 21600, // 6 hours
-    periodMaxDiscount: 800000000000000000, // 20% discount from starting price
-    periodStartingPremium: 1200000000000000000, // 120% of current price
-  },
+		nativePerEpoch: 50_000,
+		rewarderNames: ['USDC_MULTI_REWARDER'], // Names of multi-rewarders to distribute rewards to
+		vaultNativePerEpoch: 10_000,
+		vaults: 0.05, // 5% of the WELL allocation to the vault staking contract
+		markets: 0.85,
+		safetyModule: 0.05,
+		dex: 0.05,
+	},
+	initSale: {
+		auctionPeriod: 1209600, // 14 days
+		delay: 3600, // 1 hour
+		miniAuctionPeriod: 21600, // 6 hours
+		periodMaxDiscount: 800000000000000000, // 20% discount from starting price
+		periodStartingPremium: 1200000000000000000, // 120% of current price
+	},
 };
 
 export const moonbeamComptroller = {
