@@ -169,7 +169,7 @@ export async function returnJson(marketData: any, network: string) {
         withdrawWell: [],
       },
       endTimeSTamp: marketData.epochEndTimestamp,
-      startTimeStamp: marketData.epochStartTimestamp,
+      startTimeStamp: 1757441843,
     };
 
     return result;
@@ -316,11 +316,11 @@ export async function returnJson(marketData: any, network: string) {
           duration: mainConfig.secondsPerEpoch * 2,
           rewardToken: "xWELL_PROXY",
           // Use last month's timestamp instead of current epoch
-          startTimestamp: marketData.epochStartTimestamp - mainConfig.secondsPerEpoch,
+          startTimestamp: 1757441843 - mainConfig.secondsPerEpoch,
         }],
       },
       endTimeSTamp: marketData.epochEndTimestamp,
-      startTimeStamp: marketData.epochStartTimestamp,
+      startTimeStamp: 1757441843,
     };
 
     return result;
@@ -457,7 +457,7 @@ export async function returnJson(marketData: any, network: string) {
         merkleCampaigns: [],
       },
       endTimeSTamp: marketData.epochEndTimestamp,
-      startTimeStamp: marketData.epochStartTimestamp,
+      startTimeStamp: 1757441843,
     };
 
     return result;
