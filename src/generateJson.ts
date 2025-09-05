@@ -212,9 +212,15 @@ export async function returnJson(marketData: any, network: string) {
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .plus(1e17)
-              .plus(MISSING_AUGUST_AMOUNT) // TODO remove this after September. Adding missing amount from last month
               .toNumber(),
             from: "MGLIMMER_MULTISIG",
+            to: "MULTICHAIN_GOVERNOR_PROXY",
+            token: "GOVTOKEN",
+          },
+          {
+            // Transfer missing August amount from F-GLMR-DEVGRANT
+            amount: MISSING_AUGUST_AMOUNT.toNumber(),
+            from: "F-GLMR-DEVGRANT",
             to: "MULTICHAIN_GOVERNOR_PROXY",
             token: "GOVTOKEN",
           },
