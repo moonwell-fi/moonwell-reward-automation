@@ -6,6 +6,8 @@ BigNumber.config({
   EXPONENTIAL_AT: 40
 })
 
+const MISSING_AUGUST_AMOUNT = new BigNumber('11669037203603279001600000')
+
 export async function returnJson(marketData: any, network: string) {
   const moonbeamSetRewardSpeeds = marketData["1284"].flatMap((market: MarketType) => {
     const wellRewardSpeeds = {
@@ -185,7 +187,7 @@ export async function returnJson(marketData: any, network: string) {
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .plus(1e16)
-              .plus(11669037203603279001600000) // TODO remove this after September. Adding missing amount from last month 
+              .plus(MISSING_AUGUST_AMOUNT) // TODO remove this after September. Adding missing amount from last month 
               .toNumber(),
             nativeValue: new BigNumber(marketData.bridgeCost * 4).toNumber(), // pad bridgeCost by 4x in case of price fluctuations
             network: 8453,
@@ -210,7 +212,7 @@ export async function returnJson(marketData: any, network: string) {
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .plus(1e17)
-              .plus(11669037203603279001600000) // TODO remove this after September. Adding missing amount from last month
+              .plus(MISSING_AUGUST_AMOUNT) // TODO remove this after September. Adding missing amount from last month
               .toNumber(),
             from: "MGLIMMER_MULTISIG",
             to: "MULTICHAIN_GOVERNOR_PROXY",
@@ -299,9 +301,8 @@ export async function returnJson(marketData: any, network: string) {
                 },
               ],
         merkleCampaigns: [{
-          amount: new BigNumber(parseFloat(marketData.base.wellPerEpochSafetyModule) + parseFloat(marketData.base.wellHolderBalance) / 1e18)
+          amount: new BigNumber(parseFloat(marketData.base.wellPerEpochSafetyModule) + (parseFloat(marketData.base.wellHolderBalance) + MISSING_AUGUST_AMOUNT.toNumber()) / 1e18)
             .shiftedBy(18)
-            .plus(11669037203603279001600000) // TODO remove this after September. Adding missing amount from last month 
             .decimalPlaces(0, BigNumber.ROUND_CEIL)
             .toNumber(),
           // TEMPORARY FIX: Use 2 epochs duration to cover missing rewards from last month
