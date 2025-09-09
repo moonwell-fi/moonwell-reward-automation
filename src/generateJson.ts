@@ -81,7 +81,7 @@ export async function returnJson(marketData: any, network: string) {
     const result: any = {
       1284: {
         addRewardInfo: {
-          amount: BigNumber(marketData.moonbeam.wellPerEpochDex)
+          amount: BigNumber(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18))
             .shiftedBy(18)
             .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
             .plus(1e16)

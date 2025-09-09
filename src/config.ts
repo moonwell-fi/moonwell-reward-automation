@@ -7,7 +7,7 @@ export const mainConfig = {
     .div(13) // 13 epochs per year (4 weeks per epoch)
     .integerValue(BigNumber.ROUND_DOWN)
     .toNumber(), */
-	firstEpochTimestamp: 1757441843,
+	firstEpochTimestamp: 1757683818,
 	secondsPerEpoch: 60 * 60 * 24 * 7 * 4, // 4 weeks
 	moonbeam: {
 		nativePerEpoch: 187_500, // 1,125,000 GLMR / 6 months (extra 2 weeks from Dec. 1 to Dec. 14th to fund out of treasury)
