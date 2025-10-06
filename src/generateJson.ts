@@ -6,8 +6,6 @@ BigNumber.config({
   EXPONENTIAL_AT: 40
 })
 
-const MISSING_SEPTEMBER_AMOUNT = new BigNumber('23094721447738864000000')
-
 export async function returnJson(marketData: any, network: string) {
   const moonbeamSetRewardSpeeds = marketData["1284"].flatMap((market: MarketType) => {
     const wellRewardSpeeds = {
@@ -308,6 +306,11 @@ export async function returnJson(marketData: any, network: string) {
     // Check if any market has reservesEnabled=true
     const hasReservesEnabled = marketData["10"].some((market: MarketType) => market.reservesEnabled);
 
+    const x = BigNumber(marketData.optimism.wellPerEpochSafetyModule);
+    console.log("x", x.toNumber())
+    console.log("x shifted", x.shiftedBy(18).toNumber())
+
+
     const result: any = {
       1284: {
         bridgeToRecipient: [
@@ -383,10 +386,9 @@ export async function returnJson(marketData: any, network: string) {
             token: "xWELL_PROXY",
           },
           { // Transfer bridged Safety Module rewards to the Multi Reward Distributor
-            amount: BigNumber(marketData.optimism.wellPerEpochSafetyModule + MISSING_SEPTEMBER_AMOUNT)
+            amount: BigNumber(marketData.optimism.wellPerEpochSafetyModule)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
-              .minus(1e16)
               .toNumber(),
             from: "TEMPORAL_GOVERNOR",
             to: "ECOSYSTEM_RESERVE_PROXY",
