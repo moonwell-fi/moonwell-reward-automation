@@ -69,18 +69,7 @@ export async function returnJson(marketData: any, network: string) {
         .shiftedBy(18)
         .integerValue().toNumber(),
     };
-    const nativeRewardSpeeds = {
-      emissionToken: "OP",
-      market: market.alias,
-      newBorrowSpeed: new BigNumber(market.newNativeBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? 1 : new BigNumber(market.newNativeBorrowSpeed)
-        .shiftedBy(18)
-        .integerValue().toNumber(),
-      newEndTime: marketData.epochEndTimestamp,
-      newSupplySpeed: new BigNumber(market.newNativeSupplySpeed).isZero() ? 0 : new BigNumber(market.newNativeSupplySpeed)
-        .shiftedBy(18)
-        .integerValue().toNumber(),
-    };
-    return [wellRewardSpeeds, nativeRewardSpeeds];
+    return [wellRewardSpeeds];
   });
 
   if (network === "Moonbeam") {
@@ -90,7 +79,7 @@ export async function returnJson(marketData: any, network: string) {
     const result: any = {
       1284: {
         addRewardInfo: {
-          amount: BigNumber(marketData.moonbeam.wellPerEpochDex)
+          amount: BigNumber(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18))
             .shiftedBy(18)
             .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
             .plus(1e16)
@@ -225,6 +214,7 @@ export async function returnJson(marketData: any, network: string) {
             to: "MULTICHAIN_GOVERNOR_PROXY",
             token: "GOVTOKEN",
           },
+
         ].filter((transfer) => transfer.amount > 0),
       },
       8453: {
@@ -263,17 +253,6 @@ export async function returnJson(marketData: any, network: string) {
             to: "MRD_PROXY",
             token: "xWELL_PROXY",
           },
-          {
-            // Extra transferFrom to DEX Relayer
-            amount: new BigNumber(mainConfig.base.dexRelayerAmount)
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
-              .minus(1e16)
-              .toNumber(),
-            from: "F-AERO_MULTISIG",
-            to: "DEX_RELAYER",
-            token: "xWELL_PROXY",
-          },
         ].filter((transfer) => transfer.amount > 0),
         ...(hasReservesEnabled
           ? {
@@ -310,12 +289,9 @@ export async function returnJson(marketData: any, network: string) {
         merkleCampaigns: [{
           amount: new BigNumber(parseFloat(marketData.base.wellPerEpochSafetyModule) + parseFloat(marketData.base.wellHolderBalance) / 1e18)
             .shiftedBy(18)
-            .plus(11669037203603279001600000) // Add missing rewards from last month
             .decimalPlaces(0, BigNumber.ROUND_CEIL)
             .toNumber(),
-          // TEMPORARY FIX: Use 2 epochs duration to cover missing rewards from last month
-          // TODO: Update next month to use single epoch (mainConfig.secondsPerEpoch)
-          duration: mainConfig.secondsPerEpoch * 2,
+          duration: mainConfig.secondsPerEpoch,
           rewardToken: "xWELL_PROXY",
           // Use last month's timestamp instead of current epoch
           startTimestamp: marketData.epochStartTimestamp - mainConfig.secondsPerEpoch,
@@ -329,6 +305,11 @@ export async function returnJson(marketData: any, network: string) {
   } else if (network === "Optimism") {
     // Check if any market has reservesEnabled=true
     const hasReservesEnabled = marketData["10"].some((market: MarketType) => market.reservesEnabled);
+
+    const x = BigNumber(marketData.optimism.wellPerEpochSafetyModule);
+    console.log("x", x.toNumber())
+    console.log("x shifted", x.shiftedBy(18).toNumber())
+
 
     const result: any = {
       1284: {
@@ -394,16 +375,6 @@ export async function returnJson(marketData: any, network: string) {
           .integerValue()
           .toNumber(),
         transferFrom: [
-          { // Transfer native OP rewards to the Multi Reward Distributor
-            amount: BigNumber(marketData.optimism.nativePerEpoch)
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
-              .minus(1e16)
-              .toNumber(),
-            from: "FOUNDATION_OP_MULTISIG",
-            to: "MRD_PROXY",
-            token: "OP",
-          },
           { // Transfer bridged market rewards to the Multi Reward Distributor
             amount: BigNumber(marketData.optimism.wellPerEpochMarkets)
               .shiftedBy(18)
@@ -417,9 +388,7 @@ export async function returnJson(marketData: any, network: string) {
           { // Transfer bridged Safety Module rewards to the Multi Reward Distributor
             amount: BigNumber(marketData.optimism.wellPerEpochSafetyModule)
               .shiftedBy(18)
-              .minus(marketData.optimism.wellHolderBalance)
               .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
-              .minus(1e16)
               .toNumber(),
             from: "TEMPORAL_GOVERNOR",
             to: "ECOSYSTEM_RESERVE_PROXY",
@@ -463,16 +432,6 @@ export async function returnJson(marketData: any, network: string) {
               .minus(1e15)
               .toNumber(),
             rewardToken: "xWELL_PROXY",
-            vault: mainConfig.optimism.rewarderNames[0]
-          },
-          {
-            distributor: "TEMPORAL_GOVERNOR",
-            duration: mainConfig.secondsPerEpoch,
-            reward: new BigNumber(mainConfig.optimism.vaultNativePerEpoch)
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
-              .toNumber(),
-            rewardToken: "OP",
             vault: mainConfig.optimism.rewarderNames[0]
           }
         ],

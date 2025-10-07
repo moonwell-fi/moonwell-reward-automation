@@ -201,17 +201,13 @@ Total Borrows in USD: $0.00
 | Borrow APY | 0.00 | 0.00 |
 | WELL Supply APR | 0 | 0.48 |
 | WELL Borrow APR | Infinity | Infinity |
-| OP Supply APR | 0 | 1.55 |
-| OP Borrow APR | Infinity | Infinity |
-| Total Supply APR | 0.00% | 2.03% |
+| Total Supply APR | 0.00% | 0.48% |
 | Total Borrow APR | Infinity% | Infinity% |
 | Total Supply Incentives Per Day in USD | $0.00 | $277.24 |
 | Total Borrow Incentives Per Day in USD | $0.00 | $277.24 |
 
 % changed for WELL Supply: 0
 % changed for WELL Borrow: 4067650352587080700
-% changed for OP Supply: 0
-% changed for OP Borrow: 144329327864720400
 
 ### USDT (MOONWELL_USDT)
 
@@ -224,17 +220,13 @@ Total Borrows in USD: $0.00
 | Borrow APY | 0.00 | 0.00 |
 | WELL Supply APR | 0 | 0.48 |
 | WELL Borrow APR | Infinity | Infinity |
-| OP Supply APR | 0 | 1.55 |
-| OP Borrow APR | Infinity | Infinity |
-| Total Supply APR | 0.00% | 2.03% |
+| Total Supply APR | 0.00% | 0.48% |
 | Total Borrow APR | Infinity% | Infinity% |
 | Total Supply Incentives Per Day in USD | $0.00 | $55.45 |
 | Total Borrow Incentives Per Day in USD | $0.00 | $55.45 |
 
 % changed for WELL Supply: 0
 % changed for WELL Borrow: 813530886732075000
-% changed for OP Supply: 0
-% changed for OP Borrow: 28865894534064776
 
 ### DAI (MOONWELL_DAI)
 
@@ -247,17 +239,13 @@ Total Borrows in USD: $0.00
 | Borrow APY | 0.00 | 0.00 |
 | WELL Supply APR | 0 | 0.48 |
 | WELL Borrow APR | Infinity | Infinity |
-| OP Supply APR | 0 | 1.55 |
-| OP Borrow APR | Infinity | Infinity |
-| Total Supply APR | 0.00% | 2.03% |
+| Total Supply APR | 0.00% | 0.48% |
 | Total Borrow APR | Infinity% | Infinity% |
 | Total Supply Incentives Per Day in USD | $0.00 | $55.45 |
 | Total Borrow Incentives Per Day in USD | $0.00 | $55.45 |
 
 % changed for WELL Supply: 0
 % changed for WELL Borrow: 813531914886767500
-% changed for OP Supply: 0
-% changed for OP Borrow: 28865931015291744
 
 ### WBTC (MOONWELL_WBTC)
 
@@ -270,17 +258,13 @@ Total Borrows in USD: $0.00
 | Borrow APY | 0.02 | 0.02 |
 | WELL Supply APR | 0 | 0.96 |
 | WELL Borrow APR | Infinity | Infinity |
-| OP Supply APR | 0 | 3.09 |
-| OP Borrow APR | Infinity | Infinity |
-| Total Supply APR | 0.00% | 4.05% |
+| Total Supply APR | 0.00% | 0.96% |
 | Total Borrow APR | Infinity% | Infinity% |
 | Total Supply Incentives Per Day in USD | $0.00 | $221.79 |
 | Total Borrow Incentives Per Day in USD | $0.00 | $0.00 |
 
 % changed for WELL Supply: 0
 % changed for WELL Borrow: 0
-% changed for OP Supply: 0
-% changed for OP Borrow: 0
 
 ### ETH (MOONWELL_WETH)
 
@@ -293,17 +277,13 @@ Total Borrows in USD: $0.00
 | Borrow APY | 0.02 | 0.02 |
 | WELL Supply APR | 0 | 0.48 |
 | WELL Borrow APR | Infinity | Infinity |
-| OP Supply APR | 0 | 1.55 |
-| OP Borrow APR | Infinity | Infinity |
-| Total Supply APR | 0.00% | 2.03% |
+| Total Supply APR | 0.00% | 0.48% |
 | Total Borrow APR | Infinity% | Infinity% |
 | Total Supply Incentives Per Day in USD | $0.00 | $277.24 |
 | Total Borrow Incentives Per Day in USD | $0.00 | $277.24 |
 
 % changed for WELL Supply: 0
 % changed for WELL Borrow: 4067648824337917000
-% changed for OP Supply: 0
-% changed for OP Borrow: 144329273639023600
 
 ### wstETH (MOONWELL_wstETH)
 
@@ -316,17 +296,13 @@ Total Borrows in USD: $0.00
 | Borrow APY | 0.02 | 0.02 |
 | WELL Supply APR | 0 | 0.43 |
 | WELL Borrow APR | Infinity | Infinity |
-| OP Supply APR | 0 | 1.39 |
-| OP Borrow APR | Infinity | Infinity |
-| Total Supply APR | 0.00% | 1.82% |
+| Total Supply APR | 0.00% | 0.43% |
 | Total Borrow APR | Infinity% | Infinity% |
 | Total Supply Incentives Per Day in USD | $0.00 | $99.80 |
 | Total Borrow Incentives Per Day in USD | $0.00 | $121.98 |
 
 % changed for WELL Supply: 0
 % changed for WELL Borrow: 1789771293912183800
-% changed for OP Supply: 0
-% changed for OP Borrow: 63505086595661650
 
 ### cbETH (MOONWELL_cbETH)
 
@@ -339,17 +315,13 @@ Total Borrows in USD: $0.00
 | Borrow APY | 0.02 | 0.02 |
 | WELL Supply APR | 0 | 0.43 |
 | WELL Borrow APR | Infinity | Infinity |
-| OP Supply APR | 0 | 1.39 |
-| OP Borrow APR | Infinity | Infinity |
-| Total Supply APR | 0.00% | 1.82% |
+| Total Supply APR | 0.00% | 0.43% |
 | Total Borrow APR | Infinity% | Infinity% |
 | Total Supply Incentives Per Day in USD | $0.00 | $99.80 |
 | Total Borrow Incentives Per Day in USD | $0.00 | $121.98 |
 
 % changed for WELL Supply: 0
 % changed for WELL Borrow: 1789764314088756700
-% changed for OP Supply: 0
-% changed for OP Borrow: 63504838935922850
 
 ### rETH (MOONWELL_rETH)
 
@@ -362,17 +334,13 @@ Total Borrows in USD: $0.00
 | Borrow APY | 0.02 | 0.02 |
 | WELL Supply APR | 0 | 0.43 |
 | WELL Borrow APR | Infinity | Infinity |
-| OP Supply APR | 0 | 1.39 |
-| OP Borrow APR | Infinity | Infinity |
-| Total Supply APR | 0.00% | 1.82% |
+| Total Supply APR | 0.00% | 0.43% |
 | Total Borrow APR | Infinity% | Infinity% |
 | Total Supply Incentives Per Day in USD | $0.00 | $49.90 |
 | Total Borrow Incentives Per Day in USD | $0.00 | $49.90 |
 
 % changed for WELL Supply: 0
 % changed for WELL Borrow: 732177130027290400
-% changed for OP Supply: 0
-% changed for OP Borrow: 25979281377404520
 
 ### VELO (MOONWELL_VELO)
 
@@ -385,17 +353,13 @@ Total Borrows in USD: $0.00
 | Borrow APY | 0.02 | 0.02 |
 | WELL Supply APR | 0 | 0.24 |
 | WELL Borrow APR | Infinity | Infinity |
-| OP Supply APR | 0 | 0.77 |
-| OP Borrow APR | Infinity | Infinity |
-| Total Supply APR | 0.00% | 1.01% |
+| Total Supply APR | 0.00% | 0.24% |
 | Total Borrow APR | Infinity% | Infinity% |
 | Total Supply Incentives Per Day in USD | $0.00 | $27.72 |
 | Total Borrow Incentives Per Day in USD | $0.00 | $83.17 |
 
 % changed for WELL Supply: 0
 % changed for WELL Borrow: 1220293828862589000
-% changed for OP Supply: 0
-% changed for OP Borrow: 43298753051669240
 
 ### OP (MOONWELL_OP)
 
@@ -408,17 +372,13 @@ Total Borrows in USD: $0.00
 | Borrow APY | 0.02 | 0.02 |
 | WELL Supply APR | 0 | 0.72 |
 | WELL Borrow APR | Infinity | Infinity |
-| OP Supply APR | 0 | 2.32 |
-| OP Borrow APR | Infinity | Infinity |
-| Total Supply APR | 0.00% | 3.04% |
+| Total Supply APR | 0.00% | 0.72% |
 | Total Borrow APR | Infinity% | Infinity% |
 | Total Supply Incentives Per Day in USD | $0.00 | $83.17 |
 | Total Borrow Incentives Per Day in USD | $0.00 | $27.72 |
 
 % changed for WELL Supply: 0
 % changed for WELL Borrow: 406799377611843200
-% changed for OP Supply: 0
-% changed for OP Borrow: 14434151329934554
 
 ## Base Network
 

@@ -196,7 +196,6 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
     if (networkId === '10' && marketData.optimism.optimismUSDCVaultWellRewardAmount) {
       markdown += `| | |\n`;
       markdown += `| Total WELL allocated to USDC vault depositors | ${Math.max(0, Number(marketData.optimism.optimismUSDCVaultWellRewardAmount)).toLocaleString()} WELL |\n`;
-      markdown += `| Total OP allocated to USDC vault depositors | ${Math.max(0, Number(marketData.optimism.vaultNativePerEpoch)).toLocaleString()} OP |\n`;
     }
     
     markdown += `\n`;

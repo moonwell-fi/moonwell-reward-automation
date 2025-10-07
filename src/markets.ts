@@ -355,6 +355,9 @@ export async function getMarketData(timestamp: number, env?: any) {
   
   // Check for zero prices and log them
   const moonbeamPrices = moonbeamPricesResponse.map((price, index) => {
+    if (price.status === 'failure' || price.result === undefined) {
+      throw new Error(`Failed to fetch price for Moonbeam market ${moonbeamNames[index]} (${moonbeamMarkets[index]}): ${price.error || 'RPC call failed'}`);
+    }
     const priceValue = price.result as bigint;
     if (priceValue === BigInt(0)) {
       console.log(`⚠️ ZERO PRICE ALERT: Moonbeam market ${moonbeamNames[index]} (${moonbeamMarkets[index]}) has price = 0`);
@@ -365,9 +368,13 @@ export async function getMarketData(timestamp: number, env?: any) {
   const glmrIndex = moonbeamMarkets.findIndex(
     (market) => moonbeamNames[moonbeamMarkets.indexOf(market)] === "GLMR"
   );
-  
+
+  if (glmrIndex === -1) {
+    throw new Error("GLMR market not found in Moonbeam markets");
+  }
+
   const moonbeamNativePrice = formatUnits(
-    moonbeamPrices[glmrIndex], 
+    moonbeamPrices[glmrIndex],
     (36 - 18)
   );
 
