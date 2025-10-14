@@ -293,8 +293,7 @@ export async function returnJson(marketData: any, network: string) {
             .toNumber(),
           duration: mainConfig.secondsPerEpoch,
           rewardToken: "xWELL_PROXY",
-          // Use last month's timestamp instead of current epoch
-          startTimestamp: marketData.epochStartTimestamp - mainConfig.secondsPerEpoch,
+          startTimestamp: marketData.epochStartTimestamp,
         }],
       },
       endTimeSTamp: marketData.epochEndTimestamp,
