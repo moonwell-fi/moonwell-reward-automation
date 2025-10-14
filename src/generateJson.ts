@@ -1,7 +1,6 @@
 import BigNumber from 'bignumber.js';
-import { mainConfig, merkleCampaignAmounts } from './config';
+import { mainConfig, merkleCampaignAmounts, merkleCampaignDatas } from './config';
 import { MarketType } from './markets';
-import { payloadMerkleCampaignBase } from './config';
 
 BigNumber.config({
   EXPONENTIAL_AT: 40
@@ -288,7 +287,6 @@ export async function returnJson(marketData: any, network: string) {
                 },
               ],
         merkleCampaigns: [
-          // STKWELL_AMOUNT
           {
             amount: new BigNumber(parseFloat(marketData.base.wellPerEpochSafetyModule) + parseFloat(marketData.base.wellHolderBalance) / 1e18)
               .shiftedBy(18)
@@ -297,9 +295,8 @@ export async function returnJson(marketData: any, network: string) {
             duration: mainConfig.secondsPerEpoch,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
-            campaignData: payloadMerkleCampaignBase,
+            campaignData: merkleCampaignDatas.stkWELL,
           },
-          // USDC_AMOUNT: 1.5M WELL
           {
             amount: new BigNumber(merkleCampaignAmounts.USDC)
               .shiftedBy(18)
@@ -308,9 +305,8 @@ export async function returnJson(marketData: any, network: string) {
             duration: mainConfig.secondsPerEpoch,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
-            campaignData: payloadMerkleCampaignBase,
+            campaignData: merkleCampaignDatas.USDC,
           },
-          // WETH_AMOUNT: 750K WELL
           {
             amount: new BigNumber(merkleCampaignAmounts.WETH)
               .shiftedBy(18)
@@ -319,9 +315,8 @@ export async function returnJson(marketData: any, network: string) {
             duration: mainConfig.secondsPerEpoch,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
-            campaignData: payloadMerkleCampaignBase,
+            campaignData: merkleCampaignDatas.WETH,
           },
-          // EURC_AMOUNT: 400K WELL
           {
             amount: new BigNumber(merkleCampaignAmounts.EURC)
               .shiftedBy(18)
@@ -330,9 +325,8 @@ export async function returnJson(marketData: any, network: string) {
             duration: mainConfig.secondsPerEpoch,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
-            campaignData: payloadMerkleCampaignBase,
+            campaignData: merkleCampaignDatas.EURC,
           },
-          // cbBTC_AMOUNT: 400K WELL
           {
             amount: new BigNumber(merkleCampaignAmounts.cbBTC)
               .shiftedBy(18)
@@ -341,7 +335,17 @@ export async function returnJson(marketData: any, network: string) {
             duration: mainConfig.secondsPerEpoch,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
-            campaignData: payloadMerkleCampaignBase,
+            campaignData: merkleCampaignDatas.cbBTC,
+          },
+          {
+            amount: new BigNumber(0) // TODO: should this be hardcoded or dynamically generated like stkWELL
+              .shiftedBy(18)
+              .decimalPlaces(0, BigNumber.ROUND_CEIL)
+              .toNumber(),
+            duration: mainConfig.secondsPerEpoch,
+            rewardToken: "xWELL_PROXY",
+            startTimestamp: marketData.epochStartTimestamp,
+            campaignData: merkleCampaignDatas.meUSDC,
           }
         ],
       },
