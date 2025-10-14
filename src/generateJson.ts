@@ -1,6 +1,7 @@
 import BigNumber from 'bignumber.js';
-import { mainConfig } from './config';
+import { mainConfig, merkleCampaignAmounts } from './config';
 import { MarketType } from './markets';
+import { payloadMerkleCampaignBase } from './config';
 
 BigNumber.config({
   EXPONENTIAL_AT: 40
@@ -296,46 +297,51 @@ export async function returnJson(marketData: any, network: string) {
             duration: mainConfig.secondsPerEpoch,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
+            campaignData: payloadMerkleCampaignBase,
           },
           // USDC_AMOUNT: 1.5M WELL
           {
-            amount: new BigNumber(1500000000000000000000000)
+            amount: new BigNumber(merkleCampaignAmounts.USDC)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL)
               .toNumber(),
             duration: mainConfig.secondsPerEpoch,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
+            campaignData: payloadMerkleCampaignBase,
           },
           // WETH_AMOUNT: 750K WELL
           {
-            amount: new BigNumber(750000000000000000000000)
+            amount: new BigNumber(merkleCampaignAmounts.WETH)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL)
               .toNumber(),
             duration: mainConfig.secondsPerEpoch,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
+            campaignData: payloadMerkleCampaignBase,
           },
           // EURC_AMOUNT: 400K WELL
           {
-            amount: new BigNumber(400000000000000000000000)
+            amount: new BigNumber(merkleCampaignAmounts.EURC)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL)
               .toNumber(),
             duration: mainConfig.secondsPerEpoch,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
+            campaignData: payloadMerkleCampaignBase,
           },
           // cbBTC_AMOUNT: 400K WELL
           {
-            amount: new BigNumber(400000000000000000000000)
+            amount: new BigNumber(merkleCampaignAmounts.cbBTC)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL)
               .toNumber(),
             duration: mainConfig.secondsPerEpoch,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
+            campaignData: payloadMerkleCampaignBase,
           }
         ],
       },
