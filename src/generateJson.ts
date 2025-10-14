@@ -286,15 +286,58 @@ export async function returnJson(marketData: any, network: string) {
                   to: "TEMPORAL_GOVERNOR", // we now should transfer to temporal governor as the merkle createCampaign call will pull the funds from the temporal governor
                 },
               ],
-        merkleCampaigns: [{
-          amount: new BigNumber(parseFloat(marketData.base.wellPerEpochSafetyModule) + parseFloat(marketData.base.wellHolderBalance) / 1e18)
-            .shiftedBy(18)
-            .decimalPlaces(0, BigNumber.ROUND_CEIL)
-            .toNumber(),
-          duration: mainConfig.secondsPerEpoch,
-          rewardToken: "xWELL_PROXY",
-          startTimestamp: marketData.epochStartTimestamp,
-        }],
+        merkleCampaigns: [
+          // STKWELL_AMOUNT
+          {
+            amount: new BigNumber(parseFloat(marketData.base.wellPerEpochSafetyModule) + parseFloat(marketData.base.wellHolderBalance) / 1e18)
+              .shiftedBy(18)
+              .decimalPlaces(0, BigNumber.ROUND_CEIL)
+              .toNumber(),
+            duration: mainConfig.secondsPerEpoch,
+            rewardToken: "xWELL_PROXY",
+            startTimestamp: marketData.epochStartTimestamp,
+          },
+          // USDC_AMOUNT: 1.5M WELL
+          {
+            amount: new BigNumber(1500000000000000000000000)
+              .shiftedBy(18)
+              .decimalPlaces(0, BigNumber.ROUND_CEIL)
+              .toNumber(),
+            duration: mainConfig.secondsPerEpoch,
+            rewardToken: "xWELL_PROXY",
+            startTimestamp: marketData.epochStartTimestamp,
+          },
+          // WETH_AMOUNT: 750K WELL
+          {
+            amount: new BigNumber(750000000000000000000000)
+              .shiftedBy(18)
+              .decimalPlaces(0, BigNumber.ROUND_CEIL)
+              .toNumber(),
+            duration: mainConfig.secondsPerEpoch,
+            rewardToken: "xWELL_PROXY",
+            startTimestamp: marketData.epochStartTimestamp,
+          },
+          // EURC_AMOUNT: 400K WELL
+          {
+            amount: new BigNumber(400000000000000000000000)
+              .shiftedBy(18)
+              .decimalPlaces(0, BigNumber.ROUND_CEIL)
+              .toNumber(),
+            duration: mainConfig.secondsPerEpoch,
+            rewardToken: "xWELL_PROXY",
+            startTimestamp: marketData.epochStartTimestamp,
+          },
+          // cbBTC_AMOUNT: 400K WELL
+          {
+            amount: new BigNumber(400000000000000000000000)
+              .shiftedBy(18)
+              .decimalPlaces(0, BigNumber.ROUND_CEIL)
+              .toNumber(),
+            duration: mainConfig.secondsPerEpoch,
+            rewardToken: "xWELL_PROXY",
+            startTimestamp: marketData.epochStartTimestamp,
+          }
+        ],
       },
       endTimeSTamp: marketData.epochEndTimestamp,
       startTimeStamp: marketData.epochStartTimestamp,
