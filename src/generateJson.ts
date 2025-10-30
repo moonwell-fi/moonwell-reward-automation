@@ -6,68 +6,77 @@ BigNumber.config({
   EXPONENTIAL_AT: 40
 })
 
+const TOKEN_HOLDING_CAMPAIGN = 18;
+const MORPHO_VAULT_CAMPAIGN = 56;
+
 export async function returnJson(marketData: any, network: string) {
-  const moonbeamSetRewardSpeeds = marketData["1284"].flatMap((market: MarketType) => {
+  const moonbeamSetRewardSpeeds = marketData["1284"]
+    .filter((market: MarketType) => market.alias !== null)
+    .flatMap((market: MarketType) => {
     const wellRewardSpeeds = {
       market: market.alias,
-      newBorrowSpeed: new BigNumber(market.newWellBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? 1 : new BigNumber(market.newWellBorrowSpeed)
+      newBorrowSpeed: new BigNumber(market.newWellBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? "1" : new BigNumber(market.newWellBorrowSpeed)
         .shiftedBy(18)
-        .integerValue().toNumber(),
-      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isZero() ? 0 : new BigNumber(market.newWellSupplySpeed)
+        .integerValue().toString(),
+      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isZero() ? "0" : new BigNumber(market.newWellSupplySpeed)
         .shiftedBy(18)
-        .integerValue().toNumber(),
+        .integerValue().toString(),
       rewardType: 0, // 0 = WELL
     };
     const nativeRewardSpeeds = {
       market: market.alias,
-      newBorrowSpeed: new BigNumber(market.newNativeBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? 1 : new BigNumber(market.newNativeBorrowSpeed)
+      newBorrowSpeed: new BigNumber(market.newNativeBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? "1" : new BigNumber(market.newNativeBorrowSpeed)
         .shiftedBy(18)
-        .integerValue().toNumber(),
-      newSupplySpeed: new BigNumber(market.newNativeSupplySpeed).isZero() ? 0 : new BigNumber(market.newNativeSupplySpeed)
+        .integerValue().toString(),
+      newSupplySpeed: new BigNumber(market.newNativeSupplySpeed).isZero() ? "0" : new BigNumber(market.newNativeSupplySpeed)
         .shiftedBy(18)
-        .integerValue().toNumber(),
+        .integerValue().toString(),
       rewardType: 1, // 1 = GLMR
     };
     return [wellRewardSpeeds, nativeRewardSpeeds];
   });
 
-  const baseSetRewardSpeeds = marketData["8453"].flatMap((market: MarketType) => {
+  const baseSetRewardSpeeds = marketData["8453"]
+    .filter((market: MarketType) => market.alias !== null)
+    .flatMap((market: MarketType) => {
     const wellRewardSpeeds = {
       emissionToken: "xWELL_PROXY",
       market: market.alias,
-      newBorrowSpeed: new BigNumber(market.newWellBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? 1 : new BigNumber(market.newWellBorrowSpeed)
+      newBorrowSpeed: new BigNumber(market.newWellBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? "1" : new BigNumber(market.newWellBorrowSpeed)
         .shiftedBy(18)
-        .integerValue().toNumber(),
+        .integerValue().toString(),
       newEndTime: marketData.epochEndTimestamp,
-      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isZero() ? 0 : new BigNumber(market.newWellSupplySpeed)
+      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isZero() ? "0" : new BigNumber(market.newWellSupplySpeed)
         .shiftedBy(18)
-        .integerValue().toNumber(),
+        .integerValue().toString(),
     };
     const nativeRewardSpeeds = {
       emissionToken: "USDC",
       market: market.alias,
-      newBorrowSpeed: new BigNumber(market.newNativeBorrowSpeed).isEqualTo(new BigNumber('1e-6')) ? 1 : new BigNumber(market.newNativeBorrowSpeed)
+      newBorrowSpeed: new BigNumber(market.newNativeBorrowSpeed).isEqualTo(new BigNumber('1e-6')) ? "1" : new BigNumber(market.newNativeBorrowSpeed)
         .shiftedBy(6)
-        .integerValue().toNumber(),
+        .integerValue().toString(),
       newEndTime: -1, // Don't update the end timestamp for USDC until new incentives are allocated
-      newSupplySpeed: new BigNumber(market.newNativeSupplySpeed).isZero() ? 0 : new BigNumber(market.newNativeSupplySpeed)
+      newSupplySpeed: new BigNumber(market.newNativeSupplySpeed).isZero() ? "0" : new BigNumber(market.newNativeSupplySpeed)
         .shiftedBy(6)
-        .integerValue().toNumber(),
+        .integerValue().toString(),
     };
     return [wellRewardSpeeds, nativeRewardSpeeds];
   });
 
-  const optimismSetRewardSpeeds = marketData["10"].flatMap((market: MarketType) => {
+  const optimismSetRewardSpeeds = marketData["10"]
+    .filter((market: MarketType) => market.alias !== null)
+    .flatMap((market: MarketType) => {
     const wellRewardSpeeds = {
       emissionToken: "xWELL_PROXY",
       market: market.alias,
-      newBorrowSpeed: new BigNumber(market.newWellBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? 1 : new BigNumber(market.newWellBorrowSpeed)
+      newBorrowSpeed: new BigNumber(market.newWellBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? "1" : new BigNumber(market.newWellBorrowSpeed)
         .shiftedBy(18)
-        .integerValue().toNumber(),
+        .integerValue().toString(),
       newEndTime: marketData.epochEndTimestamp,
-      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isZero() ? 0 : new BigNumber(market.newWellSupplySpeed)
+      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isZero() ? "0" : new BigNumber(market.newWellSupplySpeed)
         .shiftedBy(18)
-        .integerValue().toNumber(),
+        .integerValue().toString(),
     };
     return [wellRewardSpeeds];
   });
@@ -83,14 +92,14 @@ export async function returnJson(marketData: any, network: string) {
             .shiftedBy(18)
             .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
             .plus(1e16)
-            .toNumber(),
+            .toString(),
           endTimestamp: marketData.epochEndTimestamp,
           pid: 15,
           rewardPerSec: BigNumber(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18))
             .div(BigNumber(marketData.totalSeconds))
             .shiftedBy(18)
             .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
-            .toNumber(),
+            .toString(),
           target: "STELLASWAP_REWARDER",
         },
         ...(hasReservesEnabled ? {
@@ -115,14 +124,14 @@ export async function returnJson(marketData: any, network: string) {
         stkWellEmissionsPerSecond: BigNumber(parseFloat(marketData.moonbeam.wellPerEpochSafetyModule))
           .div(marketData.totalSeconds)
           .shiftedBy(18)
-          .integerValue().toNumber(),
+          .integerValue().toString(),
         transferFrom: [
           { // Transfer StellaSwap DEX incentives from F-GLMR-LM multisig to the governor
             amount: BigNumber(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18))
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .plus(1e16)
-              .toNumber(),
+              .toString(),
             from: "MGLIMMER_MULTISIG",
             to: "MULTICHAIN_GOVERNOR_PROXY",
             token: "GOVTOKEN",
@@ -131,7 +140,7 @@ export async function returnJson(marketData: any, network: string) {
             amount: BigNumber(marketData.moonbeam.wellPerEpochMarkets)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
-              .toNumber(),
+              .toString(),
             from: "MGLIMMER_MULTISIG",
             to: "UNITROLLER",
             token: "GOVTOKEN",
@@ -140,12 +149,12 @@ export async function returnJson(marketData: any, network: string) {
             amount: BigNumber(marketData.moonbeam.wellPerEpochSafetyModule)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
-              .toNumber(),
+              .toString(),
             from: "MGLIMMER_MULTISIG",
             to: "ECOSYSTEM_RESERVE_PROXY",
             token: "GOVTOKEN",
           },
-        ].filter(transfer => transfer.amount > 0),
+        ].filter(transfer => parseInt(transfer.amount) > 0),
         ...(hasReservesEnabled ? {
           transferReserves: marketData["1284"]
             .filter((market: MarketType) => market.reservesEnabled)
@@ -157,12 +166,12 @@ export async function returnJson(marketData: any, network: string) {
                   .minus(new BigNumber(minimumReserves))
                   .shiftedBy(market.digits)
                   .decimalPlaces(0, BigNumber.ROUND_FLOOR)
-                  .toNumber(),
+                  .toString(),
                 market: market.alias,
                 to: `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`
               };
             })
-            .filter((item: { amount: number; market: string; to: string }) => item.amount > 0)
+            .filter((item: { amount: string; market: string; to: string }) => parseInt(item.amount) > 0)
         } : {}),
         withdrawWell: [],
       },
@@ -185,8 +194,8 @@ export async function returnJson(marketData: any, network: string) {
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .plus(1e16)
-              .toNumber(),
-            nativeValue: new BigNumber(marketData.bridgeCost * 4).toNumber(), // pad bridgeCost by 4x in case of price fluctuations
+              .toString(),
+            nativeValue: new BigNumber(marketData.bridgeCost * 5).toString(), // pad bridgeCost by 5x in case of price fluctuations
             network: 8453,
             target: "TEMPORAL_GOVERNOR",
           },
@@ -197,8 +206,8 @@ export async function returnJson(marketData: any, network: string) {
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .plus(1e16)
-              .toNumber(),
-            nativeValue: new BigNumber(marketData.bridgeCost * 4).toNumber(), // pad bridgeCost by 4x in case of price fluctuations
+              .toString(),
+            nativeValue: new BigNumber(marketData.bridgeCost * 5).toString(), // pad bridgeCost by 5x in case of price fluctuations
             network: 8453,
             target: "TEMPORAL_GOVERNOR",
           },
@@ -208,8 +217,8 @@ export async function returnJson(marketData: any, network: string) {
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .plus(1e16)
-              .toNumber(),
-              nativeValue: new BigNumber(marketData.bridgeCost * 4).toNumber(), // pad bridgeCost by 4x in case of price fluctuations
+              .toString(),
+              nativeValue: new BigNumber(marketData.bridgeCost * 5).toString(), // pad bridgeCost by 5x in case of price fluctuations
             network: 8453,
             target: "DEX_RELAYER"
           }, */
@@ -221,7 +230,7 @@ export async function returnJson(marketData: any, network: string) {
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .plus(1e17)
-              .toNumber(),
+              .toString(),
             from: "MGLIMMER_MULTISIG",
             to: "MULTICHAIN_GOVERNOR_PROXY",
             token: "GOVTOKEN",
@@ -233,12 +242,12 @@ export async function returnJson(marketData: any, network: string) {
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .plus(1e17)
-              .toNumber(),
+              .toString(),
             from: "F-GLMR-DEVGRANT",
             to: "MULTICHAIN_GOVERNOR_PROXY",
             token: "GOVTOKEN",
           },
-        ].filter((transfer) => transfer.amount > 0),
+        ].filter((transfer) => parseInt(transfer.amount) > 0),
       },
       8453: {
         ...(hasReservesEnabled
@@ -271,12 +280,12 @@ export async function returnJson(marketData: any, network: string) {
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
               .minus(1e16)
-              .toNumber(),
+              .toString(),
             from: "TEMPORAL_GOVERNOR",
             to: "MRD_PROXY",
             token: "xWELL_PROXY",
           },
-        ].filter((transfer) => transfer.amount > 0),
+        ].filter((transfer) => parseInt(transfer.amount) > 0),
         ...(hasReservesEnabled
           ? {
               transferReserves: marketData["8453"]
@@ -289,12 +298,12 @@ export async function returnJson(marketData: any, network: string) {
                       .minus(new BigNumber(minimumReserves))
                       .shiftedBy(market.digits)
                       .decimalPlaces(0, BigNumber.ROUND_FLOOR)
-                      .toNumber(),
+                      .toString(),
                     market: market.alias,
                     to: `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`,
                   };
                 })
-                .filter((item: { amount: number; market: string; to: string }) => item.amount > 0),
+                .filter((item: { amount: string; market: string; to: string }) => parseInt(item.amount) > 0),
             }
           : {}),
         withdrawWell:
@@ -305,7 +314,7 @@ export async function returnJson(marketData: any, network: string) {
                   amount: new BigNumber(marketData.base.wellHolderBalance)
                     .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
                     .minus(1e15)
-                    .toNumber(),
+                    .toString(),
                   to: "TEMPORAL_GOVERNOR", // we now should transfer to temporal governor as the merkle createCampaign call will pull the funds from the temporal governor
                 },
               ],
@@ -314,67 +323,67 @@ export async function returnJson(marketData: any, network: string) {
             amount: new BigNumber(parseFloat(marketData.base.wellPerEpochSafetyModule) + parseFloat(marketData.base.wellHolderBalance) / 1e18)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL)
-              .toNumber(),
+              .toString(),
+            campaignData: merkleCampaignDatas.stkWELL,
+            campaignType: TOKEN_HOLDING_CAMPAIGN,
             duration: mainConfig.secondsPerEpoch,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
-            campaignType: 18, // Token Holding Campaign (stkWELL)
-            campaignData: merkleCampaignDatas.stkWELL,
           },
           {
             amount: new BigNumber(marketData.base.vaultAmounts.USDC)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL)
-              .toNumber(),
+              .toString(),
+            campaignData: merkleCampaignDatas.USDC,
+            campaignType: MORPHO_VAULT_CAMPAIGN,
             duration: mainConfig.secondsPerEpoch,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
-            campaignType: 56, // MetaMorpho Vault Campaign
-            campaignData: merkleCampaignDatas.USDC,
           },
           {
             amount: new BigNumber(marketData.base.vaultAmounts.WETH)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL)
-              .toNumber(),
+              .toString(),
+            campaignData: merkleCampaignDatas.WETH,
+            campaignType: MORPHO_VAULT_CAMPAIGN,
             duration: mainConfig.secondsPerEpoch,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
-            campaignType: 56, // MetaMorpho Vault Campaign
-            campaignData: merkleCampaignDatas.WETH,
           },
           {
             amount: new BigNumber(marketData.base.vaultAmounts.EURC)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL)
-              .toNumber(),
+              .toString(),
+            campaignData: merkleCampaignDatas.EURC,
+            campaignType: MORPHO_VAULT_CAMPAIGN,
             duration: mainConfig.secondsPerEpoch,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
-            campaignType: 56, // MetaMorpho Vault Campaign
-            campaignData: merkleCampaignDatas.EURC,
           },
           {
             amount: new BigNumber(marketData.base.vaultAmounts.cbBTC)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL)
-              .toNumber(),
+              .toString(),
+            campaignData: merkleCampaignDatas.cbBTC,
+            campaignType: MORPHO_VAULT_CAMPAIGN,
             duration: mainConfig.secondsPerEpoch,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
-            campaignType: 56, // MetaMorpho Vault Campaign
-            campaignData: merkleCampaignDatas.cbBTC,
           },
           {
             amount: new BigNumber(marketData.base.vaultAmounts.meUSDC)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL)
-              .toNumber(),
+              .toString(),
+            campaignData: merkleCampaignDatas.meUSDC,
+            campaignType: MORPHO_VAULT_CAMPAIGN,
             duration: mainConfig.secondsPerEpoch,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
-            campaignType: 56, // MetaMorpho Vault Campaign
-            campaignData: merkleCampaignDatas.meUSDC,
           },
         ],
       },
@@ -401,8 +410,8 @@ export async function returnJson(marketData: any, network: string) {
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .plus(1e16)
-              .toNumber(),
-              nativeValue: BigNumber(marketData.bridgeCost * 4).toNumber(), // pad bridgeCost by 4x in case of price fluctuations
+              .toString(),
+              nativeValue: BigNumber(marketData.bridgeCost * 5).toString(), // pad bridgeCost by 5x in case of price fluctuations
             network: 10,
             target: "TEMPORAL_GOVERNOR"
           },
@@ -411,8 +420,8 @@ export async function returnJson(marketData: any, network: string) {
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .plus(1e16)
-              .toNumber(),
-              nativeValue: BigNumber(marketData.bridgeCost * 4).toNumber(), // pad bridgeCost by 4x in case of price fluctuations
+              .toString(),
+              nativeValue: BigNumber(marketData.bridgeCost * 5).toString(), // pad bridgeCost by 5x in case of price fluctuations
             network: 10,
             target: "DEX_RELAYER"
           },
@@ -423,12 +432,12 @@ export async function returnJson(marketData: any, network: string) {
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .plus(1e17)
-              .toNumber(),
+              .toString(),
             from: "MGLIMMER_MULTISIG",
             to: "MULTICHAIN_GOVERNOR_PROXY",
             token: "GOVTOKEN",
           },
-        ].filter(transfer => transfer.amount > 0),
+        ].filter(transfer => parseInt(transfer.amount) > 0),
       },
       10: {
         ...(hasReservesEnabled ? {
@@ -454,14 +463,14 @@ export async function returnJson(marketData: any, network: string) {
           .div(marketData.totalSeconds)
           .shiftedBy(18)
           .integerValue()
-          .toNumber(),
+          .toString(),
         transferFrom: [
           { // Transfer bridged market rewards to the Multi Reward Distributor
             amount: BigNumber(marketData.optimism.wellPerEpochMarkets)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
               .minus(1e16)
-              .toNumber(),
+              .toString(),
             from: "TEMPORAL_GOVERNOR",
             to: "MRD_PROXY",
             token: "xWELL_PROXY",
@@ -470,12 +479,12 @@ export async function returnJson(marketData: any, network: string) {
             amount: BigNumber(marketData.optimism.wellPerEpochSafetyModule)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
-              .toNumber(),
+              .toString(),
             from: "TEMPORAL_GOVERNOR",
             to: "ECOSYSTEM_RESERVE_PROXY",
             token: "xWELL_PROXY",
           },
-        ].filter(transfer => transfer.amount > 0),
+        ].filter(transfer => parseInt(transfer.amount) > 0),
         ...(hasReservesEnabled ? {
           transferReserves: marketData["10"]
             .filter((market: MarketType) => market.reservesEnabled)
@@ -487,19 +496,19 @@ export async function returnJson(marketData: any, network: string) {
                   .minus(new BigNumber(minimumReserves))
                   .shiftedBy(market.digits)
                   .decimalPlaces(0, BigNumber.ROUND_FLOOR)
-                  .toNumber(),
+                  .toString(),
                 market: market.alias,
                 to: `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`
               };
             })
-            .filter((item: { amount: number; market: string; to: string }) => item.amount > 0)
+            .filter((item: { amount: string; market: string; to: string }) => parseInt(item.amount) > 0)
         } : {}),
         withdrawWell: marketData.optimism.wellHolderBalance === "0" ? [] : [
           {
             amount: new BigNumber(marketData.optimism.wellHolderBalance)
               .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
               .minus(1e15)
-              .toNumber(),
+              .toString(),
             to: "ECOSYSTEM_RESERVE_PROXY"
           }
         ],
@@ -511,7 +520,7 @@ export async function returnJson(marketData: any, network: string) {
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
               .minus(1e15)
-              .toNumber(),
+              .toString(),
             rewardToken: "xWELL_PROXY",
             vault: mainConfig.optimism.rewarderNames[0]
           }
