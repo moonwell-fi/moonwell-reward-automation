@@ -25,10 +25,10 @@ export const mainConfig = {
 		// MetaMorpho vault incentives - bridged from Moonbeam F-GLMR-DEVGRANT multisig
 		vaultsPerEpoch: 3_050_000, // Total WELL per epoch for the 4 MetaMorpho vaults (USDC, WETH, EURC, cbBTC)
 		vaultDistribution: {
-			USDC: 0.50,    // 50%
-			WETH: 0.25,    // 25%
-			EURC: 0.125,   // 12.5%
-			cbBTC: 0.125,  // 12.5%
+			USDC: 1_500_000 / 3_050_000,  
+			WETH: 750_000 / 3_050_000,     
+			EURC: 400_000 / 3_050_000,     
+			cbBTC: 400_000 / 3_050_000,    
 		},
 	},
 	optimism: {
