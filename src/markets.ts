@@ -1676,6 +1676,31 @@ export async function getMarketData(timestamp: number, env?: any) {
     blockNumber: BigInt(baseBlockNumber),
   }) as bigint;
 
+  // Get meUSDC MetaMorpho vault TVL
+  const meUSDCVaultAddress = '0xe1ba476304255353aef290e6474a417d06e7b773' as `0x${string}`;
+  const erc4626TotalAssetsAbi = [
+    {
+      "inputs": [],
+      "name": "totalAssets",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ];
+
+  const meUSDCVaultTotalAssets = await baseClient.readContract({
+    address: meUSDCVaultAddress,
+    abi: erc4626TotalAssetsAbi,
+    functionName: "totalAssets",
+    blockNumber: BigInt(baseBlockNumber),
+  }) as bigint;
+
   // Get totalSupply from each stkWELL contract
   const erc20TotalSupplyAbi = [
     {
@@ -1874,6 +1899,22 @@ export async function getMarketData(timestamp: number, env?: any) {
       wellPerEpochSafetyModule: Number(((mainConfig.totalWellPerEpoch) * baseTotalMarketPercentage) * mainConfig.base.safetyModule).toFixed(18),
       wellPerEpochDex: Number((mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.dex).toFixed(18),
       wellHolderBalance: baseWellHolderBalance.toString(),
+      vaultAmounts: {
+        USDC: Number(mainConfig.base.vaultsPerEpoch * mainConfig.base.vaultDistribution.USDC).toFixed(18),
+        WETH: Number(mainConfig.base.vaultsPerEpoch * mainConfig.base.vaultDistribution.WETH).toFixed(18),
+        EURC: Number(mainConfig.base.vaultsPerEpoch * mainConfig.base.vaultDistribution.EURC).toFixed(18),
+        cbBTC: Number(mainConfig.base.vaultsPerEpoch * mainConfig.base.vaultDistribution.cbBTC).toFixed(18),
+        meUSDC: Number(
+          // Calculate WELL amount to achieve 3.1% APY on the vault TVL
+          // Formula: (vaultTVL * 0.031 * epochDuration) / secondsPerYear
+          // Since meUSDC vault is in USDC (6 decimals), we need to convert to WELL
+          // meUSDCVaultTotalAssets is in 6 decimals (USDC), wellPrice is in 36 decimals
+          // First convert USDC to USD: meUSDCVaultTotalAssets / 1e6
+          // Then calculate 3.1% APY for the epoch: (TVL_USD * 0.031 * epochDuration) / 31536000
+          // Then convert to WELL: result / wellPrice_in_USD
+          (Number(formatUnits(meUSDCVaultTotalAssets, 6)) * 0.031 * mainConfig.secondsPerEpoch) / (31536000 * Number(formatUnits(wellPrice, 36)))
+        ).toFixed(18),
+      },
     },
     optimism: {
       ...mainConfig.optimism,

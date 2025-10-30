@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js';
-import { mainConfig } from './config';
+import { mainConfig, merkleCampaignDatas } from './config';
 import { MarketType } from './markets';
 
 BigNumber.config({
@@ -190,6 +190,18 @@ export async function returnJson(marketData: any, network: string) {
             network: 8453,
             target: "TEMPORAL_GOVERNOR",
           },
+          {
+            // Send MetaMorpho vault incentives (4 fixed vaults + meUSDC) from F-GLMR-DEVGRANT to Base Temporal Governor
+            amount: new BigNumber(mainConfig.base.vaultsPerEpoch)
+              .plus(parseFloat(marketData.base.vaultAmounts.meUSDC))
+              .shiftedBy(18)
+              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
+              .plus(1e16)
+              .toNumber(),
+            nativeValue: new BigNumber(marketData.bridgeCost * 4).toNumber(), // pad bridgeCost by 4x in case of price fluctuations
+            network: 8453,
+            target: "TEMPORAL_GOVERNOR",
+          },
           /* commented out until we exhaust the funds in F-AERO on Base
           { // Send Base DEX incentives to DEX Relayer
             amount: new BigNumber(marketData.base.wellPerEpochDex)
@@ -214,7 +226,18 @@ export async function returnJson(marketData: any, network: string) {
             to: "MULTICHAIN_GOVERNOR_PROXY",
             token: "GOVTOKEN",
           },
-
+          {
+            // Transfer MetaMorpho vault incentives from F-GLMR-DEVGRANT to Multichain Governor for bridging
+            amount: new BigNumber(mainConfig.base.vaultsPerEpoch)
+              .plus(parseFloat(marketData.base.vaultAmounts.meUSDC))
+              .shiftedBy(18)
+              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
+              .plus(1e17)
+              .toNumber(),
+            from: "F-GLMR-DEVGRANT",
+            to: "MULTICHAIN_GOVERNOR_PROXY",
+            token: "GOVTOKEN",
+          },
         ].filter((transfer) => transfer.amount > 0),
       },
       8453: {
@@ -286,15 +309,74 @@ export async function returnJson(marketData: any, network: string) {
                   to: "TEMPORAL_GOVERNOR", // we now should transfer to temporal governor as the merkle createCampaign call will pull the funds from the temporal governor
                 },
               ],
-        merkleCampaigns: [{
-          amount: new BigNumber(parseFloat(marketData.base.wellPerEpochSafetyModule) + parseFloat(marketData.base.wellHolderBalance) / 1e18)
-            .shiftedBy(18)
-            .decimalPlaces(0, BigNumber.ROUND_CEIL)
-            .toNumber(),
-          duration: mainConfig.secondsPerEpoch,
-          rewardToken: "xWELL_PROXY",
-          startTimestamp: marketData.epochStartTimestamp,
-        }],
+        merkleCampaigns: [
+          {
+            amount: new BigNumber(parseFloat(marketData.base.wellPerEpochSafetyModule) + parseFloat(marketData.base.wellHolderBalance) / 1e18)
+              .shiftedBy(18)
+              .decimalPlaces(0, BigNumber.ROUND_CEIL)
+              .toNumber(),
+            duration: mainConfig.secondsPerEpoch,
+            rewardToken: "xWELL_PROXY",
+            startTimestamp: marketData.epochStartTimestamp,
+            campaignType: 18, // Token Holding Campaign (stkWELL)
+            campaignData: merkleCampaignDatas.stkWELL,
+          },
+          {
+            amount: new BigNumber(marketData.base.vaultAmounts.USDC)
+              .shiftedBy(18)
+              .decimalPlaces(0, BigNumber.ROUND_CEIL)
+              .toNumber(),
+            duration: mainConfig.secondsPerEpoch,
+            rewardToken: "xWELL_PROXY",
+            startTimestamp: marketData.epochStartTimestamp,
+            campaignType: 56, // MetaMorpho Vault Campaign
+            campaignData: merkleCampaignDatas.USDC,
+          },
+          {
+            amount: new BigNumber(marketData.base.vaultAmounts.WETH)
+              .shiftedBy(18)
+              .decimalPlaces(0, BigNumber.ROUND_CEIL)
+              .toNumber(),
+            duration: mainConfig.secondsPerEpoch,
+            rewardToken: "xWELL_PROXY",
+            startTimestamp: marketData.epochStartTimestamp,
+            campaignType: 56, // MetaMorpho Vault Campaign
+            campaignData: merkleCampaignDatas.WETH,
+          },
+          {
+            amount: new BigNumber(marketData.base.vaultAmounts.EURC)
+              .shiftedBy(18)
+              .decimalPlaces(0, BigNumber.ROUND_CEIL)
+              .toNumber(),
+            duration: mainConfig.secondsPerEpoch,
+            rewardToken: "xWELL_PROXY",
+            startTimestamp: marketData.epochStartTimestamp,
+            campaignType: 56, // MetaMorpho Vault Campaign
+            campaignData: merkleCampaignDatas.EURC,
+          },
+          {
+            amount: new BigNumber(marketData.base.vaultAmounts.cbBTC)
+              .shiftedBy(18)
+              .decimalPlaces(0, BigNumber.ROUND_CEIL)
+              .toNumber(),
+            duration: mainConfig.secondsPerEpoch,
+            rewardToken: "xWELL_PROXY",
+            startTimestamp: marketData.epochStartTimestamp,
+            campaignType: 56, // MetaMorpho Vault Campaign
+            campaignData: merkleCampaignDatas.cbBTC,
+          },
+          {
+            amount: new BigNumber(marketData.base.vaultAmounts.meUSDC)
+              .shiftedBy(18)
+              .decimalPlaces(0, BigNumber.ROUND_CEIL)
+              .toNumber(),
+            duration: mainConfig.secondsPerEpoch,
+            rewardToken: "xWELL_PROXY",
+            startTimestamp: marketData.epochStartTimestamp,
+            campaignType: 56, // MetaMorpho Vault Campaign
+            campaignData: merkleCampaignDatas.meUSDC,
+          },
+        ],
       },
       endTimeSTamp: marketData.epochEndTimestamp,
       startTimeStamp: marketData.epochStartTimestamp,
