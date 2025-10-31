@@ -21,7 +21,7 @@ export const mainConfig = {
 		safetyModule: 0.3,
 		dex: 0.0,
 		// below is an extra manual transfer from the F-AERO multisig to the DEX relayer
-		dexRelayerAmount: 600_191.93879185, // 7,202,303.2655022416 WELL / 12 4-week epochs
+		dexRelayerAmount: 0, // 7,202,303.2655022416 WELL / 12 4-week epochs
 		// MetaMorpho vault incentives - bridged from Moonbeam F-GLMR-DEVGRANT multisig
 		vaultsPerEpoch: 3_050_000, // Total WELL per epoch for the 4 MetaMorpho vaults (USDC, WETH, EURC, cbBTC)
 		vaultDistribution: {
@@ -37,12 +37,12 @@ export const mainConfig = {
     Retro funding 71,383.46 OP made available for Feb / Mar 2025 (not delivered yet)
     1. 20,000 depleted in April for core markets only
     2. 40,000 in May for core markets and 10,000 for the USDC vault
-    3. 40,000 in June for core markets and 10,000 for the USDC vault 
+    3. 40,000 in June for core markets and 10,000 for the USDC vault
     4. 50,000 in July for core markets and 10,000 for the USDC vault
     5. 50,000 in August for core markets and 10,000 for the USDC vault */
-		nativePerEpoch: 50_000,
+		nativePerEpoch: 0,
 		rewarderNames: ['USDC_MULTI_REWARDER'], // Names of multi-rewarders to distribute rewards to
-		vaultNativePerEpoch: 10_000,
+		vaultNativePerEpoch: 0,
 		vaults: 0.05, // 5% of the WELL allocation to the vault staking contract
 		markets: 0.85,
 		safetyModule: 0.05,
