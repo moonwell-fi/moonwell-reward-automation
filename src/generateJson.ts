@@ -188,21 +188,9 @@ export async function returnJson(marketData: any, network: string) {
       1284: {
         bridgeToRecipient: [
           {
-            // Send total well per epoch - the DEX incentives to Base Temporal Governor
+            // Send all Base incentives (markets + safety module + vaults - dex) to Base Temporal Governor
             amount: Number(new BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
               .minus(parseFloat(marketData.base.wellPerEpochDex).toFixed(18))
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
-              .plus(1e16)
-              .toFixed(0)),
-            nativeValue: Number(new BigNumber(marketData.bridgeCost * 5).toFixed(0)), // pad bridgeCost by 5x in case of price fluctuations
-            network: 8453,
-            target: "TEMPORAL_GOVERNOR",
-          },
-          {
-            // Send MetaMorpho vault incentives (4 fixed vaults + meUSDC) from F-GLMR-DEVGRANT to Base Temporal Governor
-            amount: Number(new BigNumber(mainConfig.base.vaultsPerEpoch)
-              .plus(parseFloat(marketData.base.vaultAmounts.meUSDC))
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .plus(1e16)
@@ -225,25 +213,13 @@ export async function returnJson(marketData: any, network: string) {
         ],
         transferFrom: [
           {
-            // Transfer all Base incentives to the Multichain Governor for bridging
+            // Transfer all Base incentives (markets + safety module + vaults) from F-GLMR-LM to Multichain Governor for bridging
             amount: Number(new BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .plus(1e17)
               .toFixed(0)),
             from: "MGLIMMER_MULTISIG",
-            to: "MULTICHAIN_GOVERNOR_PROXY",
-            token: "GOVTOKEN",
-          },
-          {
-            // Transfer MetaMorpho vault incentives from F-GLMR-DEVGRANT to Multichain Governor for bridging
-            amount: Number(new BigNumber(mainConfig.base.vaultsPerEpoch)
-              .plus(parseFloat(marketData.base.vaultAmounts.meUSDC))
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
-              .plus(1e17)
-              .toFixed(0)),
-            from: "F-GLMR-DEVGRANT",
             to: "MULTICHAIN_GOVERNOR_PROXY",
             token: "GOVTOKEN",
           },

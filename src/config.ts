@@ -17,18 +17,28 @@ export const mainConfig = {
 	},
 	base: {
 		nativePerEpoch: 0,
-		markets: 0.7,
-		safetyModule: 0.3,
+		markets: 0.476, // 47.6% - Proportionally reduced to accommodate vaults
+		safetyModule: 0.204, // 20.4% - Proportionally reduced to accommodate vaults
 		dex: 0.0,
+		vaults: 0.32, // 32% - MetaMorpho vault incentives (equivalent to ~3M WELL target)
 		// below is an extra manual transfer from the F-AERO multisig to the DEX relayer
 		dexRelayerAmount: 0, // 7,202,303.2655022416 WELL / 12 4-week epochs
-		// MetaMorpho vault incentives - bridged from Moonbeam F-GLMR-DEVGRANT multisig
-		vaultsPerEpoch: 3_050_000, // Total WELL per epoch for the 4 MetaMorpho vaults (USDC, WETH, EURC, cbBTC)
-		vaultDistribution: {
-			USDC: 1_500_000 / 3_050_000,  
-			WETH: 750_000 / 3_050_000,     
-			EURC: 400_000 / 3_050_000,     
-			cbBTC: 400_000 / 3_050_000,    
+		// MetaMorpho vault weight multipliers - WELL distributed based on weighted TVL
+		// Stablecoins get 2.0x multiplier to incentivize stable liquidity
+		vaultWeightMultipliers: {
+			WETH: 1.0,   // Non-stablecoin baseline
+			USDC: 2.0,   // Stablecoin 2x weight
+			EURC: 2.0,   // Stablecoin 2x weight
+			cbBTC: 1.0,  // Non-stablecoin baseline
+			meUSDC: 2.0, // Stablecoin 2x weight
+		},
+		// MetaMorpho vault addresses on Base
+		vaultAddresses: {
+			WETH: '0xa0e430870c4604ccfc7b38ca7845b1ff653d0ff1' as `0x${string}`,
+			USDC: '0xc1256ae5ff1cf2719d4937adb3bbccab2e00a2ca' as `0x${string}`,
+			EURC: '0xf24608e0ccb972b0b0f4a6446a0bbf58c701a026' as `0x${string}`,
+			cbBTC: '0x543257ef2161176d7c8cd90ba65c2d4caef5a796' as `0x${string}`,
+			meUSDC: '0xe1ba476304255353aef290e6474a417d06e7b773' as `0x${string}`,
 		},
 	},
 	optimism: {

@@ -389,6 +389,12 @@ export async function getMarketData(timestamp: number, env?: any) {
   
   // Check for zero prices and log them
   const basePrices = basePricesResponse.map((price, index) => {
+    if (price.status === 'failure' || price.result === undefined) {
+      const errorDetails = price.error ? JSON.stringify(price.error, null, 2) : 'RPC call failed';
+      console.error(`⚠️ ERROR: Base market ${baseNames[index]} (${baseMarkets[index]}) price fetch failed:`);
+      console.error(errorDetails);
+      return undefined;
+    }
     const priceValue = price.result as bigint;
     if (priceValue === BigInt(0)) {
       console.log(`⚠️ ZERO PRICE ALERT: Base market ${baseNames[index]} (${baseMarkets[index]}) has price = 0`);
@@ -399,9 +405,18 @@ export async function getMarketData(timestamp: number, env?: any) {
   const usdcIndex = baseMarkets.findIndex(
     (market) => baseNames[baseMarkets.indexOf(market)] === "USDC"
   );
-  
+
+  if (usdcIndex === -1) {
+    throw new Error("USDC market not found in Base markets");
+  }
+
+  const usdcPrice = basePrices[usdcIndex];
+  if (usdcPrice === undefined) {
+    throw new Error("USDC price fetch failed on Base");
+  }
+
   const baseNativePrice = formatUnits(
-    basePrices[usdcIndex], 
+    usdcPrice,
     (36 - 6)
   );
 
@@ -417,6 +432,12 @@ export async function getMarketData(timestamp: number, env?: any) {
   
   // Check for zero prices and log them
   const optimismPrices = optimismPricesResponse.map((price, index) => {
+    if (price.status === 'failure' || price.result === undefined) {
+      const errorDetails = price.error ? JSON.stringify(price.error, null, 2) : 'RPC call failed';
+      console.error(`⚠️ ERROR: Optimism market ${optimismNames[index]} (${optimismMarkets[index]}) price fetch failed:`);
+      console.error(errorDetails);
+      return undefined;
+    }
     const priceValue = price.result as bigint;
     if (priceValue === BigInt(0)) {
       console.log(`⚠️ ZERO PRICE ALERT: Optimism market ${optimismNames[index]} (${optimismMarkets[index]}) has price = 0`);
@@ -427,14 +448,31 @@ export async function getMarketData(timestamp: number, env?: any) {
   const opIndex = optimismMarkets.findIndex(
     (market) => optimismNames[optimismMarkets.indexOf(market)] === "OP"
   );
-  
+
+  if (opIndex === -1) {
+    throw new Error("OP market not found in Optimism markets");
+  }
+
+  const opPrice = optimismPrices[opIndex];
+  if (opPrice === undefined) {
+    throw new Error("OP price fetch failed on Optimism");
+  }
+
   const optimismNativePrice = formatUnits(
-    optimismPrices[opIndex], 
+    opPrice,
     (36 - 18)
   );
 
   const ethPrice = basePrices.find(
     (_price, index) => baseMarkets[index] === marketConfigs[8453].find(config => config.nameOverride === 'ETH')?.address
+  ) || BigInt(0);
+
+  const cbBTCPrice = basePrices.find(
+    (_price, index) => baseMarkets[index] === marketConfigs[8453].find(config => config.nameOverride === 'cbBTC')?.address
+  ) || BigInt(0);
+
+  const eurcPrice = basePrices.find(
+    (_price, index) => baseMarkets[index] === marketConfigs[8453].find(config => config.nameOverride === 'EURC')?.address
   ) || BigInt(0);
 
   const wellPrice = (await baseClient.readContract({
@@ -1676,7 +1714,7 @@ export async function getMarketData(timestamp: number, env?: any) {
   }) as bigint;
 
   // Get meUSDC MetaMorpho vault TVL (using latest block, not historical)
-  const meUSDCVaultAddress = '0xE1bA476304255353aEF290e6474A417D06e7b773' as `0x${string}`;
+  // Fetch all MetaMorpho vault TVLs on Base
   const erc4626TotalAssetsAbi = [
     {
       "inputs": [],
@@ -1693,12 +1731,38 @@ export async function getMarketData(timestamp: number, env?: any) {
     }
   ];
 
-  const meUSDCVaultTotalAssets = await baseClient.readContract({
-    address: meUSDCVaultAddress,
-    abi: erc4626TotalAssetsAbi,
-    functionName: "totalAssets",
-    blockNumber: BigInt(baseBlockNumber),
-  }) as bigint;
+  const [wethVaultTotalAssets, usdcVaultTotalAssets, eurcVaultTotalAssets, cbBTCVaultTotalAssets, meUSDCVaultTotalAssets] = await Promise.all([
+    baseClient.readContract({
+      address: mainConfig.base.vaultAddresses.WETH,
+      abi: erc4626TotalAssetsAbi,
+      functionName: "totalAssets",
+      blockNumber: BigInt(baseBlockNumber),
+    }) as Promise<bigint>,
+    baseClient.readContract({
+      address: mainConfig.base.vaultAddresses.USDC,
+      abi: erc4626TotalAssetsAbi,
+      functionName: "totalAssets",
+      blockNumber: BigInt(baseBlockNumber),
+    }) as Promise<bigint>,
+    baseClient.readContract({
+      address: mainConfig.base.vaultAddresses.EURC,
+      abi: erc4626TotalAssetsAbi,
+      functionName: "totalAssets",
+      blockNumber: BigInt(baseBlockNumber),
+    }) as Promise<bigint>,
+    baseClient.readContract({
+      address: mainConfig.base.vaultAddresses.cbBTC,
+      abi: erc4626TotalAssetsAbi,
+      functionName: "totalAssets",
+      blockNumber: BigInt(baseBlockNumber),
+    }) as Promise<bigint>,
+    baseClient.readContract({
+      address: mainConfig.base.vaultAddresses.meUSDC,
+      abi: erc4626TotalAssetsAbi,
+      functionName: "totalAssets",
+      blockNumber: BigInt(baseBlockNumber),
+    }) as Promise<bigint>,
+  ]);
 
   // Get totalSupply from each stkWELL contract
   const erc20TotalSupplyAbi = [
@@ -1898,22 +1962,41 @@ export async function getMarketData(timestamp: number, env?: any) {
       wellPerEpochSafetyModule: Number(((mainConfig.totalWellPerEpoch) * baseTotalMarketPercentage) * mainConfig.base.safetyModule).toFixed(18),
       wellPerEpochDex: Number((mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.dex).toFixed(18),
       wellHolderBalance: baseWellHolderBalance.toString(),
-      vaultAmounts: {
-        USDC: Number(mainConfig.base.vaultsPerEpoch * mainConfig.base.vaultDistribution.USDC).toFixed(18),
-        WETH: Number(mainConfig.base.vaultsPerEpoch * mainConfig.base.vaultDistribution.WETH).toFixed(18),
-        EURC: Number(mainConfig.base.vaultsPerEpoch * mainConfig.base.vaultDistribution.EURC).toFixed(18),
-        cbBTC: Number(mainConfig.base.vaultsPerEpoch * mainConfig.base.vaultDistribution.cbBTC).toFixed(18),
-        meUSDC: Number(
-          // Calculate WELL amount to achieve 3.1% APY on the vault TVL
-          // Formula: (vaultTVL * 0.031 * epochDuration) / secondsPerYear
-          // Since meUSDC vault is in USDC (6 decimals), we need to convert to WELL
-          // meUSDCVaultTotalAssets is in 6 decimals (USDC), wellPrice is in 36 decimals
-          // First convert USDC to USD: meUSDCVaultTotalAssets / 1e6
-          // Then calculate 3.1% APY for the epoch: (TVL_USD * 0.031 * epochDuration) / 31536000
-          // Then convert to WELL: result / wellPrice_in_USD
-          (Number(formatUnits(meUSDCVaultTotalAssets, 6)) * 0.031 * mainConfig.secondsPerEpoch) / (31536000 * Number(formatUnits(wellPrice, 36)))
-        ).toFixed(18),
-      },
+      wellPerEpochVaults: Number((mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.vaults).toFixed(18),
+      vaultAmounts: (() => {
+        // Calculate total WELL allocation for vaults
+        const totalVaultWELL = (mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.vaults;
+
+        // Calculate USD TVL for each vault
+        const ethPriceUSD = Number(formatUnits(ethPrice, 36));
+        const cbBTCPriceUSD = Number(formatUnits(cbBTCPrice, 36));
+        const eurcPriceUSD = Number(formatUnits(eurcPrice, 36));
+
+        const wethTVL_USD = Number(formatUnits(wethVaultTotalAssets, 18)) * ethPriceUSD;
+        const usdcTVL_USD = Number(formatUnits(usdcVaultTotalAssets, 6)); // USDC = $1
+        const eurcTVL_USD = Number(formatUnits(eurcVaultTotalAssets, 6)) * eurcPriceUSD; // EURC in USD
+        const cbBTCTVL_USD = Number(formatUnits(cbBTCVaultTotalAssets, 8)) * cbBTCPriceUSD;
+        const meUSDCTVL_USD = Number(formatUnits(meUSDCVaultTotalAssets, 6)); // meUSDC = $1
+
+        // Apply weight multipliers from config (2.0x for stablecoins, 1.0x for others)
+        const wethWeighted = wethTVL_USD * mainConfig.base.vaultWeightMultipliers.WETH;
+        const usdcWeighted = usdcTVL_USD * mainConfig.base.vaultWeightMultipliers.USDC;
+        const eurcWeighted = eurcTVL_USD * mainConfig.base.vaultWeightMultipliers.EURC;
+        const cbBTCWeighted = cbBTCTVL_USD * mainConfig.base.vaultWeightMultipliers.cbBTC;
+        const meUSDCWeighted = meUSDCTVL_USD * mainConfig.base.vaultWeightMultipliers.meUSDC;
+
+        // Calculate total weighted TVL
+        const totalWeighted = wethWeighted + usdcWeighted + eurcWeighted + cbBTCWeighted + meUSDCWeighted;
+
+        // Distribute proportionally based on weighted TVL
+        return {
+          WETH: Number((wethWeighted / totalWeighted) * totalVaultWELL).toFixed(18),
+          USDC: Number((usdcWeighted / totalWeighted) * totalVaultWELL).toFixed(18),
+          EURC: Number((eurcWeighted / totalWeighted) * totalVaultWELL).toFixed(18),
+          cbBTC: Number((cbBTCWeighted / totalWeighted) * totalVaultWELL).toFixed(18),
+          meUSDC: Number((meUSDCWeighted / totalWeighted) * totalVaultWELL).toFixed(18),
+        };
+      })(),
     },
     optimism: {
       ...mainConfig.optimism,
