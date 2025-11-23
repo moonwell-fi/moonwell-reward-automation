@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js';
-import { mainConfig } from './config';
+import { mainConfig, merkleCampaignAmounts, merkleCampaignDatas } from './config';
 import { MarketType } from './markets';
 
 BigNumber.config({
@@ -286,15 +286,68 @@ export async function returnJson(marketData: any, network: string) {
                   to: "TEMPORAL_GOVERNOR", // we now should transfer to temporal governor as the merkle createCampaign call will pull the funds from the temporal governor
                 },
               ],
-        merkleCampaigns: [{
-          amount: new BigNumber(parseFloat(marketData.base.wellPerEpochSafetyModule) + parseFloat(marketData.base.wellHolderBalance) / 1e18)
-            .shiftedBy(18)
-            .decimalPlaces(0, BigNumber.ROUND_CEIL)
-            .toNumber(),
-          duration: mainConfig.secondsPerEpoch,
-          rewardToken: "xWELL_PROXY",
-          startTimestamp: marketData.epochStartTimestamp,
-        }],
+        merkleCampaigns: [
+          {
+            amount: new BigNumber(parseFloat(marketData.base.wellPerEpochSafetyModule) + parseFloat(marketData.base.wellHolderBalance) / 1e18)
+              .shiftedBy(18)
+              .decimalPlaces(0, BigNumber.ROUND_CEIL)
+              .toNumber(),
+            duration: mainConfig.secondsPerEpoch,
+            rewardToken: "xWELL_PROXY",
+            startTimestamp: marketData.epochStartTimestamp,
+            campaignData: merkleCampaignDatas.stkWELL,
+          },
+          {
+            amount: new BigNumber(merkleCampaignAmounts.USDC)
+              .shiftedBy(18)
+              .decimalPlaces(0, BigNumber.ROUND_CEIL)
+              .toNumber(),
+            duration: mainConfig.secondsPerEpoch,
+            rewardToken: "xWELL_PROXY",
+            startTimestamp: marketData.epochStartTimestamp,
+            campaignData: merkleCampaignDatas.USDC,
+          },
+          {
+            amount: new BigNumber(merkleCampaignAmounts.WETH)
+              .shiftedBy(18)
+              .decimalPlaces(0, BigNumber.ROUND_CEIL)
+              .toNumber(),
+            duration: mainConfig.secondsPerEpoch,
+            rewardToken: "xWELL_PROXY",
+            startTimestamp: marketData.epochStartTimestamp,
+            campaignData: merkleCampaignDatas.WETH,
+          },
+          {
+            amount: new BigNumber(merkleCampaignAmounts.EURC)
+              .shiftedBy(18)
+              .decimalPlaces(0, BigNumber.ROUND_CEIL)
+              .toNumber(),
+            duration: mainConfig.secondsPerEpoch,
+            rewardToken: "xWELL_PROXY",
+            startTimestamp: marketData.epochStartTimestamp,
+            campaignData: merkleCampaignDatas.EURC,
+          },
+          {
+            amount: new BigNumber(merkleCampaignAmounts.cbBTC)
+              .shiftedBy(18)
+              .decimalPlaces(0, BigNumber.ROUND_CEIL)
+              .toNumber(),
+            duration: mainConfig.secondsPerEpoch,
+            rewardToken: "xWELL_PROXY",
+            startTimestamp: marketData.epochStartTimestamp,
+            campaignData: merkleCampaignDatas.cbBTC,
+          },
+          {
+            amount: new BigNumber(0) // TODO: should this be hardcoded or dynamically generated like stkWELL
+              .shiftedBy(18)
+              .decimalPlaces(0, BigNumber.ROUND_CEIL)
+              .toNumber(),
+            duration: mainConfig.secondsPerEpoch,
+            rewardToken: "xWELL_PROXY",
+            startTimestamp: marketData.epochStartTimestamp,
+            campaignData: merkleCampaignDatas.meUSDC,
+          }
+        ],
       },
       endTimeSTamp: marketData.epochEndTimestamp,
       startTimeStamp: marketData.epochStartTimestamp,
