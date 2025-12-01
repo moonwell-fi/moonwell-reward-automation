@@ -20,7 +20,7 @@ export const mainConfig = {
 		markets: 0.476, // 47.6% - Proportionally reduced to accommodate vaults
 		safetyModule: 0.204, // 20.4% - Proportionally reduced to accommodate vaults
 		dex: 0.0,
-		vaults: 0.32, // 32% - MetaMorpho vault incentives (equivalent to ~3M WELL target)
+		vaults: 0.32, // 32% - MetaMorpho vault incentives 
 		// below is an extra manual transfer from the F-AERO multisig to the DEX relayer
 		dexRelayerAmount: 0, // 7,202,303.2655022416 WELL / 12 4-week epochs
 		// MetaMorpho vault weight multipliers - WELL distributed based on weighted TVL
@@ -13637,7 +13637,7 @@ export const marketConfigs = {
       alias: 'MOONWELL_cbBTC',
       digits: 8,
       boost: 0,
-      deboost: 30_000_000,
+      deboost: 0,
       supply: 0.5,
       borrow: 0.5,
       enabled: true,
