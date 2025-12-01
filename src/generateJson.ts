@@ -8,6 +8,21 @@ BigNumber.config({
 
 const TOKEN_HOLDING_CAMPAIGN = 18;
 const MORPHO_VAULT_CAMPAIGN = 56;
+const TARGET_STKWELL_APY = 0.10; // 10% APY cap for stkWELL
+const EPOCHS_PER_YEAR = 365 / 28;
+
+// Calculate capped wellHolderBalance to achieve target APY for stkWELL
+function calculateCappedWellHolderBalance(
+  safetyModuleRewards: number,
+  wellHolderBalance: number,
+  stkWellTotalSupply: number
+): { cappedBalance: number; remainingBalance: number } {
+  const maxRewardsPerEpoch = (TARGET_STKWELL_APY * stkWellTotalSupply) / EPOCHS_PER_YEAR;
+  const maxWellHolderContribution = Math.max(0, maxRewardsPerEpoch - safetyModuleRewards);
+  const cappedBalance = Math.min(wellHolderBalance, maxWellHolderContribution);
+  const remainingBalance = wellHolderBalance - cappedBalance;
+  return { cappedBalance, remainingBalance };
+}
 
 export async function returnJson(marketData: any, network: string) {
   const moonbeamSetRewardSpeeds = marketData["1284"]
@@ -297,27 +312,22 @@ export async function returnJson(marketData: any, network: string) {
           marketData.base.wellHolderBalance === "0"
             ? []
             : (() => {
-                // Cap withdrawal to match the 10% APY cap
-                const wellHolderBalance = parseFloat(marketData.base.wellHolderBalance) / 1e18;
-                const stkWellTotalSupply = parseFloat(marketData.baseStkWELLTotalSupply) / 1e18;
-                const baseSafetyModuleRewards = parseFloat(marketData.base.wellPerEpochSafetyModule);
-                const epochsPerYear = 365 / 28;
-                const targetAPY = 0.10; // 10% max APY
+                const { cappedBalance } = calculateCappedWellHolderBalance(
+                  parseFloat(marketData.base.wellPerEpochSafetyModule),
+                  parseFloat(marketData.base.wellHolderBalance) / 1e18,
+                  parseFloat(marketData.baseStkWELLTotalSupply) / 1e18
+                );
 
-                const maxRewardsPerEpoch = (targetAPY * stkWellTotalSupply) / epochsPerYear;
-                const maxWellHolderContribution = Math.max(0, maxRewardsPerEpoch - baseSafetyModuleRewards);
-                const cappedWellHolderBalance = Math.min(wellHolderBalance, maxWellHolderContribution);
-
-                if (cappedWellHolderBalance <= 0) return [];
+                if (cappedBalance <= 0) return [];
 
                 return [
                   {
-                    amount: Number(new BigNumber(cappedWellHolderBalance)
+                    amount: Number(new BigNumber(cappedBalance)
                       .shiftedBy(18)
-                      .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
+                      .decimalPlaces(0, BigNumber.ROUND_FLOOR)
                       .minus(1e15)
                       .toFixed(0)),
-                    to: "TEMPORAL_GOVERNOR", // we now should transfer to temporal governor as the merkle createCampaign call will pull the funds from the temporal governor
+                    to: "TEMPORAL_GOVERNOR",
                   },
                 ];
               })(),
@@ -325,22 +335,13 @@ export async function returnJson(marketData: any, network: string) {
           {
             // Cap stkWELL APY at 10% by limiting wellHolderBalance contribution
             amount: (() => {
-              const baseSafetyModuleRewards = parseFloat(marketData.base.wellPerEpochSafetyModule);
-              const wellHolderBalance = parseFloat(marketData.base.wellHolderBalance) / 1e18;
-              const stkWellTotalSupply = parseFloat(marketData.baseStkWELLTotalSupply) / 1e18;
-              const epochsPerYear = 365 / 28;
-              const targetAPY = 0.10; // 10% max APY
-
-              // Max rewards per epoch to achieve target APY
-              const maxRewardsPerEpoch = (targetAPY * stkWellTotalSupply) / epochsPerYear;
-
-              // Max contribution from wellHolderBalance
-              const maxWellHolderContribution = Math.max(0, maxRewardsPerEpoch - baseSafetyModuleRewards);
-
-              // Cap the wellHolderBalance to the max contribution
-              const cappedWellHolderBalance = Math.min(wellHolderBalance, maxWellHolderContribution);
-
-              const totalRewards = baseSafetyModuleRewards + cappedWellHolderBalance;
+              const safetyModuleRewards = parseFloat(marketData.base.wellPerEpochSafetyModule);
+              const { cappedBalance } = calculateCappedWellHolderBalance(
+                safetyModuleRewards,
+                parseFloat(marketData.base.wellHolderBalance) / 1e18,
+                parseFloat(marketData.baseStkWELLTotalSupply) / 1e18
+              );
+              const totalRewards = safetyModuleRewards + cappedBalance;
               return Number(new BigNumber(totalRewards)
                 .shiftedBy(18)
                 .decimalPlaces(0, BigNumber.ROUND_CEIL)
@@ -476,11 +477,19 @@ export async function returnJson(marketData: any, network: string) {
           }
         } : {}),
         setMRDSpeeds: optimismSetRewardSpeeds,
-        stkWellEmissionsPerSecond: Number(BigNumber(parseFloat(marketData.optimism.wellPerEpochSafetyModule) + parseFloat(marketData.optimism.wellHolderBalance) / 1e18)
-          .div(marketData.totalSeconds)
-          .shiftedBy(18)
-          .integerValue()
-          .toFixed(0)),
+        stkWellEmissionsPerSecond: (() => {
+          const safetyModuleRewards = parseFloat(marketData.optimism.wellPerEpochSafetyModule);
+          const { cappedBalance } = calculateCappedWellHolderBalance(
+            safetyModuleRewards,
+            parseFloat(marketData.optimism.wellHolderBalance) / 1e18,
+            parseFloat(marketData.optimismStkWELLTotalSupply) / 1e18
+          );
+          return Number(BigNumber(safetyModuleRewards + cappedBalance)
+            .div(marketData.totalSeconds)
+            .shiftedBy(18)
+            .integerValue()
+            .toFixed(0));
+        })(),
         transferFrom: [
           { // Transfer bridged market rewards to the Multi Reward Distributor
             amount: Number(BigNumber(marketData.optimism.wellPerEpochMarkets)
@@ -520,15 +529,24 @@ export async function returnJson(marketData: any, network: string) {
             })
             .filter((item: { amount: number; market: string; to: string }) => item.amount > 0)
         } : {}),
-        withdrawWell: marketData.optimism.wellHolderBalance === "0" ? [] : [
-          {
-            amount: Number(new BigNumber(marketData.optimism.wellHolderBalance)
-              .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
-              .minus(1e15)
-              .toFixed(0)),
-            to: "ECOSYSTEM_RESERVE_PROXY"
-          }
-        ],
+        withdrawWell: marketData.optimism.wellHolderBalance === "0" ? [] : (() => {
+          const { cappedBalance } = calculateCappedWellHolderBalance(
+            parseFloat(marketData.optimism.wellPerEpochSafetyModule),
+            parseFloat(marketData.optimism.wellHolderBalance) / 1e18,
+            parseFloat(marketData.optimismStkWELLTotalSupply) / 1e18
+          );
+          if (cappedBalance <= 0) return [];
+          return [
+            {
+              amount: Number(new BigNumber(cappedBalance)
+                .shiftedBy(18)
+                .decimalPlaces(0, BigNumber.ROUND_FLOOR)
+                .minus(1e15)
+                .toFixed(0)),
+              to: "ECOSYSTEM_RESERVE_PROXY"
+            }
+          ];
+        })(),
         multiRewarder: [
           {
             distributor: "TEMPORAL_GOVERNOR",

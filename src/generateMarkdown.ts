@@ -133,18 +133,29 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
     } else if (networkId === '10') {
       const stkWellTotalSupply = parseFloat(marketData.optimismStkWELLTotalSupply) / 10**18;
       if (stkWellTotalSupply > 0) {
-        const rewardsPerSecond = parseFloat(networkMarketData.wellPerEpochSafetyModule) / mainConfig.secondsPerEpoch;
-        const annualRewards = rewardsPerSecond * 31536000; // seconds in a year
+        const safetyModuleRewards = parseFloat(networkMarketData.wellPerEpochSafetyModule);
+        const rewardsPerSecond = safetyModuleRewards / mainConfig.secondsPerEpoch;
+        const annualRewards = rewardsPerSecond * 31536000;
         const safetyModuleAPR = (annualRewards / stkWellTotalSupply) * 100;
-        markdown += `| Safety Module APR | ${safetyModuleAPR.toFixed(2)}% |\n`;
-        
-        // Add Safety Module Boosted APR if wellHolderBalance exists and is > 0
+        markdown += `| Safety Module APR (Base) | ${safetyModuleAPR.toFixed(2)}% |\n`;
+
+        // Calculate capped APY (10% cap) if wellHolderBalance exists and is > 0
         if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
           const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 10**18;
-          const totalRewardsPerSecond = (parseFloat(networkMarketData.wellPerEpochSafetyModule) + wellBalance) / mainConfig.secondsPerEpoch;
-          const totalAnnualRewards = totalRewardsPerSecond * 31536000; // seconds in a year
-          const boostedSafetyModuleAPR = (totalAnnualRewards / stkWellTotalSupply) * 100;
-          markdown += `| **Safety Module Boosted APR** | **${boostedSafetyModuleAPR.toFixed(2)}%** |\n`;
+          const epochsPerYear = 365 / 28;
+          const targetAPY = 0.10;
+          const maxRewardsPerEpoch = (targetAPY * stkWellTotalSupply) / epochsPerYear;
+          const maxWellHolderContribution = Math.max(0, maxRewardsPerEpoch - safetyModuleRewards);
+          const cappedWellHolderBalance = Math.min(wellBalance, maxWellHolderContribution);
+          const remainingWellHolder = wellBalance - cappedWellHolderBalance;
+
+          const cappedRewardsPerSecond = (safetyModuleRewards + cappedWellHolderBalance) / mainConfig.secondsPerEpoch;
+          const cappedAnnualRewards = cappedRewardsPerSecond * 31536000;
+          const cappedSafetyModuleAPR = (cappedAnnualRewards / stkWellTotalSupply) * 100;
+
+          markdown += `| Safety Module APR (Capped at 10%) | ${cappedSafetyModuleAPR.toFixed(2)}% |\n`;
+          markdown += `| WELL from auctions (this epoch) | ${cappedWellHolderBalance.toLocaleString()} WELL |\n`;
+          markdown += `| WELL from auctions (reserved for future) | ${remainingWellHolder.toLocaleString()} WELL |\n`;
         }
       }
     }

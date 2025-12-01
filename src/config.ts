@@ -13637,7 +13637,7 @@ export const marketConfigs = {
       alias: 'MOONWELL_cbBTC',
       digits: 8,
       boost: 0,
-      deboost: 30_000_000,
+      deboost: 0,
       supply: 0.5,
       borrow: 0.5,
       enabled: true,
