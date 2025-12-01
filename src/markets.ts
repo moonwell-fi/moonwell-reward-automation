@@ -464,15 +464,15 @@ export async function getMarketData(timestamp: number, env?: any) {
   );
 
   const ethPrice = basePrices.find(
-    (_price, index) => baseMarkets[index] === marketConfigs[8453].find(config => config.nameOverride === 'ETH')?.address
+    (_price, index) => baseMarkets[index].toLowerCase() === marketConfigs[8453].find(config => config.nameOverride === 'ETH')?.address.toLowerCase()
   ) || BigInt(0);
 
   const cbBTCPrice = basePrices.find(
-    (_price, index) => baseMarkets[index] === marketConfigs[8453].find(config => config.nameOverride === 'cbBTC')?.address
+    (_price, index) => baseMarkets[index].toLowerCase() === marketConfigs[8453].find(config => config.nameOverride === 'cbBTC')?.address.toLowerCase()
   ) || BigInt(0);
 
   const eurcPrice = basePrices.find(
-    (_price, index) => baseMarkets[index] === marketConfigs[8453].find(config => config.nameOverride === 'EURC')?.address
+    (_price, index) => baseMarkets[index].toLowerCase() === marketConfigs[8453].find(config => config.nameOverride === 'EURC')?.address.toLowerCase()
   ) || BigInt(0);
 
   const wellPrice = (await baseClient.readContract({
@@ -1968,9 +1968,13 @@ export async function getMarketData(timestamp: number, env?: any) {
         const totalVaultWELL = (mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.vaults;
 
         // Calculate USD TVL for each vault
-        const ethPriceUSD = Number(formatUnits(ethPrice, 36));
-        const cbBTCPriceUSD = Number(formatUnits(cbBTCPrice, 36));
-        const eurcPriceUSD = Number(formatUnits(eurcPrice, 36));
+        // Oracle returns prices in (36 - underlyingDecimals) format
+        // ETH: 18 decimals, so price is in 36-18=18 decimals
+        // cbBTC: 8 decimals, so price is in 36-8=28 decimals
+        // EURC: 6 decimals, so price is in 36-6=30 decimals
+        const ethPriceUSD = Number(formatUnits(ethPrice, 18));
+        const cbBTCPriceUSD = Number(formatUnits(cbBTCPrice, 28));
+        const eurcPriceUSD = Number(formatUnits(eurcPrice, 30));
 
         const wethTVL_USD = Number(formatUnits(wethVaultTotalAssets, 18)) * ethPriceUSD;
         const usdcTVL_USD = Number(formatUnits(usdcVaultTotalAssets, 6)); // USDC = $1

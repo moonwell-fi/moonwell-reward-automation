@@ -104,15 +104,30 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
         const rewardsPerSecond = parseFloat(networkMarketData.wellPerEpochSafetyModule) / mainConfig.secondsPerEpoch;
         const annualRewards = rewardsPerSecond * 31536000; // seconds in a year
         const safetyModuleAPR = (annualRewards / stkWellTotalSupply) * 100;
-        markdown += `| Safety Module APR | ${safetyModuleAPR.toFixed(2)}% |\n`;
-        
+        markdown += `| Safety Module APR (Base) | ${safetyModuleAPR.toFixed(2)}% |\n`;
+
         // Add Safety Module Boosted APR if wellHolderBalance exists and is > 0
         if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
           const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 10**18;
-          const totalRewardsPerSecond = (parseFloat(networkMarketData.wellPerEpochSafetyModule) + wellBalance) / mainConfig.secondsPerEpoch;
-          const totalAnnualRewards = totalRewardsPerSecond * 31536000; // seconds in a year
-          const boostedSafetyModuleAPR = (totalAnnualRewards / stkWellTotalSupply) * 100;
-          markdown += `| **Safety Module Boosted APR** | **${boostedSafetyModuleAPR.toFixed(2)}%** |\n`;
+          const baseSafetyModuleRewards = parseFloat(networkMarketData.wellPerEpochSafetyModule);
+          const epochsPerYear = 365 / 28;
+          const targetAPY = 0.10; // 10% max APY cap
+
+          // Calculate capped distribution
+          const maxRewardsPerEpoch = (targetAPY * stkWellTotalSupply) / epochsPerYear;
+          const maxWellHolderContribution = Math.max(0, maxRewardsPerEpoch - baseSafetyModuleRewards);
+          const cappedWellHolderBalance = Math.min(wellBalance, maxWellHolderContribution);
+          const totalCappedRewards = baseSafetyModuleRewards + cappedWellHolderBalance;
+          const remainingWellHolder = wellBalance - cappedWellHolderBalance;
+
+          // Calculate capped APR
+          const cappedRewardsPerSecond = totalCappedRewards / mainConfig.secondsPerEpoch;
+          const cappedAnnualRewards = cappedRewardsPerSecond * 31536000;
+          const cappedSafetyModuleAPR = (cappedAnnualRewards / stkWellTotalSupply) * 100;
+
+          markdown += `| Safety Module APR (Capped at 10%) | ${cappedSafetyModuleAPR.toFixed(2)}% |\n`;
+          markdown += `| WELL from auctions (this epoch) | ${cappedWellHolderBalance.toLocaleString()} WELL |\n`;
+          markdown += `| WELL from auctions (reserved for future) | ${remainingWellHolder.toLocaleString()} WELL |\n`;
         }
       }
     } else if (networkId === '10') {
@@ -158,7 +173,24 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
     if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
       // Adjust for 18 decimal places to show human-readable amount
       const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 10**18;
-      markdown += `| Total WELL to distribute Safety Module (Auctions) | ${wellBalance.toLocaleString()} WELL |\n`;
+
+      // For Base network, show capped amount due to 10% APY cap
+      if (networkId === '8453') {
+        const stkWellTotalSupply = parseFloat(marketData.baseStkWELLTotalSupply) / 10**18;
+        const baseSafetyModuleRewards = parseFloat(networkMarketData.wellPerEpochSafetyModule);
+        const epochsPerYear = 365 / 28;
+        const targetAPY = 0.10;
+        const maxRewardsPerEpoch = (targetAPY * stkWellTotalSupply) / epochsPerYear;
+        const maxWellHolderContribution = Math.max(0, maxRewardsPerEpoch - baseSafetyModuleRewards);
+        const cappedWellHolderBalance = Math.min(wellBalance, maxWellHolderContribution);
+        const remainingWellHolder = wellBalance - cappedWellHolderBalance;
+
+        markdown += `| Total WELL from auctions (available) | ${wellBalance.toLocaleString()} WELL |\n`;
+        markdown += `| Total WELL from auctions (this epoch - capped) | ${cappedWellHolderBalance.toLocaleString()} WELL |\n`;
+        markdown += `| Total WELL from auctions (reserved for future) | ${remainingWellHolder.toLocaleString()} WELL |\n`;
+      } else {
+        markdown += `| Total WELL to distribute Safety Module (Auctions) | ${wellBalance.toLocaleString()} WELL |\n`;
+      }
     }
     markdown += `| Total WELL to distribute Markets (Config) | ${Math.max(0, Number(networkMarketData?.wellPerEpochMarkets)).toLocaleString()} WELL |\n`;
     markdown += `| Total WELL to distribute Markets (Sanity Check) | ${Math.max(0, Number(networkSummary?.totalWell)).toFixed(4).toLocaleString()} WELL |\n`;
@@ -169,15 +201,44 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
     // Check if wellHolderBalance is non-zero and adjust the display accordingly
     if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
       const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 10**18;
-      const totalWell = Math.max(0, Number(networkMarketData.wellPerEpoch) + wellBalance);
-      markdown += `| Total WELL to distribute (Config + Auctions) | ${totalWell.toFixed(4).toLocaleString()} WELL |\n`;
+
+      // For Base network, use capped amount due to 10% APY cap
+      if (networkId === '8453') {
+        const stkWellTotalSupply = parseFloat(marketData.baseStkWELLTotalSupply) / 10**18;
+        const baseSafetyModuleRewards = parseFloat(networkMarketData.wellPerEpochSafetyModule);
+        const epochsPerYear = 365 / 28;
+        const targetAPY = 0.10;
+        const maxRewardsPerEpoch = (targetAPY * stkWellTotalSupply) / epochsPerYear;
+        const maxWellHolderContribution = Math.max(0, maxRewardsPerEpoch - baseSafetyModuleRewards);
+        const cappedWellHolderBalance = Math.min(wellBalance, maxWellHolderContribution);
+
+        const totalWell = Math.max(0, Number(networkMarketData.wellPerEpoch) + cappedWellHolderBalance);
+        markdown += `| Total WELL to distribute (Config + Capped Auctions) | ${totalWell.toFixed(4).toLocaleString()} WELL |\n`;
+      } else {
+        const totalWell = Math.max(0, Number(networkMarketData.wellPerEpoch) + wellBalance);
+        markdown += `| Total WELL to distribute (Config + Auctions) | ${totalWell.toFixed(4).toLocaleString()} WELL |\n`;
+      }
     } else {
       markdown += `| Total WELL to distribute (Config) | ${Math.max(0, Number(networkMarketData.wellPerEpoch)).toFixed(4).toLocaleString()} WELL |\n`;
     }
     // For Sanity Check, also add wellBalance if it exists
     if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
       const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 10**18;
-      markdown += `| Total WELL to distribute (Sanity Check) | ${Math.max(0, Number(networkMarketData?.wellPerEpochDex) + Number(networkMarketData?.wellPerEpochSafetyModule) + Number(networkSummary?.totalWell) + wellBalance).toFixed(4).toLocaleString()} WELL \n`;
+
+      // For Base network, use capped amount due to 10% APY cap
+      if (networkId === '8453') {
+        const stkWellTotalSupply = parseFloat(marketData.baseStkWELLTotalSupply) / 10**18;
+        const baseSafetyModuleRewards = parseFloat(networkMarketData.wellPerEpochSafetyModule);
+        const epochsPerYear = 365 / 28;
+        const targetAPY = 0.10;
+        const maxRewardsPerEpoch = (targetAPY * stkWellTotalSupply) / epochsPerYear;
+        const maxWellHolderContribution = Math.max(0, maxRewardsPerEpoch - baseSafetyModuleRewards);
+        const cappedWellHolderBalance = Math.min(wellBalance, maxWellHolderContribution);
+
+        markdown += `| Total WELL to distribute (Sanity Check - Capped) | ${Math.max(0, Number(networkMarketData?.wellPerEpochDex) + Number(networkMarketData?.wellPerEpochSafetyModule) + Number(networkSummary?.totalWell) + cappedWellHolderBalance).toFixed(4).toLocaleString()} WELL \n`;
+      } else {
+        markdown += `| Total WELL to distribute (Sanity Check) | ${Math.max(0, Number(networkMarketData?.wellPerEpochDex) + Number(networkMarketData?.wellPerEpochSafetyModule) + Number(networkSummary?.totalWell) + wellBalance).toFixed(4).toLocaleString()} WELL \n`;
+      }
     } else {
       markdown += `| Total WELL to distribute (Sanity Check) | ${Math.max(0, Number(networkMarketData?.wellPerEpochDex) + Number(networkMarketData?.wellPerEpochSafetyModule) + Number(networkSummary?.totalWell)).toFixed(4).toLocaleString()} WELL \n`;
     }

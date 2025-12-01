@@ -15,20 +15,24 @@ export async function returnJson(marketData: any, network: string) {
     .flatMap((market: MarketType) => {
     const wellRewardSpeeds = {
       market: market.alias,
-      newBorrowSpeed: new BigNumber(market.newWellBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? 1 : Number(new BigNumber(market.newWellBorrowSpeed)
+      newBorrowSpeed: new BigNumber(market.newWellBorrowSpeed).isLessThanOrEqualTo(0) ? 1 :
+        new BigNumber(market.newWellBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? 1 : Number(new BigNumber(market.newWellBorrowSpeed)
         .shiftedBy(18)
         .integerValue().toFixed(0)),
-      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isZero() ? 0 : Number(new BigNumber(market.newWellSupplySpeed)
+      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isLessThanOrEqualTo(0) ? 0 :
+        new BigNumber(market.newWellSupplySpeed).isZero() ? 0 : Number(new BigNumber(market.newWellSupplySpeed)
         .shiftedBy(18)
         .integerValue().toFixed(0)),
       rewardType: 0, // 0 = WELL
     };
     const nativeRewardSpeeds = {
       market: market.alias,
-      newBorrowSpeed: new BigNumber(market.newNativeBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? 1 : Number(new BigNumber(market.newNativeBorrowSpeed)
+      newBorrowSpeed: new BigNumber(market.newNativeBorrowSpeed).isLessThanOrEqualTo(0) ? 1 :
+        new BigNumber(market.newNativeBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? 1 : Number(new BigNumber(market.newNativeBorrowSpeed)
         .shiftedBy(18)
         .integerValue().toFixed(0)),
-      newSupplySpeed: new BigNumber(market.newNativeSupplySpeed).isZero() ? 0 : Number(new BigNumber(market.newNativeSupplySpeed)
+      newSupplySpeed: new BigNumber(market.newNativeSupplySpeed).isLessThanOrEqualTo(0) ? 0 :
+        new BigNumber(market.newNativeSupplySpeed).isZero() ? 0 : Number(new BigNumber(market.newNativeSupplySpeed)
         .shiftedBy(18)
         .integerValue().toFixed(0)),
       rewardType: 1, // 1 = GLMR
@@ -42,22 +46,26 @@ export async function returnJson(marketData: any, network: string) {
     const wellRewardSpeeds = {
       emissionToken: "xWELL_PROXY",
       market: market.alias,
-      newBorrowSpeed: new BigNumber(market.newWellBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? 1 : Number(new BigNumber(market.newWellBorrowSpeed)
+      newBorrowSpeed: new BigNumber(market.newWellBorrowSpeed).isLessThanOrEqualTo(0) ? -1 :
+        new BigNumber(market.newWellBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? 1 : Number(new BigNumber(market.newWellBorrowSpeed)
         .shiftedBy(18)
         .integerValue().toFixed(0)),
       newEndTime: marketData.epochEndTimestamp,
-      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isZero() ? 0 : Number(new BigNumber(market.newWellSupplySpeed)
+      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isLessThanOrEqualTo(0) ? -1 :
+        new BigNumber(market.newWellSupplySpeed).isZero() ? 0 : Number(new BigNumber(market.newWellSupplySpeed)
         .shiftedBy(18)
         .integerValue().toFixed(0)),
     };
     const nativeRewardSpeeds = {
       emissionToken: "USDC",
       market: market.alias,
-      newBorrowSpeed: new BigNumber(market.newNativeBorrowSpeed).isEqualTo(new BigNumber('1e-6')) ? 1 : Number(new BigNumber(market.newNativeBorrowSpeed)
+      newBorrowSpeed: new BigNumber(market.newNativeBorrowSpeed).isLessThanOrEqualTo(0) ? -1 :
+        new BigNumber(market.newNativeBorrowSpeed).isEqualTo(new BigNumber('1e-6')) ? 1 : Number(new BigNumber(market.newNativeBorrowSpeed)
         .shiftedBy(6)
         .integerValue().toFixed(0)),
       newEndTime: -1, // Don't update the end timestamp for USDC until new incentives are allocated
-      newSupplySpeed: new BigNumber(market.newNativeSupplySpeed).isZero() ? 0 : Number(new BigNumber(market.newNativeSupplySpeed)
+      newSupplySpeed: new BigNumber(market.newNativeSupplySpeed).isLessThanOrEqualTo(0) ? -1 :
+        new BigNumber(market.newNativeSupplySpeed).isZero() ? 0 : Number(new BigNumber(market.newNativeSupplySpeed)
         .shiftedBy(6)
         .integerValue().toFixed(0)),
     };
@@ -70,11 +78,13 @@ export async function returnJson(marketData: any, network: string) {
     const wellRewardSpeeds = {
       emissionToken: "xWELL_PROXY",
       market: market.alias,
-      newBorrowSpeed: new BigNumber(market.newWellBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? 1 : Number(new BigNumber(market.newWellBorrowSpeed)
+      newBorrowSpeed: new BigNumber(market.newWellBorrowSpeed).isLessThanOrEqualTo(0) ? -1 :
+        new BigNumber(market.newWellBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? 1 : Number(new BigNumber(market.newWellBorrowSpeed)
         .shiftedBy(18)
         .integerValue().toFixed(0)),
       newEndTime: marketData.epochEndTimestamp,
-      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isZero() ? 0 : Number(new BigNumber(market.newWellSupplySpeed)
+      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isLessThanOrEqualTo(0) ? -1 :
+        new BigNumber(market.newWellSupplySpeed).isZero() ? 0 : Number(new BigNumber(market.newWellSupplySpeed)
         .shiftedBy(18)
         .integerValue().toFixed(0)),
     };
@@ -285,21 +295,56 @@ export async function returnJson(marketData: any, network: string) {
         withdrawWell:
           marketData.base.wellHolderBalance === "0"
             ? []
-            : [
-                {
-                  amount: Number(new BigNumber(marketData.base.wellHolderBalance)
-                    .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
-                    .minus(1e15)
-                    .toFixed(0)),
-                  to: "TEMPORAL_GOVERNOR", // we now should transfer to temporal governor as the merkle createCampaign call will pull the funds from the temporal governor
-                },
-              ],
+            : (() => {
+                // Cap withdrawal to match the 10% APY cap
+                const wellHolderBalance = parseFloat(marketData.base.wellHolderBalance) / 1e18;
+                const stkWellTotalSupply = parseFloat(marketData.baseStkWELLTotalSupply) / 1e18;
+                const baseSafetyModuleRewards = parseFloat(marketData.base.wellPerEpochSafetyModule);
+                const epochsPerYear = 365 / 28;
+                const targetAPY = 0.10; // 10% max APY
+
+                const maxRewardsPerEpoch = (targetAPY * stkWellTotalSupply) / epochsPerYear;
+                const maxWellHolderContribution = Math.max(0, maxRewardsPerEpoch - baseSafetyModuleRewards);
+                const cappedWellHolderBalance = Math.min(wellHolderBalance, maxWellHolderContribution);
+
+                if (cappedWellHolderBalance <= 0) return [];
+
+                return [
+                  {
+                    amount: Number(new BigNumber(cappedWellHolderBalance)
+                      .shiftedBy(18)
+                      .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
+                      .minus(1e15)
+                      .toFixed(0)),
+                    to: "TEMPORAL_GOVERNOR", // we now should transfer to temporal governor as the merkle createCampaign call will pull the funds from the temporal governor
+                  },
+                ];
+              })(),
         merkleCampaigns: [
           {
-            amount: Number(new BigNumber(parseFloat(marketData.base.wellPerEpochSafetyModule) + parseFloat(marketData.base.wellHolderBalance) / 1e18)
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL)
-              .toFixed(0)),
+            // Cap stkWELL APY at 10% by limiting wellHolderBalance contribution
+            amount: (() => {
+              const baseSafetyModuleRewards = parseFloat(marketData.base.wellPerEpochSafetyModule);
+              const wellHolderBalance = parseFloat(marketData.base.wellHolderBalance) / 1e18;
+              const stkWellTotalSupply = parseFloat(marketData.baseStkWELLTotalSupply) / 1e18;
+              const epochsPerYear = 365 / 28;
+              const targetAPY = 0.10; // 10% max APY
+
+              // Max rewards per epoch to achieve target APY
+              const maxRewardsPerEpoch = (targetAPY * stkWellTotalSupply) / epochsPerYear;
+
+              // Max contribution from wellHolderBalance
+              const maxWellHolderContribution = Math.max(0, maxRewardsPerEpoch - baseSafetyModuleRewards);
+
+              // Cap the wellHolderBalance to the max contribution
+              const cappedWellHolderBalance = Math.min(wellHolderBalance, maxWellHolderContribution);
+
+              const totalRewards = baseSafetyModuleRewards + cappedWellHolderBalance;
+              return Number(new BigNumber(totalRewards)
+                .shiftedBy(18)
+                .decimalPlaces(0, BigNumber.ROUND_CEIL)
+                .toFixed(0));
+            })(),
             campaignData: merkleCampaignDatas.stkWELL,
             campaignType: TOKEN_HOLDING_CAMPAIGN,
             duration: mainConfig.secondsPerEpoch,
