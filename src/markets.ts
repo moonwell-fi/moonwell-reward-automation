@@ -1,7 +1,7 @@
 import { formatUnits } from "viem";
-import { ContractCall, createClients, moonbeamClient as defaultMoonbeamClient, baseClient as defaultBaseClient, optimismClient as defaultOptimismClient } from "./utils";
 import { mainConfig, marketConfigs } from "./config";
 import { getSafetyModuleDataForAllChains } from "./safetyModule";
+import { ContractCall, createClients, baseClient as defaultBaseClient, moonbeamClient as defaultMoonbeamClient, optimismClient as defaultOptimismClient } from "./utils";
 
 // These will be set in getMarketData
 let moonbeamClient = defaultMoonbeamClient;
@@ -9,32 +9,31 @@ let baseClient = defaultBaseClient;
 let optimismClient = defaultOptimismClient;
 
 import {
-  moonbeamComptroller,
-  baseComptroller,
-  optimismComptroller,
-  moonbeamOracleContract,
-  baseOracleContract,
-  optimismOracleContract,
-  baseMultiRewardDistributor,
-  optimismMultiRewardDistributor,
-  xWellToken,
-  baseNativeToken,
-  optimismNativeToken,
   aeroMarketContract,
-  moonbeamViewsContract,
-  baseViewsContract,
-  optimismViewsContract,
-  xWellRouterContract,
-  excludedMarkets,
+  baseComptroller,
+  baseMultiRewardDistributor,
+  baseNativeToken,
+  baseOracleContract,
   baseStkWELL,
-  optimismStkWELL,
-  moonbeamStkWELL,
+  baseViewsContract,
   baseWellHolder,
-  optimismWellHolder
+  excludedMarkets,
+  moonbeamComptroller,
+  moonbeamOracleContract,
+  moonbeamStkWELL,
+  moonbeamViewsContract,
+  optimismComptroller,
+  optimismMultiRewardDistributor,
+  optimismNativeToken,
+  optimismOracleContract,
+  optimismStkWELL,
+  optimismViewsContract,
+  optimismWellHolder,
+  xWellRouterContract,
+  xWellToken
 } from "./config";
 
 import { mTokenv1ABI, mTokenv2ABI } from "./constants";
-import { moonbeam, optimism } from "viem/chains";
 
 export interface MarketType {
   market: string;
@@ -390,6 +389,12 @@ export async function getMarketData(timestamp: number, env?: any) {
   
   // Check for zero prices and log them
   const basePrices = basePricesResponse.map((price, index) => {
+    if (price.status === 'failure' || price.result === undefined) {
+      const errorDetails = price.error ? JSON.stringify(price.error, null, 2) : 'RPC call failed';
+      console.error(`⚠️ ERROR: Base market ${baseNames[index]} (${baseMarkets[index]}) price fetch failed:`);
+      console.error(errorDetails);
+      return undefined;
+    }
     const priceValue = price.result as bigint;
     if (priceValue === BigInt(0)) {
       console.log(`⚠️ ZERO PRICE ALERT: Base market ${baseNames[index]} (${baseMarkets[index]}) has price = 0`);
@@ -400,9 +405,18 @@ export async function getMarketData(timestamp: number, env?: any) {
   const usdcIndex = baseMarkets.findIndex(
     (market) => baseNames[baseMarkets.indexOf(market)] === "USDC"
   );
-  
+
+  if (usdcIndex === -1) {
+    throw new Error("USDC market not found in Base markets");
+  }
+
+  const usdcPrice = basePrices[usdcIndex];
+  if (usdcPrice === undefined) {
+    throw new Error("USDC price fetch failed on Base");
+  }
+
   const baseNativePrice = formatUnits(
-    basePrices[usdcIndex], 
+    usdcPrice,
     (36 - 6)
   );
 
@@ -418,6 +432,12 @@ export async function getMarketData(timestamp: number, env?: any) {
   
   // Check for zero prices and log them
   const optimismPrices = optimismPricesResponse.map((price, index) => {
+    if (price.status === 'failure' || price.result === undefined) {
+      const errorDetails = price.error ? JSON.stringify(price.error, null, 2) : 'RPC call failed';
+      console.error(`⚠️ ERROR: Optimism market ${optimismNames[index]} (${optimismMarkets[index]}) price fetch failed:`);
+      console.error(errorDetails);
+      return undefined;
+    }
     const priceValue = price.result as bigint;
     if (priceValue === BigInt(0)) {
       console.log(`⚠️ ZERO PRICE ALERT: Optimism market ${optimismNames[index]} (${optimismMarkets[index]}) has price = 0`);
@@ -428,14 +448,31 @@ export async function getMarketData(timestamp: number, env?: any) {
   const opIndex = optimismMarkets.findIndex(
     (market) => optimismNames[optimismMarkets.indexOf(market)] === "OP"
   );
-  
+
+  if (opIndex === -1) {
+    throw new Error("OP market not found in Optimism markets");
+  }
+
+  const opPrice = optimismPrices[opIndex];
+  if (opPrice === undefined) {
+    throw new Error("OP price fetch failed on Optimism");
+  }
+
   const optimismNativePrice = formatUnits(
-    optimismPrices[opIndex], 
+    opPrice,
     (36 - 18)
   );
 
   const ethPrice = basePrices.find(
-    (price, index) => baseMarkets[index] === marketConfigs[8453].find(config => config.nameOverride === 'ETH')?.address
+    (_price, index) => baseMarkets[index] === marketConfigs[8453].find(config => config.nameOverride === 'ETH')?.address
+  ) || BigInt(0);
+
+  const cbBTCPrice = basePrices.find(
+    (_price, index) => baseMarkets[index] === marketConfigs[8453].find(config => config.nameOverride === 'cbBTC')?.address
+  ) || BigInt(0);
+
+  const eurcPrice = basePrices.find(
+    (_price, index) => baseMarkets[index] === marketConfigs[8453].find(config => config.nameOverride === 'EURC')?.address
   ) || BigInt(0);
 
   const wellPrice = (await baseClient.readContract({
@@ -855,7 +892,7 @@ export async function getMarketData(timestamp: number, env?: any) {
       Number(formatUnits(borrowPerDay, 18)) * Number(optimismNativePrice)
   );
 
-  const moonbeamTotalSupplyUsd = moonbeamMarkets.map((market, index) => {
+  const moonbeamTotalSupplyUsd = moonbeamMarkets.map((_market, index) => {
     if (!moonbeamEnabled[index]) { // Only include markets that are enabled
       return 0;
     }
@@ -881,7 +918,7 @@ export async function getMarketData(timestamp: number, env?: any) {
     );
   });
 
-  const baseTotalSupplyUsd = baseMarkets.map((market, index) => {
+  const baseTotalSupplyUsd = baseMarkets.map((_market, index) => {
     if (!baseEnabled[index]) { // Only include markets that are enabled
       return 0;
     }
@@ -907,7 +944,7 @@ export async function getMarketData(timestamp: number, env?: any) {
     );
   });
 
-  const optimismTotalSupplyUsd = optimismMarkets.map((market, index) => {
+  const optimismTotalSupplyUsd = optimismMarkets.map((_market, index) => {
     if (!optimismEnabled[index]) { // Only include markets that are enabled
       return 0;
     }
@@ -942,7 +979,7 @@ export async function getMarketData(timestamp: number, env?: any) {
   const basePercentages = calculatePercentages(baseTotalSupplyUsd);
   const optimismPercentages = calculatePercentages(optimismTotalSupplyUsd);
 
-  const moonbeamTotalBorrowsUsd = moonbeamMarkets.map((market, index) => {
+  const moonbeamTotalBorrowsUsd = moonbeamMarkets.map((_market, index) => {
     if (!moonbeamEnabled[index]) { // Only include markets that are enabled
       return 0;
     }
@@ -962,7 +999,7 @@ export async function getMarketData(timestamp: number, env?: any) {
     );
   });
 
-  const baseTotalBorrowsUsd = baseMarkets.map((market, index) => {
+  const baseTotalBorrowsUsd = baseMarkets.map((_market, index) => {
     if (!baseEnabled[index]) { // Only include markets that are enabled
       return 0;
     }
@@ -982,7 +1019,7 @@ export async function getMarketData(timestamp: number, env?: any) {
     );
   });
 
-  const optimismTotalBorrowsUsd = optimismMarkets.map((market, index) => {
+  const optimismTotalBorrowsUsd = optimismMarkets.map((_market, index) => {
     if (!optimismEnabled[index]) { // Only include markets that are enabled
       return 0;
     }
@@ -1016,7 +1053,7 @@ export async function getMarketData(timestamp: number, env?: any) {
     let totalSupplyUSD = 0;
     let totalBorrowsUSD = 0;
 
-    markets.forEach((market, index) => {
+    markets.forEach((_market, index) => {
       const supply = supplies[index];
       const exchangeRate = exchangeRates[index];
       const price = prices[index];
@@ -1103,7 +1140,7 @@ export async function getMarketData(timestamp: number, env?: any) {
     return epochStartTimestamp;
   };
 
-  const moonbeamNewWellSupplySpeeds = moonbeamMarkets.map((market, index) => {
+  const moonbeamNewWellSupplySpeeds = moonbeamMarkets.map((_market, index) => {
     const currentSpeed = Number(formatUnits(moonbeamWellSupplySpeeds[index], 18));
 
     if (!moonbeamEnabled[index]) { // Only include markets that are enabled
@@ -1121,7 +1158,7 @@ export async function getMarketData(timestamp: number, env?: any) {
     return Math.abs(calculatedSpeed - currentSpeed) < 1e-18 ? currentSpeed : calculatedSpeed;
   });
 
-  const moonbeamNewWellBorrowSpeeds = moonbeamMarkets.map((market, index) => {
+  const moonbeamNewWellBorrowSpeeds = moonbeamMarkets.map((_market, index) => {
     const currentSpeed = Number(formatUnits(moonbeamWellBorrowSpeeds[index], 18));
 
     if (!moonbeamEnabled[index]) { // Only include markets that are enabled
@@ -1143,7 +1180,7 @@ export async function getMarketData(timestamp: number, env?: any) {
     return calculatedSpeed === 0 ? 1e-18 : calculatedSpeed;
   });
 
-  const baseNewWellSupplySpeeds = baseMarkets.map((market, index) => {
+  const baseNewWellSupplySpeeds = baseMarkets.map((_market, index) => {
     const currentSpeed = Number(formatUnits(baseWellSupplySpeeds[index], 18));
 
     if (!baseEnabled[index]) { // Only include markets that are enabled
@@ -1161,7 +1198,7 @@ export async function getMarketData(timestamp: number, env?: any) {
     return Math.abs(calculatedSpeed - currentSpeed) < 1e-18 ? -1e-18 : calculatedSpeed;
   });
 
-  const baseNewWellBorrowSpeeds = baseMarkets.map((market, index) => {
+  const baseNewWellBorrowSpeeds = baseMarkets.map((_market, index) => {
     const currentSpeed = Number(formatUnits(baseWellBorrowSpeeds[index], 18));
 
     if (!baseEnabled[index]) { // Only include markets that are enabled
@@ -1188,7 +1225,7 @@ export async function getMarketData(timestamp: number, env?: any) {
     return calculatedSpeed === 0 ? 1e-18 : calculatedSpeed;
   });
 
-  const optimismNewWellSupplySpeeds = optimismMarkets.map((market, index) => {
+  const optimismNewWellSupplySpeeds = optimismMarkets.map((_market, index) => {
     const currentSpeed = Number(formatUnits(optimismWellSupplySpeeds[index], 18));
 
     if (!optimismEnabled[index]) { // Only include markets that are enabled
@@ -1206,7 +1243,7 @@ export async function getMarketData(timestamp: number, env?: any) {
     return Math.abs(calculatedSpeed - currentSpeed) < 1e-18 ? -1e-18 : calculatedSpeed;
   });
 
-  const optimismNewWellBorrowSpeeds = optimismMarkets.map((market, index) => {
+  const optimismNewWellBorrowSpeeds = optimismMarkets.map((_market, index) => {
     const currentSpeed = Number(formatUnits(optimismWellBorrowSpeeds[index], 18));
 
     if (!optimismEnabled[index]) { // Only include markets that are enabled
@@ -1234,7 +1271,7 @@ export async function getMarketData(timestamp: number, env?: any) {
     return calculatedSpeed === 0 ? 1e-18 : calculatedSpeed;
   });
 
-  const moonbeamNewNativeSupplySpeeds = moonbeamMarkets.map((market, index) => {
+  const moonbeamNewNativeSupplySpeeds = moonbeamMarkets.map((_market, index) => {
     const currentSpeed = Number(formatUnits(moonbeamNativeSupplySpeeds[index], 18));
     if (!moonbeamEnabled[index]) { // Only include markets that are enabled
       return currentSpeed === 0 ? currentSpeed : 0;
@@ -1248,7 +1285,7 @@ export async function getMarketData(timestamp: number, env?: any) {
     return Math.abs(calculatedSpeed - currentSpeed) < 1e-18 ? currentSpeed : calculatedSpeed;
   });
 
-  const moonbeamNewNativeBorrowSpeeds = moonbeamMarkets.map((market, index) => {
+  const moonbeamNewNativeBorrowSpeeds = moonbeamMarkets.map((_market, index) => {
     const currentSpeed = Number(formatUnits(moonbeamNativeBorrowSpeeds[index], 18));
 
     if (!moonbeamEnabled[index]) { // Only include markets that are enabled
@@ -1315,7 +1352,7 @@ export async function getMarketData(timestamp: number, env?: any) {
     return calculatedSpeed === 0 ? 1e-6 : calculatedSpeed;
   });
 
-  const optimismNewNativeSupplySpeeds = optimismMarkets.map((market, index) => {
+  const optimismNewNativeSupplySpeeds = optimismMarkets.map((_market, index) => {
     const currentSpeed = Number(formatUnits(optimismNativeSupplySpeeds[index], 18));
 
     if (!optimismEnabled[index]) { // Only include markets that are enabled
@@ -1331,7 +1368,7 @@ export async function getMarketData(timestamp: number, env?: any) {
     return Math.abs(calculatedSpeed - currentSpeed) < 1e-18 ? -1e-18 : calculatedSpeed;
   });
 
-  const optimismNewNativeBorrowSpeeds = optimismMarkets.map((market, index) => {
+  const optimismNewNativeBorrowSpeeds = optimismMarkets.map((_market, index) => {
     const currentSpeed = Number(formatUnits(optimismNativeBorrowSpeeds[index], 18));
 
     if (!optimismEnabled[index]) { // Only include markets that are enabled
@@ -1676,6 +1713,57 @@ export async function getMarketData(timestamp: number, env?: any) {
     blockNumber: BigInt(baseBlockNumber),
   }) as bigint;
 
+  // Get meUSDC MetaMorpho vault TVL (using latest block, not historical)
+  // Fetch all MetaMorpho vault TVLs on Base
+  const erc4626TotalAssetsAbi = [
+    {
+      "inputs": [],
+      "name": "totalAssets",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ];
+
+  const [wethVaultTotalAssets, usdcVaultTotalAssets, eurcVaultTotalAssets, cbBTCVaultTotalAssets, meUSDCVaultTotalAssets] = await Promise.all([
+    baseClient.readContract({
+      address: mainConfig.base.vaultAddresses.WETH,
+      abi: erc4626TotalAssetsAbi,
+      functionName: "totalAssets",
+      blockNumber: BigInt(baseBlockNumber),
+    }) as Promise<bigint>,
+    baseClient.readContract({
+      address: mainConfig.base.vaultAddresses.USDC,
+      abi: erc4626TotalAssetsAbi,
+      functionName: "totalAssets",
+      blockNumber: BigInt(baseBlockNumber),
+    }) as Promise<bigint>,
+    baseClient.readContract({
+      address: mainConfig.base.vaultAddresses.EURC,
+      abi: erc4626TotalAssetsAbi,
+      functionName: "totalAssets",
+      blockNumber: BigInt(baseBlockNumber),
+    }) as Promise<bigint>,
+    baseClient.readContract({
+      address: mainConfig.base.vaultAddresses.cbBTC,
+      abi: erc4626TotalAssetsAbi,
+      functionName: "totalAssets",
+      blockNumber: BigInt(baseBlockNumber),
+    }) as Promise<bigint>,
+    baseClient.readContract({
+      address: mainConfig.base.vaultAddresses.meUSDC,
+      abi: erc4626TotalAssetsAbi,
+      functionName: "totalAssets",
+      blockNumber: BigInt(baseBlockNumber),
+    }) as Promise<bigint>,
+  ]);
+
   // Get totalSupply from each stkWELL contract
   const erc20TotalSupplyAbi = [
     {
@@ -1874,6 +1962,41 @@ export async function getMarketData(timestamp: number, env?: any) {
       wellPerEpochSafetyModule: Number(((mainConfig.totalWellPerEpoch) * baseTotalMarketPercentage) * mainConfig.base.safetyModule).toFixed(18),
       wellPerEpochDex: Number((mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.dex).toFixed(18),
       wellHolderBalance: baseWellHolderBalance.toString(),
+      wellPerEpochVaults: Number((mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.vaults).toFixed(18),
+      vaultAmounts: (() => {
+        // Calculate total WELL allocation for vaults
+        const totalVaultWELL = (mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.vaults;
+
+        // Calculate USD TVL for each vault
+        const ethPriceUSD = Number(formatUnits(ethPrice, 36));
+        const cbBTCPriceUSD = Number(formatUnits(cbBTCPrice, 36));
+        const eurcPriceUSD = Number(formatUnits(eurcPrice, 36));
+
+        const wethTVL_USD = Number(formatUnits(wethVaultTotalAssets, 18)) * ethPriceUSD;
+        const usdcTVL_USD = Number(formatUnits(usdcVaultTotalAssets, 6)); // USDC = $1
+        const eurcTVL_USD = Number(formatUnits(eurcVaultTotalAssets, 6)) * eurcPriceUSD; // EURC in USD
+        const cbBTCTVL_USD = Number(formatUnits(cbBTCVaultTotalAssets, 8)) * cbBTCPriceUSD;
+        const meUSDCTVL_USD = Number(formatUnits(meUSDCVaultTotalAssets, 6)); // meUSDC = $1
+
+        // Apply weight multipliers from config (2.0x for stablecoins, 1.0x for others)
+        const wethWeighted = wethTVL_USD * mainConfig.base.vaultWeightMultipliers.WETH;
+        const usdcWeighted = usdcTVL_USD * mainConfig.base.vaultWeightMultipliers.USDC;
+        const eurcWeighted = eurcTVL_USD * mainConfig.base.vaultWeightMultipliers.EURC;
+        const cbBTCWeighted = cbBTCTVL_USD * mainConfig.base.vaultWeightMultipliers.cbBTC;
+        const meUSDCWeighted = meUSDCTVL_USD * mainConfig.base.vaultWeightMultipliers.meUSDC;
+
+        // Calculate total weighted TVL
+        const totalWeighted = wethWeighted + usdcWeighted + eurcWeighted + cbBTCWeighted + meUSDCWeighted;
+
+        // Distribute proportionally based on weighted TVL
+        return {
+          WETH: Number((wethWeighted / totalWeighted) * totalVaultWELL).toFixed(18),
+          USDC: Number((usdcWeighted / totalWeighted) * totalVaultWELL).toFixed(18),
+          EURC: Number((eurcWeighted / totalWeighted) * totalVaultWELL).toFixed(18),
+          cbBTC: Number((cbBTCWeighted / totalWeighted) * totalVaultWELL).toFixed(18),
+          meUSDC: Number((meUSDCWeighted / totalWeighted) * totalVaultWELL).toFixed(18),
+        };
+      })(),
     },
     optimism: {
       ...mainConfig.optimism,
