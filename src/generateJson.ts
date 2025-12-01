@@ -199,11 +199,12 @@ export async function returnJson(marketData: any, network: string) {
         bridgeToRecipient: [
           {
             // Send all Base incentives (markets + safety module + vaults - dex) to Base Temporal Governor
+            // Add extra padding (1e17) to cover rounding differences in 6 merkle campaigns + MRD transfer
             amount: Number(new BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
               .minus(parseFloat(marketData.base.wellPerEpochDex).toFixed(18))
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
-              .plus(1e16)
+              .plus(1e17) // increased padding for merkle campaign rounding
               .toFixed(0)),
             nativeValue: Number(new BigNumber(marketData.bridgeCost * 5).toFixed(0)), // pad bridgeCost by 5x in case of price fluctuations
             network: 8453,
@@ -416,11 +417,6 @@ export async function returnJson(marketData: any, network: string) {
   } else if (network === "Optimism") {
     // Check if any market has reservesEnabled=true
     const hasReservesEnabled = marketData["10"].some((market: MarketType) => market.reservesEnabled);
-
-    const x = BigNumber(marketData.optimism.wellPerEpochSafetyModule);
-    console.log("x", x.toNumber())
-    console.log("x shifted", x.shiftedBy(18).toNumber())
-
 
     const result: any = {
       1284: {
