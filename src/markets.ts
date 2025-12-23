@@ -107,6 +107,11 @@ async function getClosestBlockNumber(
   const currentBlockDetails = await client.getBlock({ blockNumber: BigInt(currentBlockNumber) });
   const currentTimestamp = Number(currentBlockDetails.timestamp);
 
+  // If timestamp is in the future, return the current block number
+  if (timestamp >= currentTimestamp) {
+    return Number(currentBlockNumber);
+  }
+
   // Calculate the approximate block number based on the time difference
   const blockDiff = Math.floor((currentTimestamp - timestamp) / blockTime);
   let low = Math.max(0, Number(BigInt(currentBlockNumber) - BigInt(blockDiff)));

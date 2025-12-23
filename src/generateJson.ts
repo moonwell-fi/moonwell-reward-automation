@@ -354,57 +354,54 @@ export async function returnJson(marketData: any, network: string) {
             startTimestamp: marketData.epochStartTimestamp,
           },
           {
+            // TEMPORARY: January epoch - half incentives, 2 week duration
             amount: Number(new BigNumber(marketData.base.vaultAmounts.USDC)
+              .div(2)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL)
               .toFixed(0)),
             campaignData: merkleCampaignDatas.USDC,
             campaignType: MORPHO_VAULT_CAMPAIGN,
-            duration: mainConfig.secondsPerEpoch,
+            duration: mainConfig.secondsPerEpoch / 2,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
           },
           {
+            // TEMPORARY: January epoch - half incentives, 2 week duration
             amount: Number(new BigNumber(marketData.base.vaultAmounts.WETH)
+              .div(2)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL)
               .toFixed(0)),
             campaignData: merkleCampaignDatas.WETH,
             campaignType: MORPHO_VAULT_CAMPAIGN,
-            duration: mainConfig.secondsPerEpoch,
+            duration: mainConfig.secondsPerEpoch / 2,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
           },
           {
+            // TEMPORARY: January epoch - half incentives, 2 week duration
             amount: Number(new BigNumber(marketData.base.vaultAmounts.EURC)
+              .div(2)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL)
               .toFixed(0)),
             campaignData: merkleCampaignDatas.EURC,
             campaignType: MORPHO_VAULT_CAMPAIGN,
-            duration: mainConfig.secondsPerEpoch,
+            duration: mainConfig.secondsPerEpoch / 2,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
           },
           {
+            // TEMPORARY: January epoch - half incentives, 2 week duration
             amount: Number(new BigNumber(marketData.base.vaultAmounts.cbBTC)
+              .div(2)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL)
               .toFixed(0)),
             campaignData: merkleCampaignDatas.cbBTC,
             campaignType: MORPHO_VAULT_CAMPAIGN,
-            duration: mainConfig.secondsPerEpoch,
-            rewardToken: "xWELL_PROXY",
-            startTimestamp: marketData.epochStartTimestamp,
-          },
-          {
-            amount: Number(new BigNumber(marketData.base.vaultAmounts.meUSDC)
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL)
-              .toFixed(0)),
-            campaignData: merkleCampaignDatas.meUSDC,
-            campaignType: MORPHO_VAULT_CAMPAIGN,
-            duration: mainConfig.secondsPerEpoch,
+            duration: mainConfig.secondsPerEpoch / 2,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
           },
