@@ -106,3 +106,8 @@ compatibility_flags = ["nodejs_compat"]
 # [[vectorize]]
 # binding = "MY_INDEX"
 # index_name = "my-index"
+
+[observability]
+[observability.logs]
+enabled = true
+invocation_logs = true
