@@ -30,7 +30,7 @@ export const mainConfig = {
 			USDC: 2.0,   // Stablecoin 2x weight
 			EURC: 2.0,   // Stablecoin 2x weight
 			cbBTC: 1.0,  // Non-stablecoin baseline
-			meUSDC: 2.0, // Stablecoin 2x weight
+			meUSDC: 0,   // Disabled
 		},
 		// MetaMorpho vault addresses on Base
 		vaultAddresses: {
