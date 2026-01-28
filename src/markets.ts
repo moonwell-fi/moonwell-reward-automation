@@ -1130,14 +1130,15 @@ export async function getMarketData(timestamp: number, env?: any) {
   );
 
   const calculateEpochStartTimestamp = () => {
-    const currentTimestamp = Math.floor(Date.now() / 1000);
+    // Use the passed timestamp to find the current epoch
     let epochStartTimestamp = mainConfig.firstEpochTimestamp;
 
-    while (currentTimestamp >= epochStartTimestamp) {
+    while (timestamp >= epochStartTimestamp + mainConfig.secondsPerEpoch) {
       epochStartTimestamp += mainConfig.secondsPerEpoch;
     }
 
-    return epochStartTimestamp;
+    // Return the start of the NEXT epoch (previous epoch end + 1 second conceptually, but we use exact boundary)
+    return epochStartTimestamp + mainConfig.secondsPerEpoch;
   };
 
   const moonbeamNewWellSupplySpeeds = moonbeamMarkets.map((_market, index) => {
