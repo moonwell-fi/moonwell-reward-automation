@@ -397,17 +397,6 @@ export async function returnJson(marketData: any, network: string) {
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
           },
-          {
-            amount: Number(new BigNumber(marketData.base.vaultAmounts.meUSDC)
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL)
-              .toFixed(0)),
-            campaignData: merkleCampaignDatas.meUSDC,
-            campaignType: MORPHO_VAULT_CAMPAIGN,
-            duration: mainConfig.secondsPerEpoch,
-            rewardToken: "xWELL_PROXY",
-            startTimestamp: marketData.epochStartTimestamp,
-          },
         ],
       },
       endTimeSTamp: marketData.epochEndTimestamp,
