@@ -1137,8 +1137,8 @@ export async function getMarketData(timestamp: number, env?: any) {
       epochStartTimestamp += mainConfig.secondsPerEpoch;
     }
 
-    // Return the start of the NEXT epoch (previous epoch end + 1 second conceptually, but we use exact boundary)
-    return epochStartTimestamp + mainConfig.secondsPerEpoch;
+    // Return the start of the NEXT epoch (previous epoch end + 1)
+    return epochStartTimestamp + mainConfig.secondsPerEpoch + 1;
   };
 
   const moonbeamNewWellSupplySpeeds = moonbeamMarkets.map((_market, index) => {
