@@ -264,6 +264,69 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
       markdown += `| Total ${nativeToken} to distribute Markets (By Speed) | ${Math.max(0, Number(networkSummary?.totalNativeBySpeed)).toFixed(4).toLocaleString()} ${nativeToken} |\n`;
     }
 
+    // Add Merkle Campaigns section for Base network
+    if (networkId === '8453') {
+      markdown += `\n### Merkle Campaigns\n\n`;
+      markdown += `| Campaign | WELL Rewards (28 days) |\n`;
+      markdown += `| -------- | ---------------------- |\n`;
+
+      // stkWELL Merkle Campaign (Safety Module + Capped Auctions)
+      if (networkMarketData?.wellPerEpochSafetyModule) {
+        const safetyModuleRewards = parseFloat(networkMarketData.wellPerEpochSafetyModule);
+        let stkWellTotal = safetyModuleRewards;
+
+        // Add capped wellHolderBalance if available
+        if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
+          const stkWellTotalSupply = parseFloat(marketData.baseStkWELLTotalSupply) / 1e18;
+          const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 1e18;
+          const epochsPerYear = 365 / 28;
+          const targetAPY = 0.10;
+          const maxRewardsPerEpoch = (targetAPY * stkWellTotalSupply) / epochsPerYear;
+          const maxWellHolderContribution = Math.max(0, maxRewardsPerEpoch - safetyModuleRewards);
+          const cappedWellHolderBalance = Math.min(wellBalance, maxWellHolderContribution);
+          stkWellTotal = safetyModuleRewards + cappedWellHolderBalance;
+        }
+        markdown += `| stkWELL (Safety Module) | ${Math.max(0, stkWellTotal).toLocaleString()} WELL |\n`;
+      }
+
+      // MetaMorpho Vault Campaigns
+      if (networkMarketData?.vaultAmounts) {
+        const vaultAmounts = networkMarketData.vaultAmounts;
+        if (vaultAmounts.USDC > 0) {
+          markdown += `| USDC MetaMorpho Vault | ${Math.max(0, Number(vaultAmounts.USDC)).toLocaleString()} WELL |\n`;
+        }
+        if (vaultAmounts.WETH > 0) {
+          markdown += `| WETH MetaMorpho Vault | ${Math.max(0, Number(vaultAmounts.WETH)).toLocaleString()} WELL |\n`;
+        }
+        if (vaultAmounts.EURC > 0) {
+          markdown += `| EURC MetaMorpho Vault | ${Math.max(0, Number(vaultAmounts.EURC)).toLocaleString()} WELL |\n`;
+        }
+        if (vaultAmounts.cbBTC > 0) {
+          markdown += `| cbBTC MetaMorpho Vault | ${Math.max(0, Number(vaultAmounts.cbBTC)).toLocaleString()} WELL |\n`;
+        }
+
+        // Calculate total Merkle rewards
+        const totalVaultRewards = (vaultAmounts.USDC || 0) + (vaultAmounts.WETH || 0) + (vaultAmounts.EURC || 0) + (vaultAmounts.cbBTC || 0);
+        let totalMerkleRewards = totalVaultRewards;
+        if (networkMarketData?.wellPerEpochSafetyModule) {
+          const safetyModuleRewards = parseFloat(networkMarketData.wellPerEpochSafetyModule);
+          let stkWellTotal = safetyModuleRewards;
+          if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
+            const stkWellTotalSupply = parseFloat(marketData.baseStkWELLTotalSupply) / 1e18;
+            const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 1e18;
+            const epochsPerYear = 365 / 28;
+            const targetAPY = 0.10;
+            const maxRewardsPerEpoch = (targetAPY * stkWellTotalSupply) / epochsPerYear;
+            const maxWellHolderContribution = Math.max(0, maxRewardsPerEpoch - safetyModuleRewards);
+            const cappedWellHolderBalance = Math.min(wellBalance, maxWellHolderContribution);
+            stkWellTotal = safetyModuleRewards + cappedWellHolderBalance;
+          }
+          totalMerkleRewards += stkWellTotal;
+        }
+        markdown += `| **Total Merkle Campaigns** | **${Math.max(0, totalMerkleRewards).toLocaleString()} WELL** |\n`;
+      }
+    }
+
     markdown += `\n`;
     // Iterate over the markets for the specific network, but only include enabled markets
     for (const market of Object.values(marketData[networkId])) {
