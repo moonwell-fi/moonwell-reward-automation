@@ -264,6 +264,29 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
       markdown += `| Total ${nativeToken} to distribute Markets (By Speed) | ${Math.max(0, Number(networkSummary?.totalNativeBySpeed)).toFixed(4).toLocaleString()} ${nativeToken} |\n`;
     }
 
+    // Add Merkle Campaigns section for Base network
+    if (networkId === '8453' && networkMarketData?.vaultAmounts) {
+      const vaultAmounts = networkMarketData.vaultAmounts;
+      const totalVaultRewards = (vaultAmounts.USDC || 0) + (vaultAmounts.WETH || 0) + (vaultAmounts.EURC || 0) + (vaultAmounts.cbBTC || 0);
+
+      markdown += `\n### Merkle Campaigns (MetaMorpho Vaults)\n\n`;
+      markdown += `| Vault | WELL Rewards (28 days) |\n`;
+      markdown += `| ----- | ---------------------- |\n`;
+      if (vaultAmounts.USDC > 0) {
+        markdown += `| USDC MetaMorpho Vault | ${Math.max(0, Number(vaultAmounts.USDC)).toLocaleString()} WELL |\n`;
+      }
+      if (vaultAmounts.WETH > 0) {
+        markdown += `| WETH MetaMorpho Vault | ${Math.max(0, Number(vaultAmounts.WETH)).toLocaleString()} WELL |\n`;
+      }
+      if (vaultAmounts.EURC > 0) {
+        markdown += `| EURC MetaMorpho Vault | ${Math.max(0, Number(vaultAmounts.EURC)).toLocaleString()} WELL |\n`;
+      }
+      if (vaultAmounts.cbBTC > 0) {
+        markdown += `| cbBTC MetaMorpho Vault | ${Math.max(0, Number(vaultAmounts.cbBTC)).toLocaleString()} WELL |\n`;
+      }
+      markdown += `| **Total MetaMorpho Vaults** | **${Math.max(0, totalVaultRewards).toLocaleString()} WELL** |\n`;
+    }
+
     markdown += `\n`;
     // Iterate over the markets for the specific network, but only include enabled markets
     for (const market of Object.values(marketData[networkId])) {
