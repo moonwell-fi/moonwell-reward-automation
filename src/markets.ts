@@ -1132,7 +1132,7 @@ export async function getMarketData(timestamp: number, env?: any) {
   const calculateEpochStartTimestamp = () => {
     let epochStartTimestamp = mainConfig.firstEpochTimestamp;
 
-    while (timestamp >= epochStartTimestamp) {
+    while (timestamp >= epochStartTimestamp + mainConfig.secondsPerEpoch) {
       epochStartTimestamp += mainConfig.secondsPerEpoch;
     }
 
