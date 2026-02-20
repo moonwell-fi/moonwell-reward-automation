@@ -109,5 +109,5 @@ compatibility_flags = ["nodejs_compat"]
 
 [observability]
 [observability.logs]
-enabled = true
+enabled = false
 invocation_logs = true
