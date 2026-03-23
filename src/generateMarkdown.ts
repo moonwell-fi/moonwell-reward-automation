@@ -306,7 +306,7 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
         }
 
         // Calculate total Merkle rewards
-        const totalVaultRewards = (vaultAmounts.USDC || 0) + (vaultAmounts.WETH || 0) + (vaultAmounts.EURC || 0) + (vaultAmounts.cbBTC || 0);
+        const totalVaultRewards = Number(vaultAmounts.USDC || 0) + Number(vaultAmounts.WETH || 0) + Number(vaultAmounts.EURC || 0) + Number(vaultAmounts.cbBTC || 0);
         let totalMerkleRewards = totalVaultRewards;
         if (networkMarketData?.wellPerEpochSafetyModule) {
           const safetyModuleRewards = parseFloat(networkMarketData.wellPerEpochSafetyModule);
