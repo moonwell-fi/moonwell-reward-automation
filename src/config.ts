@@ -56,7 +56,7 @@ export const mainConfig = {
 		vaults: 0.05, // 5% of the WELL allocation to the vault staking contract
 		markets: 0.85,
 		safetyModule: 0.05,
-		dex: 0.05,
+		dex: 0.0,
 	},
 	initSale: {
 		auctionPeriod: 1209600, // 14 days
