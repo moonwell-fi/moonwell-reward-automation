@@ -15,6 +15,7 @@ import { getMarketData } from "./markets";
 import { returnJson } from "./generateJson";
 import { generateMarkdown } from "./generateMarkdown";
 import { getDexInfo } from "./dex";
+import { applyConfigOverrides, validateSplits, type ConfigOverrides } from "./config";
 
 // Helper function to deep merge objects
 function deepMerge(target: any, source: any) {
@@ -48,13 +49,24 @@ export default {
 			return new Response('Missing required parameters: type and timestamp', { status: 400 });
 		}
 
-		// Parse config overrides if provided (URL-encoded JSON)
-		let configOverrides: import('./config').ConfigOverrides | undefined;
+		// Parse and validate config overrides if provided (URL-encoded JSON)
+		let configOverrides: ConfigOverrides | undefined;
 		if (configOverridesParam) {
 			try {
 				configOverrides = JSON.parse(configOverridesParam);
 			} catch {
 				return new Response('Invalid configOverrides JSON', { status: 400 });
+			}
+
+			// Validate override values and split sums
+			try {
+				const effectiveConfig = applyConfigOverrides(configOverrides);
+				const validationError = validateSplits(effectiveConfig);
+				if (validationError) {
+					return new Response(`Invalid config overrides: ${validationError}`, { status: 400 });
+				}
+			} catch (e) {
+				return new Response(`Invalid config overrides: ${e instanceof Error ? e.message : String(e)}`, { status: 400 });
 			}
 		}
 
