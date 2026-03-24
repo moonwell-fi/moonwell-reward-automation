@@ -548,7 +548,7 @@ export async function returnJson(marketData: any, network: string) {
             rewardToken: "xWELL_PROXY",
             vault: mainConfig.optimism.rewarderNames[0]
           }
-        ],
+        ].filter(entry => entry.reward > 0),
         merkleCampaigns: [],
       },
       endTimeSTamp: marketData.epochEndTimestamp,
