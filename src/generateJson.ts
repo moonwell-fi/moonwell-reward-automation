@@ -422,7 +422,7 @@ export async function returnJson(marketData: any, network: string) {
             network: 10,
             target: "TEMPORAL_GOVERNOR"
           },
-          { // Send Optimism DEX incentives to DEX Relayer
+          ...(parseFloat(marketData.optimism.wellPerEpochDex) > 0 ? [{ // Send Optimism DEX incentives to DEX Relayer
             amount: Number(BigNumber(marketData.optimism.wellPerEpochDex)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
@@ -431,7 +431,7 @@ export async function returnJson(marketData: any, network: string) {
               nativeValue: Number(BigNumber(marketData.bridgeCost * 5).toFixed(0)), // pad bridgeCost by 5x in case of price fluctuations
             network: 10,
             target: "DEX_RELAYER"
-          },
+          }] : []),
         ],
         transferFrom: [
           { // Transfer all Optimism incentives to the Multichain Governor for bridging
@@ -548,7 +548,7 @@ export async function returnJson(marketData: any, network: string) {
             rewardToken: "xWELL_PROXY",
             vault: mainConfig.optimism.rewarderNames[0]
           }
-        ],
+        ].filter(entry => entry.reward > 0),
         merkleCampaigns: [],
       },
       endTimeSTamp: marketData.epochEndTimestamp,

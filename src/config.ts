@@ -17,10 +17,10 @@ export const mainConfig = {
 	},
 	base: {
 		nativePerEpoch: 0,
-		markets: 0.476, // 47.6% - Proportionally reduced to accommodate vaults
-		safetyModule: 0.204, // 20.4% - Proportionally reduced to accommodate vaults
+		markets: 0.55, // 55% - Proportionally reduced to accommodate vaults
+		safetyModule: 0.20, // 20% - Proportionally reduced to accommodate vaults
 		dex: 0.0,
-		vaults: 0.32, // 32% - MetaMorpho vault incentives 
+		vaults: 0.25, // 25% - MetaMorpho vault incentives 
 		// below is an extra manual transfer from the F-AERO multisig to the DEX relayer
 		dexRelayerAmount: 0, // 7,202,303.2655022416 WELL / 12 4-week epochs
 		// MetaMorpho vault weight multipliers - WELL distributed based on weighted TVL
@@ -53,10 +53,10 @@ export const mainConfig = {
 		nativePerEpoch: 0,
 		rewarderNames: ['USDC_MULTI_REWARDER'], // Names of multi-rewarders to distribute rewards to
 		vaultNativePerEpoch: 0,
-		vaults: 0.05, // 5% of the WELL allocation to the vault staking contract
-		markets: 0.85,
+		vaults: 0.00, // 0% of the WELL allocation to the vault staking contract
+		markets: 0.95,
 		safetyModule: 0.05,
-		dex: 0.05,
+		dex: 0.0,
 	},
 	initSale: {
 		auctionPeriod: 1209600, // 14 days
