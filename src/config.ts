@@ -1,3 +1,33 @@
+export interface ConfigOverrides {
+	moonbeam?: { markets?: number; safetyModule?: number; dex?: number };
+	base?: { markets?: number; safetyModule?: number; dex?: number; vaults?: number };
+	optimism?: { markets?: number; safetyModule?: number; dex?: number; vaults?: number };
+}
+
+// Apply split overrides to mainConfig, returning a new config object
+export function applyConfigOverrides(overrides?: ConfigOverrides): typeof mainConfig {
+	if (!overrides) return mainConfig;
+
+	const config = JSON.parse(JSON.stringify(mainConfig));
+	if (overrides.moonbeam) {
+		if (overrides.moonbeam.markets !== undefined) config.moonbeam.markets = overrides.moonbeam.markets;
+		if (overrides.moonbeam.safetyModule !== undefined) config.moonbeam.safetyModule = overrides.moonbeam.safetyModule;
+		if (overrides.moonbeam.dex !== undefined) config.moonbeam.dex = overrides.moonbeam.dex;
+	}
+	if (overrides.base) {
+		if (overrides.base.markets !== undefined) config.base.markets = overrides.base.markets;
+		if (overrides.base.safetyModule !== undefined) config.base.safetyModule = overrides.base.safetyModule;
+		if (overrides.base.dex !== undefined) config.base.dex = overrides.base.dex;
+		if (overrides.base.vaults !== undefined) config.base.vaults = overrides.base.vaults;
+	}
+	if (overrides.optimism) {
+		if (overrides.optimism.markets !== undefined) config.optimism.markets = overrides.optimism.markets;
+		if (overrides.optimism.safetyModule !== undefined) config.optimism.safetyModule = overrides.optimism.safetyModule;
+		if (overrides.optimism.dex !== undefined) config.optimism.dex = overrides.optimism.dex;
+		if (overrides.optimism.vaults !== undefined) config.optimism.vaults = overrides.optimism.vaults;
+	}
+	return config;
+}
 
 export const mainConfig = {
 	totalWellPerEpoch: 13_139_447.412450949,
@@ -65,6 +95,13 @@ export const mainConfig = {
 		periodMaxDiscount: 800000000000000000, // 20% discount from starting price
 		periodStartingPremium: 1200000000000000000, // 120% of current price
 	},
+};
+
+// Default split percentages per network, derived from mainConfig to stay in sync
+export const DEFAULT_SPLITS = {
+	moonbeam: { markets: mainConfig.moonbeam.markets, safetyModule: mainConfig.moonbeam.safetyModule, dex: mainConfig.moonbeam.dex },
+	base: { markets: mainConfig.base.markets, safetyModule: mainConfig.base.safetyModule, dex: mainConfig.base.dex, vaults: mainConfig.base.vaults },
+	optimism: { markets: mainConfig.optimism.markets, safetyModule: mainConfig.optimism.safetyModule, dex: mainConfig.optimism.dex, vaults: mainConfig.optimism.vaults },
 };
 
 export const merkleCampaignDatas = {

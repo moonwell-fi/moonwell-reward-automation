@@ -1,5 +1,5 @@
 import { formatUnits } from "viem";
-import { mainConfig, marketConfigs } from "./config";
+import { marketConfigs, applyConfigOverrides, type ConfigOverrides } from "./config";
 import { getSafetyModuleDataForAllChains } from "./safetyModule";
 import { ContractCall, createClients, baseClient as defaultBaseClient, moonbeamClient as defaultMoonbeamClient, optimismClient as defaultOptimismClient } from "./utils";
 
@@ -185,7 +185,10 @@ async function getOptimismMarkets() {
   return await filterExcludedMarkets(markets as string[], 10);
 }
 
-export async function getMarketData(timestamp: number, env?: any) {
+export async function getMarketData(timestamp: number, env?: any, configOverrides?: ConfigOverrides) {
+  // Apply config overrides to get effective config for this request
+  const config = applyConfigOverrides(configOverrides);
+
   // If environment variables are provided, create clients with them
   if (env) {
     const clients = createClients(env);
@@ -1130,10 +1133,10 @@ export async function getMarketData(timestamp: number, env?: any) {
   );
 
   const calculateEpochStartTimestamp = () => {
-    let epochStartTimestamp = mainConfig.firstEpochTimestamp;
+    let epochStartTimestamp = config.firstEpochTimestamp;
 
-    while (timestamp >= epochStartTimestamp + mainConfig.secondsPerEpoch) {
-      epochStartTimestamp += mainConfig.secondsPerEpoch;
+    while (timestamp >= epochStartTimestamp + config.secondsPerEpoch) {
+      epochStartTimestamp += config.secondsPerEpoch;
     }
 
     return epochStartTimestamp;
@@ -1146,12 +1149,12 @@ export async function getMarketData(timestamp: number, env?: any) {
       return currentSpeed === 0 ? currentSpeed : 0;
     }
     const totalWellPerEpochMarkets =
-      mainConfig.totalWellPerEpoch
+      config.totalWellPerEpoch
       * moonbeamTotalMarketPercentage
-      * mainConfig.moonbeam.markets;
+      * config.moonbeam.markets;
     const percentage = moonbeamPercentages[index];
     const supplyRatio = moonbeamSupplyRatios[index] ?? 0;
-    const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * supplyRatio) / mainConfig.secondsPerEpoch);
+    const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * supplyRatio) / config.secondsPerEpoch);
 
     // Return currentSpeed if the speeds are the same, otherwise return the calculated speed
     return Math.abs(calculatedSpeed - currentSpeed) < 1e-18 ? currentSpeed : calculatedSpeed;
@@ -1164,12 +1167,12 @@ export async function getMarketData(timestamp: number, env?: any) {
       return currentSpeed === 1e-18 ? currentSpeed : 1e-18;
     }
     const totalWellPerEpochMarkets =
-      mainConfig.totalWellPerEpoch
+      config.totalWellPerEpoch
       * moonbeamTotalMarketPercentage
-      * mainConfig.moonbeam.markets;
+      * config.moonbeam.markets;
     const percentage = moonbeamPercentages[index];
     const borrowRatio = moonbeamBorrowRatios[index] ?? 0;
-    const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
+    const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * borrowRatio) / config.secondsPerEpoch);
     // Return currentSpeed if the speeds are the same
     if (Math.abs(calculatedSpeed - currentSpeed) < 1e-18) {
       return currentSpeed;
@@ -1186,12 +1189,12 @@ export async function getMarketData(timestamp: number, env?: any) {
       return currentSpeed === 0 ? -1e-18 : 0;
     }
     const totalWellPerEpochMarkets =
-      mainConfig.totalWellPerEpoch
+      config.totalWellPerEpoch
       * baseTotalMarketPercentage
-      * mainConfig.base.markets;
+      * config.base.markets;
     const percentage = basePercentages[index];
     const supplyRatio = baseSupplyRatios[index] ?? 0;
-    const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * supplyRatio) / mainConfig.secondsPerEpoch);
+    const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * supplyRatio) / config.secondsPerEpoch);
 
     // Return -1 if the speeds are the same, otherwise return the calculated speed
     return Math.abs(calculatedSpeed - currentSpeed) < 1e-18 ? -1e-18 : calculatedSpeed;
@@ -1204,12 +1207,12 @@ export async function getMarketData(timestamp: number, env?: any) {
       return currentSpeed === 1e-18 ? -1e-18: 1e-18;
     }
     const totalWellPerEpochMarkets =
-      mainConfig.totalWellPerEpoch
+      config.totalWellPerEpoch
       * baseTotalMarketPercentage
-      * mainConfig.base.markets;
+      * config.base.markets;
     const percentage = basePercentages[index];
     const borrowRatio = baseBorrowRatios[index] ?? 0;
-    const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
+    const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * borrowRatio) / config.secondsPerEpoch);
     // Return -1e-18 if the current speed is 1e-18 and the calculated speed is 0
     if (currentSpeed === 1e-18 && calculatedSpeed === 0) {
       return -1e-18;
@@ -1231,12 +1234,12 @@ export async function getMarketData(timestamp: number, env?: any) {
       return currentSpeed === 0 ? -1e-18: 0;
     }
     const totalWellPerEpochMarkets =
-      mainConfig.totalWellPerEpoch
+      config.totalWellPerEpoch
       * optimismTotalMarketPercentage
-      * mainConfig.optimism.markets;
+      * config.optimism.markets;
     const percentage = optimismPercentages[index];
     const supplyRatio = optimismSupplyRatios[index] ?? 0;
-    const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * supplyRatio) / mainConfig.secondsPerEpoch);
+    const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * supplyRatio) / config.secondsPerEpoch);
 
     // Return -1 if the speeds are the same, otherwise return the calculated speed
     return Math.abs(calculatedSpeed - currentSpeed) < 1e-18 ? -1e-18 : calculatedSpeed;
@@ -1250,12 +1253,12 @@ export async function getMarketData(timestamp: number, env?: any) {
     }
 
     const totalWellPerEpochMarkets =
-      mainConfig.totalWellPerEpoch
+      config.totalWellPerEpoch
       * optimismTotalMarketPercentage
-      * mainConfig.optimism.markets;
+      * config.optimism.markets;
     const percentage = optimismPercentages[index];
     const borrowRatio = optimismBorrowRatios[index] ?? 0;
-    const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
+    const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * borrowRatio) / config.secondsPerEpoch);
     // Return -1e-18 if the current speed is 1e-18 and the calculated speed is 0
     if (currentSpeed === 1e-18 && calculatedSpeed === 0) {
       return -1e-18;
@@ -1275,10 +1278,10 @@ export async function getMarketData(timestamp: number, env?: any) {
     if (!moonbeamEnabled[index]) { // Only include markets that are enabled
       return currentSpeed === 0 ? currentSpeed : 0;
     }
-    const totalNativePerEpochMarkets = mainConfig.moonbeam.nativePerEpoch;
+    const totalNativePerEpochMarkets = config.moonbeam.nativePerEpoch;
     const percentage = moonbeamPercentages[index];
     const supplyRatio = moonbeamSupplyRatios[index] ?? 0;
-    const calculatedSpeed = Number((totalNativePerEpochMarkets * percentage * supplyRatio) / mainConfig.secondsPerEpoch);
+    const calculatedSpeed = Number((totalNativePerEpochMarkets * percentage * supplyRatio) / config.secondsPerEpoch);
 
     // Return currentSpeed if the speeds are the same, otherwise return the calculated speed
     return Math.abs(calculatedSpeed - currentSpeed) < 1e-18 ? currentSpeed : calculatedSpeed;
@@ -1290,10 +1293,10 @@ export async function getMarketData(timestamp: number, env?: any) {
     if (!moonbeamEnabled[index]) { // Only include markets that are enabled
       return currentSpeed === 1e-18 ? currentSpeed : 1e-18;
     }
-    const totalNativePerEpochMarkets = mainConfig.moonbeam.nativePerEpoch;
+    const totalNativePerEpochMarkets = config.moonbeam.nativePerEpoch;
     const percentage = moonbeamPercentages[index];
     const borrowRatio = moonbeamBorrowRatios[index] ?? 0;
-    const calculatedSpeed = Number((totalNativePerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
+    const calculatedSpeed = Number((totalNativePerEpochMarkets * percentage * borrowRatio) / config.secondsPerEpoch);
 
     // Return currentSpeed if the speeds are the same
     if (Math.abs(calculatedSpeed - currentSpeed) < 1e-18) {
@@ -1316,10 +1319,10 @@ export async function getMarketData(timestamp: number, env?: any) {
       return currentSpeed === 0 ? -1e-6 : 0;
     }
 
-    const totalNativePerEpochMarkets = mainConfig.base.nativePerEpoch;
+    const totalNativePerEpochMarkets = config.base.nativePerEpoch;
     const percentage = basePercentages[index];
     const supplyRatio = baseSupplyRatios[index] ?? 0;
-    const calculatedSpeed = Number((totalNativePerEpochMarkets * percentage * supplyRatio) / mainConfig.secondsPerEpoch);
+    const calculatedSpeed = Number((totalNativePerEpochMarkets * percentage * supplyRatio) / config.secondsPerEpoch);
 
     // Return -1 if the speeds are the same, otherwise return the calculated speed
     return Math.abs(calculatedSpeed - currentSpeed) < 1e-6 ? -1e-6 : calculatedSpeed;
@@ -1337,10 +1340,10 @@ export async function getMarketData(timestamp: number, env?: any) {
       return currentSpeed === 1e-6 ? -1e-6 : 1e-6;
     }
 
-    const totalNativePerEpochMarkets = mainConfig.base.nativePerEpoch;
+    const totalNativePerEpochMarkets = config.base.nativePerEpoch;
     const percentage = basePercentages[index];
     const borrowRatio = baseBorrowRatios[index] ?? 0;
-    const calculatedSpeed = Number((totalNativePerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
+    const calculatedSpeed = Number((totalNativePerEpochMarkets * percentage * borrowRatio) / config.secondsPerEpoch);
 
     // Return -1 if the speeds are the same
     if ((calculatedSpeed === 0) && (currentSpeed === 0.000001)) {
@@ -1358,10 +1361,10 @@ export async function getMarketData(timestamp: number, env?: any) {
       return currentSpeed === 0 ? -1e-18 : 0;
     }
 
-    const totalNativePerEpochMarkets = mainConfig.optimism.nativePerEpoch;
+    const totalNativePerEpochMarkets = config.optimism.nativePerEpoch;
     const percentage = optimismPercentages[index];
     const supplyRatio = optimismSupplyRatios[index] ?? 0;
-    const calculatedSpeed = Number((totalNativePerEpochMarkets * percentage * supplyRatio) / mainConfig.secondsPerEpoch);
+    const calculatedSpeed = Number((totalNativePerEpochMarkets * percentage * supplyRatio) / config.secondsPerEpoch);
 
     // Return -1 if the speeds are the same, otherwise return the calculated speed
     return Math.abs(calculatedSpeed - currentSpeed) < 1e-18 ? -1e-18 : calculatedSpeed;
@@ -1374,10 +1377,10 @@ export async function getMarketData(timestamp: number, env?: any) {
       return currentSpeed === 1e-18 ? -1e-18 : 1e-18;
     }
 
-    const totalNativePerEpochMarkets = mainConfig.optimism.nativePerEpoch;
+    const totalNativePerEpochMarkets = config.optimism.nativePerEpoch;
     const percentage = optimismPercentages[index];
     const borrowRatio = optimismBorrowRatios[index] ?? 0;
-    const calculatedSpeed = Number((totalNativePerEpochMarkets * percentage * borrowRatio) / mainConfig.secondsPerEpoch);
+    const calculatedSpeed = Number((totalNativePerEpochMarkets * percentage * borrowRatio) / config.secondsPerEpoch);
 
     // Return -1e-18 if the current speed is 1e-18 and the calculated speed is 0
     if (currentSpeed === 1e-18 && calculatedSpeed === 0) {
@@ -1732,31 +1735,31 @@ export async function getMarketData(timestamp: number, env?: any) {
 
   const [wethVaultTotalAssets, usdcVaultTotalAssets, eurcVaultTotalAssets, cbBTCVaultTotalAssets, meUSDCVaultTotalAssets] = await Promise.all([
     baseClient.readContract({
-      address: mainConfig.base.vaultAddresses.WETH,
+      address: config.base.vaultAddresses.WETH,
       abi: erc4626TotalAssetsAbi,
       functionName: "totalAssets",
       blockNumber: BigInt(baseBlockNumber),
     }) as Promise<bigint>,
     baseClient.readContract({
-      address: mainConfig.base.vaultAddresses.USDC,
+      address: config.base.vaultAddresses.USDC,
       abi: erc4626TotalAssetsAbi,
       functionName: "totalAssets",
       blockNumber: BigInt(baseBlockNumber),
     }) as Promise<bigint>,
     baseClient.readContract({
-      address: mainConfig.base.vaultAddresses.EURC,
+      address: config.base.vaultAddresses.EURC,
       abi: erc4626TotalAssetsAbi,
       functionName: "totalAssets",
       blockNumber: BigInt(baseBlockNumber),
     }) as Promise<bigint>,
     baseClient.readContract({
-      address: mainConfig.base.vaultAddresses.cbBTC,
+      address: config.base.vaultAddresses.cbBTC,
       abi: erc4626TotalAssetsAbi,
       functionName: "totalAssets",
       blockNumber: BigInt(baseBlockNumber),
     }) as Promise<bigint>,
     baseClient.readContract({
-      address: mainConfig.base.vaultAddresses.meUSDC,
+      address: config.base.vaultAddresses.meUSDC,
       abi: erc4626TotalAssetsAbi,
       functionName: "totalAssets",
       blockNumber: BigInt(baseBlockNumber),
@@ -1835,14 +1838,14 @@ export async function getMarketData(timestamp: number, env?: any) {
       optimismNativeSupplyPerDayUsd,
       optimismNativeBorrowPerDayUsd,
       optimismPercentages,
-      Number((mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage) * mainConfig.optimism.markets),
+      Number((config.totalWellPerEpoch * optimismTotalMarketPercentage) * config.optimism.markets),
       optimismNewWellSupplySpeeds,
       optimismNewWellBorrowSpeeds,
       optimismNewNativeSupplySpeeds,
       optimismNewNativeBorrowSpeeds,
       formatUnits(wellPrice, 36),
       optimismNativePrice,
-      Number(mainConfig.optimism.nativePerEpoch),
+      Number(config.optimism.nativePerEpoch),
     ),
     1284: formatResults(
       moonbeamMarkets,
@@ -1877,14 +1880,14 @@ export async function getMarketData(timestamp: number, env?: any) {
       moonbeamNativeSupplyPerDayUsd,
       moonbeamNativeBorrowPerDayUsd,
       moonbeamPercentages,
-      Number((mainConfig.totalWellPerEpoch * moonbeamTotalMarketPercentage) * mainConfig.moonbeam.markets),
+      Number((config.totalWellPerEpoch * moonbeamTotalMarketPercentage) * config.moonbeam.markets),
       moonbeamNewWellSupplySpeeds,
       moonbeamNewWellBorrowSpeeds,
       moonbeamNewNativeSupplySpeeds,
       moonbeamNewNativeBorrowSpeeds,
       formatUnits(wellPrice, 36),
       moonbeamNativePrice,
-      Number(mainConfig.moonbeam.nativePerEpoch),
+      Number(config.moonbeam.nativePerEpoch),
     ),
     8453: formatResults(
       baseMarkets,
@@ -1919,52 +1922,52 @@ export async function getMarketData(timestamp: number, env?: any) {
       baseNativeSupplyPerDayUsd,
       baseNativeBorrowPerDayUsd,
       basePercentages,
-      Number((mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.markets),
+      Number((config.totalWellPerEpoch * baseTotalMarketPercentage) * config.base.markets),
       baseNewWellSupplySpeeds,
       baseNewWellBorrowSpeeds,
       baseNewNativeSupplySpeeds,
       baseNewNativeBorrowSpeeds,
       formatUnits(wellPrice, 36),
       baseNativePrice,
-      Number(mainConfig.base.nativePerEpoch),
+      Number(config.base.nativePerEpoch),
     ),
     wellPrice: formatUnits(wellPrice, 36),
     glmrPrice: moonbeamNativePrice,
     usdcPrice: baseNativePrice,
     opPrice: optimismNativePrice,
-    epochStartTimestamp: calculateEpochStartTimestamp() + mainConfig.secondsPerEpoch,
-    epochEndTimestamp: calculateEpochStartTimestamp() + mainConfig.secondsPerEpoch * 2,
-    totalSeconds: mainConfig.secondsPerEpoch,
-    wellPerEpoch: mainConfig.totalWellPerEpoch,
+    epochStartTimestamp: calculateEpochStartTimestamp() + config.secondsPerEpoch,
+    epochEndTimestamp: calculateEpochStartTimestamp() + config.secondsPerEpoch * 2,
+    totalSeconds: config.secondsPerEpoch,
+    wellPerEpoch: config.totalWellPerEpoch,
     bridgeCost: (await getBridgeCost()).toString(),
     timestamp: timestamp,
     moonbeamBlockNumber: moonbeamBlockNumber,
     baseBlockNumber: baseBlockNumber,
     optimismBlockNumber: optimismBlockNumber,
     moonbeam: {
-      ...mainConfig.moonbeam,
+      ...config.moonbeam,
       networkTotalUsd: moonbeamNetworkTotalUsd,
       totalMarketPercentage: moonbeamTotalMarketPercentage,
-      wellPerEpoch: Number(mainConfig.totalWellPerEpoch * moonbeamTotalMarketPercentage).toFixed(18),
-      nativePerEpoch: mainConfig.moonbeam.nativePerEpoch,
-      wellPerEpochMarkets: Number((mainConfig.totalWellPerEpoch * moonbeamTotalMarketPercentage) * mainConfig.moonbeam.markets).toFixed(18),
-      wellPerEpochSafetyModule: Number((mainConfig.totalWellPerEpoch * moonbeamTotalMarketPercentage) * mainConfig.moonbeam.safetyModule).toFixed(18),
-      wellPerEpochDex: Number((mainConfig.totalWellPerEpoch * moonbeamTotalMarketPercentage) * mainConfig.moonbeam.dex).toFixed(18),
+      wellPerEpoch: Number(config.totalWellPerEpoch * moonbeamTotalMarketPercentage).toFixed(18),
+      nativePerEpoch: config.moonbeam.nativePerEpoch,
+      wellPerEpochMarkets: Number((config.totalWellPerEpoch * moonbeamTotalMarketPercentage) * config.moonbeam.markets).toFixed(18),
+      wellPerEpochSafetyModule: Number((config.totalWellPerEpoch * moonbeamTotalMarketPercentage) * config.moonbeam.safetyModule).toFixed(18),
+      wellPerEpochDex: Number((config.totalWellPerEpoch * moonbeamTotalMarketPercentage) * config.moonbeam.dex).toFixed(18),
     },
     base: {
-      ...mainConfig.base,
+      ...config.base,
       networkTotalUsd: baseNetworkTotalUsd,
       totalMarketPercentage: baseTotalMarketPercentage,
-      wellPerEpoch: Number(mainConfig.totalWellPerEpoch * baseTotalMarketPercentage).toFixed(18),
-      nativePerEpoch: mainConfig.base.nativePerEpoch,
-      wellPerEpochMarkets: Number((mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.markets).toFixed(18),
-      wellPerEpochSafetyModule: Number(((mainConfig.totalWellPerEpoch) * baseTotalMarketPercentage) * mainConfig.base.safetyModule).toFixed(18),
-      wellPerEpochDex: Number((mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.dex).toFixed(18),
+      wellPerEpoch: Number(config.totalWellPerEpoch * baseTotalMarketPercentage).toFixed(18),
+      nativePerEpoch: config.base.nativePerEpoch,
+      wellPerEpochMarkets: Number((config.totalWellPerEpoch * baseTotalMarketPercentage) * config.base.markets).toFixed(18),
+      wellPerEpochSafetyModule: Number(((config.totalWellPerEpoch) * baseTotalMarketPercentage) * config.base.safetyModule).toFixed(18),
+      wellPerEpochDex: Number((config.totalWellPerEpoch * baseTotalMarketPercentage) * config.base.dex).toFixed(18),
       wellHolderBalance: baseWellHolderBalance.toString(),
-      wellPerEpochVaults: Number((mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.vaults).toFixed(18),
+      wellPerEpochVaults: Number((config.totalWellPerEpoch * baseTotalMarketPercentage) * config.base.vaults).toFixed(18),
       vaultAmounts: (() => {
         // Calculate total WELL allocation for vaults
-        const totalVaultWELL = (mainConfig.totalWellPerEpoch * baseTotalMarketPercentage) * mainConfig.base.vaults;
+        const totalVaultWELL = (config.totalWellPerEpoch * baseTotalMarketPercentage) * config.base.vaults;
 
         // Calculate USD TVL for each vault
         // Oracle returns prices in (36 - underlyingDecimals) format
@@ -1982,11 +1985,11 @@ export async function getMarketData(timestamp: number, env?: any) {
         const meUSDCTVL_USD = Number(formatUnits(meUSDCVaultTotalAssets, 6)); // meUSDC = $1
 
         // Apply weight multipliers from config (2.0x for stablecoins, 1.0x for others)
-        const wethWeighted = wethTVL_USD * mainConfig.base.vaultWeightMultipliers.WETH;
-        const usdcWeighted = usdcTVL_USD * mainConfig.base.vaultWeightMultipliers.USDC;
-        const eurcWeighted = eurcTVL_USD * mainConfig.base.vaultWeightMultipliers.EURC;
-        const cbBTCWeighted = cbBTCTVL_USD * mainConfig.base.vaultWeightMultipliers.cbBTC;
-        const meUSDCWeighted = meUSDCTVL_USD * mainConfig.base.vaultWeightMultipliers.meUSDC;
+        const wethWeighted = wethTVL_USD * config.base.vaultWeightMultipliers.WETH;
+        const usdcWeighted = usdcTVL_USD * config.base.vaultWeightMultipliers.USDC;
+        const eurcWeighted = eurcTVL_USD * config.base.vaultWeightMultipliers.EURC;
+        const cbBTCWeighted = cbBTCTVL_USD * config.base.vaultWeightMultipliers.cbBTC;
+        const meUSDCWeighted = meUSDCTVL_USD * config.base.vaultWeightMultipliers.meUSDC;
 
         // Calculate total weighted TVL
         const totalWeighted = wethWeighted + usdcWeighted + eurcWeighted + cbBTCWeighted + meUSDCWeighted;
@@ -2002,16 +2005,16 @@ export async function getMarketData(timestamp: number, env?: any) {
       })(),
     },
     optimism: {
-      ...mainConfig.optimism,
+      ...config.optimism,
       networkTotalUsd: optimismNetworkTotalUsd,
       totalMarketPercentage: optimismTotalMarketPercentage,
-      wellPerEpoch: Number(mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage).toFixed(18),
-      nativePerEpoch: mainConfig.optimism.nativePerEpoch,
-      wellPerEpochMarkets: Number((mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage) * mainConfig.optimism.markets).toFixed(18),
-      wellPerEpochSafetyModule: Number(((mainConfig.totalWellPerEpoch) * optimismTotalMarketPercentage) * mainConfig.optimism.safetyModule).toFixed(18),
-      wellPerEpochDex: Number((mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage) * mainConfig.optimism.dex).toFixed(18),
+      wellPerEpoch: Number(config.totalWellPerEpoch * optimismTotalMarketPercentage).toFixed(18),
+      nativePerEpoch: config.optimism.nativePerEpoch,
+      wellPerEpochMarkets: Number((config.totalWellPerEpoch * optimismTotalMarketPercentage) * config.optimism.markets).toFixed(18),
+      wellPerEpochSafetyModule: Number(((config.totalWellPerEpoch) * optimismTotalMarketPercentage) * config.optimism.safetyModule).toFixed(18),
+      wellPerEpochDex: Number((config.totalWellPerEpoch * optimismTotalMarketPercentage) * config.optimism.dex).toFixed(18),
       wellHolderBalance: optimismWellHolderBalance.toString(),
-      optimismUSDCVaultWellRewardAmount: Number((mainConfig.totalWellPerEpoch * optimismTotalMarketPercentage) * mainConfig.optimism.vaults),
+      optimismUSDCVaultWellRewardAmount: Number((config.totalWellPerEpoch * optimismTotalMarketPercentage) * config.optimism.vaults),
     },
     safetyModule: safetyModuleData,
     baseStkWELLTotalSupply: baseStkWELLTotalSupply.toString(),

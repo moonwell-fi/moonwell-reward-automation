@@ -42,14 +42,25 @@ export default {
 		const type = searchParams.get('type');
 		const network = searchParams.get('network');
 		const timestamp = searchParams.get('timestamp');
+		const configOverridesParam = searchParams.get('configOverrides');
 
 		if (!type || !timestamp) {
 			return new Response('Missing required parameters: type and timestamp', { status: 400 });
 		}
 
+		// Parse config overrides if provided (URL-encoded JSON)
+		let configOverrides: import('./config').ConfigOverrides | undefined;
+		if (configOverridesParam) {
+			try {
+				configOverrides = JSON.parse(configOverridesParam);
+			} catch {
+				return new Response('Invalid configOverrides JSON', { status: 400 });
+			}
+		}
+
 		try {
 			if (type === 'json') {
-				const marketData = await getMarketData(Number(timestamp), env);
+				const marketData = await getMarketData(Number(timestamp), env, configOverrides);
 				let json = '';
 				const networks = network ? [network] : ['Base', 'Optimism', 'Moonbeam'];
 
@@ -66,7 +77,7 @@ export default {
 				});
 			} else if (type === 'markdown') {
 				const proposalNumber = searchParams.get('proposal') || 'X??';
-				const marketData = await getMarketData(Number(timestamp), env);
+				const marketData = await getMarketData(Number(timestamp), env, configOverrides);
 				const dexData = await getDexInfo();
 				let markdown = '';
 				if (network) {
