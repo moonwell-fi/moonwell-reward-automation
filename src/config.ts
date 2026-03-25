@@ -1,3 +1,53 @@
+export interface ConfigOverrides {
+	moonbeam?: { markets?: number; safetyModule?: number; dex?: number };
+	base?: { markets?: number; safetyModule?: number; dex?: number; vaults?: number };
+	optimism?: { markets?: number; safetyModule?: number; dex?: number; vaults?: number };
+}
+
+// Apply split overrides to mainConfig, always returning a fresh deep copy
+export function applyConfigOverrides(overrides?: ConfigOverrides): typeof mainConfig {
+	const config = JSON.parse(JSON.stringify(mainConfig));
+	if (!overrides) return config;
+
+	const applyNetworkOverrides = (
+		target: { markets: number; safetyModule: number; dex: number; vaults?: number },
+		source?: { markets?: number; safetyModule?: number; dex?: number; vaults?: number }
+	) => {
+		if (!source) return;
+		for (const [key, value] of Object.entries(source)) {
+			if (value !== undefined) {
+				if (typeof value !== 'number' || !isFinite(value)) {
+					throw new Error(`Invalid override: ${key} must be a finite number, got ${typeof value}`);
+				}
+				if (value < 0 || value > 1) {
+					throw new Error(`Invalid override: ${key} must be between 0 and 1, got ${value}`);
+				}
+				(target as any)[key] = value;
+			}
+		}
+	};
+
+	applyNetworkOverrides(config.moonbeam, overrides.moonbeam);
+	applyNetworkOverrides(config.base, overrides.base);
+	applyNetworkOverrides(config.optimism, overrides.optimism);
+	return config;
+}
+
+// Validate that splits for a network sum to approximately 1.0
+export function validateSplits(config: typeof mainConfig): string | null {
+	const networks: { name: string; sum: number }[] = [
+		{ name: 'moonbeam', sum: config.moonbeam.markets + config.moonbeam.safetyModule + config.moonbeam.dex },
+		{ name: 'base', sum: config.base.markets + config.base.safetyModule + config.base.dex + config.base.vaults },
+		{ name: 'optimism', sum: config.optimism.markets + config.optimism.safetyModule + config.optimism.dex + config.optimism.vaults },
+	];
+
+	for (const { name, sum } of networks) {
+		if (Math.abs(sum - 1.0) > 0.0001) {
+			return `${name} splits sum to ${(sum * 100).toFixed(2)}%, must be 100%`;
+		}
+	}
+	return null;
+}
 
 export const mainConfig = {
 	totalWellPerEpoch: 13_139_447.412450949,
@@ -65,6 +115,13 @@ export const mainConfig = {
 		periodMaxDiscount: 800000000000000000, // 20% discount from starting price
 		periodStartingPremium: 1200000000000000000, // 120% of current price
 	},
+};
+
+// Default split percentages per network, derived from mainConfig to stay in sync
+export const DEFAULT_SPLITS = {
+	moonbeam: { markets: mainConfig.moonbeam.markets, safetyModule: mainConfig.moonbeam.safetyModule, dex: mainConfig.moonbeam.dex },
+	base: { markets: mainConfig.base.markets, safetyModule: mainConfig.base.safetyModule, dex: mainConfig.base.dex, vaults: mainConfig.base.vaults },
+	optimism: { markets: mainConfig.optimism.markets, safetyModule: mainConfig.optimism.safetyModule, dex: mainConfig.optimism.dex, vaults: mainConfig.optimism.vaults },
 };
 
 export const merkleCampaignDatas = {
