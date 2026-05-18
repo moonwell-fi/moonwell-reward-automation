@@ -60,7 +60,7 @@ export const mainConfig = {
 	firstEpochTimestamp: 1757683818,
 	secondsPerEpoch: 60 * 60 * 24 * 7 * 4, // 4 weeks
 	moonbeam: {
-		nativePerEpoch: 187_500, // 1,125,000 GLMR / 6 months (extra 2 weeks from Dec. 1 to Dec. 14th to fund out of treasury)
+		nativePerEpoch: 0, // GLMR grant fully spent, no more GLMR rewards
 		markets: 0.48,
 		safetyModule: 0.47,
 		dex: 0.05,
