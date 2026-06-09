@@ -1,0 +1,6 @@
+# Ignore generateJson.ts to prevent unwanted formatting changes
+src/generateJson.ts
+
+# config.ts is mostly large contract ABIs; prettier reformatting creates huge
+# unreviewable diffs. Keep it out of prettier to preserve clean diffs.
+src/config.ts
