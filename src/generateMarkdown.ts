@@ -49,8 +49,9 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
 
   if (networkId && marketData[networkId]) {
     const networkName = networkId === '1284' ? 'Moonbeam' : networkId === '10' ? 'Optimism' : networkId === '1' ? 'Ethereum' : 'Base';
-    // Ethereum has no native reward token (nativePerEpoch is 0, so the rows are gated off).
-    const nativeToken = networkId === '1284' ? 'GLMR' : networkId === '10' ? 'OP' : 'USDC';
+    // Ethereum has no native reward token (nativePerEpoch is 0, so the rows are gated off);
+    // the explicit 'N/A' label guards against a future nonzero config mislabeling rows as USDC.
+    const nativeToken = networkId === '1284' ? 'GLMR' : networkId === '10' ? 'OP' : networkId === '1' ? 'N/A' : 'USDC';
 
     markdown += `## ${networkName} Network\n\n`;
     markdown += `If successful, the proposal would automatically distribute and adjust liquidity incentives for the period beginning ${startDate} and ending on ${endDate}.

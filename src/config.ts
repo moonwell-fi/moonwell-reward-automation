@@ -50,6 +50,14 @@ export function validateSplits(config: typeof mainConfig): string | null {
 			return `${name} splits sum to ${(sum * 100).toFixed(2)}%, must be 100% (active) or 0% (disabled)`;
 		}
 	}
+
+	// The Ethereum JSON branch only emits market-funding actions; accepting a nonzero
+	// safetyModule/dex split would make the markdown advertise an allocation the
+	// governance JSON never funds. Reject until those flows are implemented.
+	if (config.ethereum.safetyModule > 0 || config.ethereum.dex > 0) {
+		return 'ethereum safetyModule/dex splits are not supported yet (no funding actions are emitted); only markets may be nonzero';
+	}
+
 	return null;
 }
 

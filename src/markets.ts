@@ -1177,13 +1177,15 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     const supply = ethereumSupplies[index];
     const exchangeRate = ethereumExchangeRates[index];
     const price = ethereumPrices[index];
-    const digit = ethereumDigits.filter((digit): digit is number => digit !== null)[index];
-    const boost = ethereumBoosts.filter((boost): boost is number => boost !== null)[index];
-    const deboost = ethereumDeboosts.filter((deboost): deboost is number => deboost !== null)[index];
+    // Index directly (not filter-then-index, which misaligns every later market
+    // when an on-chain market is missing from marketConfigs[1]); null means unconfigured.
+    const digit = ethereumDigits[index];
+    const boost = ethereumBoosts[index];
+    const deboost = ethereumDeboosts[index];
 
     // Add null checks before using formatUnits
     if (supply === undefined || exchangeRate === undefined || price === undefined ||
-        digit === undefined || boost === undefined || deboost === undefined) {
+        digit == null || boost == null || deboost == null) {
       console.log(`⚠️ MISSING DATA: Ethereum market ${index} missing data for totalSupplyUSD calculation`);
       return 0;
     }
@@ -1273,10 +1275,11 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     }
     const borrow = ethereumBorrows[index];
     const price = ethereumPrices[index];
-    const digit = ethereumDigits.filter((digit): digit is number => digit !== null)[index];
+    // Index directly (not filter-then-index, which misaligns on unconfigured markets).
+    const digit = ethereumDigits[index];
 
     // Add null checks before using formatUnits
-    if (borrow === undefined || price === undefined || digit === undefined) {
+    if (borrow === undefined || price === undefined || digit == null) {
       console.log(`⚠️ MISSING DATA: Ethereum market ${index} missing data for totalBorrowsUSD calculation`);
       return 0;
     }
@@ -1768,14 +1771,14 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     totalSupplyUSD: (() => {
       const value = Number(suppliesUsd[index].toFixed(2));
       if (value === 0 && enabled[index]) {
-        console.log(`⚠️ ZERO SUPPLY USD ALERT: ${chainId === 1284 ? 'Moonbeam' : chainId === 8453 ? 'Base' : 'Optimism'} market ${names[index]} (${market}) has totalSupplyUSD = 0`);
+        console.log(`⚠️ ZERO SUPPLY USD ALERT: ${chainId === 1284 ? 'Moonbeam' : chainId === 8453 ? 'Base' : chainId === 1 ? 'Ethereum' : 'Optimism'} market ${names[index]} (${market}) has totalSupplyUSD = 0`);
       }
       return value;
     })(),
     totalBorrowsUSD: (() => {
       const value = Number(borrowsUsd[index].toFixed(2));
       if (value === 0 && enabled[index]) {
-        console.log(`⚠️ ZERO BORROW USD ALERT: ${chainId === 1284 ? 'Moonbeam' : chainId === 8453 ? 'Base' : 'Optimism'} market ${names[index]} (${market}) has totalBorrowsUSD = 0`);
+        console.log(`⚠️ ZERO BORROW USD ALERT: ${chainId === 1284 ? 'Moonbeam' : chainId === 8453 ? 'Base' : chainId === 1 ? 'Ethereum' : 'Optimism'} market ${names[index]} (${market}) has totalBorrowsUSD = 0`);
       }
       return value;
     })(),

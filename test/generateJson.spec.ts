@@ -365,11 +365,25 @@ describe('generateJson', () => {
       expect(r[1].bridgeToRecipient).toBeUndefined();
     });
 
-    it('emits no transfer when Ethereum markets allocation is zero', async () => {
+    it('emits no transfer and only no-change speeds when Ethereum allocation is zero', async () => {
       const md = ethMarketData();
       md.ethereum = { wellPerEpoch: "0", wellPerEpochDex: "0", wellPerEpochMarkets: "0", wellPerEpochSafetyModule: "0" };
+      // With zero allocation markets.ts emits the -1e-18 "no change" sentinel per market.
+      md["1"] = [
+        {
+          alias: "MOONWELL_USDC",
+          newWellSupplySpeed: "-1e-18",
+          newWellBorrowSpeed: "-1e-18",
+          newNativeSupplySpeed: "-1e-18",
+          newNativeBorrowSpeed: "-1e-18",
+        },
+      ];
       const r = await returnJson(md, "Ethereum");
       expect(r[1].transferFrom).toEqual([]);
+      // Speeds translate to -1 (MRD "no change"), so nothing is distributed without funding.
+      expect(r[1].setMRDSpeeds).toHaveLength(1);
+      expect(r[1].setMRDSpeeds[0].newSupplySpeed).toBe(-1);
+      expect(r[1].setMRDSpeeds[0].newBorrowSpeed).toBe(-1);
     });
   });
 });
