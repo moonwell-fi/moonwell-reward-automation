@@ -2,6 +2,7 @@ import { formatUnits } from "viem";
 import { marketConfigs, applyConfigOverrides, type ConfigOverrides } from "./config";
 import { getSafetyModuleDataForAllChains } from "./safetyModule";
 import { ContractCall, createClients, baseClient as defaultBaseClient, moonbeamClient as defaultMoonbeamClient, optimismClient as defaultOptimismClient } from "./utils";
+import { getEpochWindow } from "./epochs";
 
 // These will be set in getMarketData
 let moonbeamClient = defaultMoonbeamClient;
@@ -29,7 +30,6 @@ import {
   optimismStkWELL,
   optimismViewsContract,
   optimismWellHolder,
-  xWellRouterContract,
   xWellToken
 } from "./config";
 
@@ -142,15 +142,6 @@ async function getClosestBlockNumber(
   }
 }
 
-async function getBridgeCost(): Promise<bigint> {
-  const bridgeCost = await moonbeamClient.readContract({
-    ...xWellRouterContract,
-    functionName: "bridgeCost",
-    args: [],
-  });
-  return bridgeCost as bigint;
-}
-
 async function filterExcludedMarkets(markets: string[], chainId: number): Promise<string[]> {
   const excludedAddresses = excludedMarkets
     .filter(market => market.chainId === chainId)
@@ -188,6 +179,12 @@ async function getOptimismMarkets() {
 export async function getMarketData(timestamp: number, env?: any, configOverrides?: ConfigOverrides) {
   // Apply config overrides to get effective config for this request
   const config = applyConfigOverrides(configOverrides);
+
+  // Calendar-month epoch (15th→15th UTC). Variable duration drives all
+  // per-second reward-speed math, so every `config.secondsPerEpoch` use below
+  // automatically reflects the real month length.
+  const epochWindow = getEpochWindow(timestamp);
+  config.secondsPerEpoch = epochWindow.durationSeconds;
 
   // If environment variables are provided, create clients with them
   if (env) {
@@ -1132,16 +1129,6 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     optimismNetworkTotalUsd / (moonbeamNetworkTotalUsd + baseNetworkTotalUsd + optimismNetworkTotalUsd)
   );
 
-  const calculateEpochStartTimestamp = () => {
-    let epochStartTimestamp = config.firstEpochTimestamp;
-
-    while (timestamp >= epochStartTimestamp + config.secondsPerEpoch) {
-      epochStartTimestamp += config.secondsPerEpoch;
-    }
-
-    return epochStartTimestamp;
-  };
-
   const moonbeamNewWellSupplySpeeds = moonbeamMarkets.map((_market, index) => {
     const currentSpeed = Number(formatUnits(moonbeamWellSupplySpeeds[index], 18));
 
@@ -1935,11 +1922,10 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     glmrPrice: moonbeamNativePrice,
     usdcPrice: baseNativePrice,
     opPrice: optimismNativePrice,
-    epochStartTimestamp: calculateEpochStartTimestamp() + config.secondsPerEpoch,
-    epochEndTimestamp: calculateEpochStartTimestamp() + config.secondsPerEpoch * 2,
-    totalSeconds: config.secondsPerEpoch,
+    epochStartTimestamp: epochWindow.start,
+    epochEndTimestamp: epochWindow.end,
+    totalSeconds: epochWindow.durationSeconds,
     wellPerEpoch: config.totalWellPerEpoch,
-    bridgeCost: (await getBridgeCost()).toString(),
     timestamp: timestamp,
     moonbeamBlockNumber: moonbeamBlockNumber,
     baseBlockNumber: baseBlockNumber,
