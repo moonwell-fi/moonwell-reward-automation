@@ -58,7 +58,9 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
     const networkDexInfo = dexData.find(r => r.network.toString() == networkId)
     const networkSummary = Object.values(marketData[networkId]).reduce((prev, curr) => {
       return {
-        supplyUSD: prev.supplyUSD + curr.totalSupplyUSD,
+        // Cancel out boosts/deboosts (allocation-only) so the network total reflects real TVL,
+        // matching the per-market "Total Supply in USD" lines below.
+        supplyUSD: prev.supplyUSD + (curr.enabled ? curr.totalSupplyUSD - curr.boost + curr.deboost : 0),
         borrowUSD: prev.borrowUSD + curr.totalBorrowsUSD,
         totalWell: prev.totalWell + curr.wellPerEpochMarket,
         supplyWell: prev.supplyWell + curr.wellPerEpochMarketSupply,

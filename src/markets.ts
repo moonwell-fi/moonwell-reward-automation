@@ -1425,7 +1425,11 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     wellPrice: string,
     nativePrice: string,
     totalNativePerEpochMarkets: number,
-  ) => markets.map((market: any, index: any) => ({
+  ) => markets.map((market: any, index: any) => {
+    // suppliesUsd includes the flat USD boost/deboost used to skew reward
+    // allocation; APRs shown to suppliers must be computed on real TVL only.
+    const realSupplyUsd = suppliesUsd[index] - boosts[index] + deboosts[index];
+    return {
     market,
     name: names[index],
     alias: aliases[index],
@@ -1515,9 +1519,9 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     nativeBorrowPerDayUsd: Number(nativeBorrowPerDayUsd[index].toFixed(2)),
     supplyApy: Number(parseFloat(formatUnits(supplyRates[index], 18)) * 60 * 60 * 24 * 365).toFixed(4),
     borrowApy: Number(parseFloat(formatUnits(borrowRates[index], 18)) * 60 * 60 * 24 * 365).toFixed(4),
-    wellSupplyApr: suppliesUsd[index] > 0 ? Number((
+    wellSupplyApr: realSupplyUsd > 0 ? Number((
       wellSupplyPerDayUsd[index]
-      / suppliesUsd[index]
+      / realSupplyUsd
       * 365 * 100).toFixed(2)
     ) : Number(0).toFixed(2),
     wellBorrowApr: borrowsUsd[index] > 0 ? Number((
@@ -1525,9 +1529,9 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
       / borrowsUsd[index]
       * 365 * 100).toFixed(2)) : Number(0).toFixed(2)
     ,
-    nativeSupplyApr: suppliesUsd[index] > 0 ? Number((
+    nativeSupplyApr: realSupplyUsd > 0 ? Number((
       nativeSupplyPerDayUsd[index]
-      / suppliesUsd[index]
+      / realSupplyUsd
       * 365 * 100).toFixed(2)
     ) : Number(0).toFixed(2),
     nativeBorrowApr: borrowsUsd[index] > 0 ? Number((
@@ -1544,9 +1548,9 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     newWellBorrowSpeed: newWellBorrowSpeed[index],
     newNativeSupplySpeed: newNativeSupplySpeed[index],
     newNativeBorrowSpeed: newNativeBorrowSpeed[index],
-    newWellSupplyApr: suppliesUsd[index] > 0 ? Number((
+    newWellSupplyApr: realSupplyUsd > 0 ? Number((
       (newWellSupplySpeed[index] * 86400 * Number(wellPrice))
-      / suppliesUsd[index]
+      / realSupplyUsd
       * 365 * 100).toFixed(2),
     ) : Number(0).toFixed(2),
     newWellBorrowApr: borrowsUsd[index] > 0 ? Number((
@@ -1554,9 +1558,9 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
       / borrowsUsd[index]
       * 365 * 100).toFixed(2),
     ) : Number(0).toFixed(2),
-    newNativeSupplyApr: suppliesUsd[index] > 0 ? Number((
+    newNativeSupplyApr: realSupplyUsd > 0 ? Number((
       (newNativeSupplySpeed[index] * 86400 * Number(nativePrice))
-      / suppliesUsd[index]
+      / realSupplyUsd
       * 365 * 100).toFixed(2),
     ) : Number(0).toFixed(2),
     newNativeBorrowApr: borrowsUsd[index] > 0 ? Number((
@@ -1643,7 +1647,8 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     nativePerEpochMarket: Number(totalNativePerEpochMarkets * percentages[index]),
     nativePerEpochMarketSupply: Number(totalNativePerEpochMarkets * percentages[index] * supply[index]),
     nativePerEpochMarketBorrow: Number(totalNativePerEpochMarkets * percentages[index] * borrow[index]),
-  }));
+  };
+  });
 
   // Get xWellToken balance for optimismWellHolder
   const optimismWellHolderBalance = await optimismClient.readContract({
