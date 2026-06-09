@@ -1097,7 +1097,8 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
 
 	function calculatePercentages(totalSupplyUsd: number[]) {
 		const total = totalSupplyUsd.reduce((sum, value) => sum + value, 0);
-		return totalSupplyUsd.map((value) => value / total);
+		// Guard against a fully-disabled network (total === 0) producing NaN percentages.
+		return totalSupplyUsd.map((value) => (total === 0 ? 0 : value / total));
 	}
 
 	const moonbeamPercentages = calculatePercentages(moonbeamTotalSupplyUsd);
