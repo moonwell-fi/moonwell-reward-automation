@@ -63,11 +63,11 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
         totalWell: prev.totalWell + curr.wellPerEpochMarket,
         supplyWell: prev.supplyWell + curr.wellPerEpochMarketSupply,
         borrowWell: prev.borrowWell + curr.wellPerEpochMarketBorrow,
-        totalWellBySpeed: prev.totalWellBySpeed + (curr.newWellSupplySpeed * mainConfig.secondsPerEpoch) + (curr.newWellBorrowSpeed * mainConfig.secondsPerEpoch),
+        totalWellBySpeed: prev.totalWellBySpeed + (curr.newWellSupplySpeed * marketData.totalSeconds) + (curr.newWellBorrowSpeed * marketData.totalSeconds),
         totalNative: prev.totalNative + curr.nativePerEpochMarket,
         supplyNative: prev.supplyNative + curr.nativePerEpochMarketSupply,
         borrowNative: prev.borrowNative + curr.nativePerEpochMarketBorrow,
-        totalNativeBySpeed: prev.totalNativeBySpeed + (curr.newNativeSupplySpeed * mainConfig.secondsPerEpoch) + (curr.newNativeBorrowSpeed * mainConfig.secondsPerEpoch),
+        totalNativeBySpeed: prev.totalNativeBySpeed + (curr.newNativeSupplySpeed * marketData.totalSeconds) + (curr.newNativeBorrowSpeed * marketData.totalSeconds),
       }
     }, { supplyUSD: 0, borrowUSD: 0, totalWell: 0, supplyWell: 0, borrowWell: 0, totalWellBySpeed: 0, totalNative: 0, supplyNative: 0, borrowNative: 0, totalNativeBySpeed: 0,  })
 
@@ -84,7 +84,7 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
     if (networkId === '1284') {
       const stkWellTotalSupply = parseFloat(marketData.moonbeamStkWELLTotalSupply) / 10**18;
       if (stkWellTotalSupply > 0) {
-        const rewardsPerSecond = parseFloat(networkMarketData.wellPerEpochSafetyModule) / mainConfig.secondsPerEpoch;
+        const rewardsPerSecond = parseFloat(networkMarketData.wellPerEpochSafetyModule) / marketData.totalSeconds;
         const annualRewards = rewardsPerSecond * 31536000; // seconds in a year
         const safetyModuleAPR = (annualRewards / stkWellTotalSupply) * 100;
         markdown += `| Safety Module APR | ${safetyModuleAPR.toFixed(2)}% |\n`;
@@ -92,7 +92,7 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
         // Add Safety Module Boosted APR if wellHolderBalance exists and is > 0
         if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
           const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 10**18;
-          const totalRewardsPerSecond = (parseFloat(networkMarketData.wellPerEpochSafetyModule) + wellBalance) / mainConfig.secondsPerEpoch;
+          const totalRewardsPerSecond = (parseFloat(networkMarketData.wellPerEpochSafetyModule) + wellBalance) / marketData.totalSeconds;
           const totalAnnualRewards = totalRewardsPerSecond * 31536000; // seconds in a year
           const boostedSafetyModuleAPR = (totalAnnualRewards / stkWellTotalSupply) * 100;
           markdown += `| **Safety Module Boosted APR** | **${boostedSafetyModuleAPR.toFixed(2)}%** |\n`;
@@ -101,7 +101,7 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
     } else if (networkId === '8453') {
       const stkWellTotalSupply = parseFloat(marketData.baseStkWELLTotalSupply) / 10**18;
       if (stkWellTotalSupply > 0) {
-        const rewardsPerSecond = parseFloat(networkMarketData.wellPerEpochSafetyModule) / mainConfig.secondsPerEpoch;
+        const rewardsPerSecond = parseFloat(networkMarketData.wellPerEpochSafetyModule) / marketData.totalSeconds;
         const annualRewards = rewardsPerSecond * 31536000; // seconds in a year
         const safetyModuleAPR = (annualRewards / stkWellTotalSupply) * 100;
         markdown += `| Safety Module APR (Base) | ${safetyModuleAPR.toFixed(2)}% |\n`;
@@ -110,7 +110,7 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
         if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
           const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 10**18;
           const baseSafetyModuleRewards = parseFloat(networkMarketData.wellPerEpochSafetyModule);
-          const epochsPerYear = 365 / 28;
+          const epochsPerYear = 31536000 / marketData.totalSeconds;
           const targetAPY = 0.10; // 10% max APY cap
 
           // Calculate capped distribution
@@ -121,7 +121,7 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
           const remainingWellHolder = wellBalance - cappedWellHolderBalance;
 
           // Calculate capped APR
-          const cappedRewardsPerSecond = totalCappedRewards / mainConfig.secondsPerEpoch;
+          const cappedRewardsPerSecond = totalCappedRewards / marketData.totalSeconds;
           const cappedAnnualRewards = cappedRewardsPerSecond * 31536000;
           const cappedSafetyModuleAPR = (cappedAnnualRewards / stkWellTotalSupply) * 100;
 
@@ -134,7 +134,7 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
       const stkWellTotalSupply = parseFloat(marketData.optimismStkWELLTotalSupply) / 10**18;
       if (stkWellTotalSupply > 0) {
         const safetyModuleRewards = parseFloat(networkMarketData.wellPerEpochSafetyModule);
-        const rewardsPerSecond = safetyModuleRewards / mainConfig.secondsPerEpoch;
+        const rewardsPerSecond = safetyModuleRewards / marketData.totalSeconds;
         const annualRewards = rewardsPerSecond * 31536000;
         const safetyModuleAPR = (annualRewards / stkWellTotalSupply) * 100;
         markdown += `| Safety Module APR (Base) | ${safetyModuleAPR.toFixed(2)}% |\n`;
@@ -142,14 +142,14 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
         // Calculate capped APY (10% cap) if wellHolderBalance exists and is > 0
         if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
           const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 10**18;
-          const epochsPerYear = 365 / 28;
+          const epochsPerYear = 31536000 / marketData.totalSeconds;
           const targetAPY = 0.10;
           const maxRewardsPerEpoch = (targetAPY * stkWellTotalSupply) / epochsPerYear;
           const maxWellHolderContribution = Math.max(0, maxRewardsPerEpoch - safetyModuleRewards);
           const cappedWellHolderBalance = Math.min(wellBalance, maxWellHolderContribution);
           const remainingWellHolder = wellBalance - cappedWellHolderBalance;
 
-          const cappedRewardsPerSecond = (safetyModuleRewards + cappedWellHolderBalance) / mainConfig.secondsPerEpoch;
+          const cappedRewardsPerSecond = (safetyModuleRewards + cappedWellHolderBalance) / marketData.totalSeconds;
           const cappedAnnualRewards = cappedRewardsPerSecond * 31536000;
           const cappedSafetyModuleAPR = (cappedAnnualRewards / stkWellTotalSupply) * 100;
 
@@ -189,7 +189,7 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
       if (networkId === '8453') {
         const stkWellTotalSupply = parseFloat(marketData.baseStkWELLTotalSupply) / 10**18;
         const baseSafetyModuleRewards = parseFloat(networkMarketData.wellPerEpochSafetyModule);
-        const epochsPerYear = 365 / 28;
+        const epochsPerYear = 31536000 / marketData.totalSeconds;
         const targetAPY = 0.10;
         const maxRewardsPerEpoch = (targetAPY * stkWellTotalSupply) / epochsPerYear;
         const maxWellHolderContribution = Math.max(0, maxRewardsPerEpoch - baseSafetyModuleRewards);
@@ -217,7 +217,7 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
       if (networkId === '8453') {
         const stkWellTotalSupply = parseFloat(marketData.baseStkWELLTotalSupply) / 10**18;
         const baseSafetyModuleRewards = parseFloat(networkMarketData.wellPerEpochSafetyModule);
-        const epochsPerYear = 365 / 28;
+        const epochsPerYear = 31536000 / marketData.totalSeconds;
         const targetAPY = 0.10;
         const maxRewardsPerEpoch = (targetAPY * stkWellTotalSupply) / epochsPerYear;
         const maxWellHolderContribution = Math.max(0, maxRewardsPerEpoch - baseSafetyModuleRewards);
@@ -240,7 +240,7 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
       if (networkId === '8453') {
         const stkWellTotalSupply = parseFloat(marketData.baseStkWELLTotalSupply) / 10**18;
         const baseSafetyModuleRewards = parseFloat(networkMarketData.wellPerEpochSafetyModule);
-        const epochsPerYear = 365 / 28;
+        const epochsPerYear = 31536000 / marketData.totalSeconds;
         const targetAPY = 0.10;
         const maxRewardsPerEpoch = (targetAPY * stkWellTotalSupply) / epochsPerYear;
         const maxWellHolderContribution = Math.max(0, maxRewardsPerEpoch - baseSafetyModuleRewards);
@@ -279,7 +279,7 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
         if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
           const stkWellTotalSupply = parseFloat(marketData.baseStkWELLTotalSupply) / 1e18;
           const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 1e18;
-          const epochsPerYear = 365 / 28;
+          const epochsPerYear = 31536000 / marketData.totalSeconds;
           const targetAPY = 0.10;
           const maxRewardsPerEpoch = (targetAPY * stkWellTotalSupply) / epochsPerYear;
           const maxWellHolderContribution = Math.max(0, maxRewardsPerEpoch - safetyModuleRewards);
@@ -314,7 +314,7 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
           if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
             const stkWellTotalSupply = parseFloat(marketData.baseStkWELLTotalSupply) / 1e18;
             const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 1e18;
-            const epochsPerYear = 365 / 28;
+            const epochsPerYear = 31536000 / marketData.totalSeconds;
             const targetAPY = 0.10;
             const maxRewardsPerEpoch = (targetAPY * stkWellTotalSupply) / epochsPerYear;
             const maxWellHolderContribution = Math.max(0, maxRewardsPerEpoch - safetyModuleRewards);

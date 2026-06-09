@@ -353,7 +353,7 @@ export async function returnJson(marketData: any, network: string) {
             })(),
             campaignData: merkleCampaignDatas.stkWELL,
             campaignType: TOKEN_HOLDING_CAMPAIGN,
-            duration: mainConfig.secondsPerEpoch,
+            duration: marketData.totalSeconds,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
           },
@@ -364,7 +364,7 @@ export async function returnJson(marketData: any, network: string) {
               .toFixed(0)),
             campaignData: merkleCampaignDatas.USDC,
             campaignType: MORPHO_VAULT_CAMPAIGN,
-            duration: mainConfig.secondsPerEpoch,
+            duration: marketData.totalSeconds,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
           },
@@ -375,7 +375,7 @@ export async function returnJson(marketData: any, network: string) {
               .toFixed(0)),
             campaignData: merkleCampaignDatas.WETH,
             campaignType: MORPHO_VAULT_CAMPAIGN,
-            duration: mainConfig.secondsPerEpoch,
+            duration: marketData.totalSeconds,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
           },
@@ -386,7 +386,7 @@ export async function returnJson(marketData: any, network: string) {
               .toFixed(0)),
             campaignData: merkleCampaignDatas.EURC,
             campaignType: MORPHO_VAULT_CAMPAIGN,
-            duration: mainConfig.secondsPerEpoch,
+            duration: marketData.totalSeconds,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
           },
@@ -397,7 +397,7 @@ export async function returnJson(marketData: any, network: string) {
               .toFixed(0)),
             campaignData: merkleCampaignDatas.cbBTC,
             campaignType: MORPHO_VAULT_CAMPAIGN,
-            duration: mainConfig.secondsPerEpoch,
+            duration: marketData.totalSeconds,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
           },
@@ -545,7 +545,7 @@ export async function returnJson(marketData: any, network: string) {
         multiRewarder: [
           {
             distributor: "TEMPORAL_GOVERNOR",
-            duration: mainConfig.secondsPerEpoch,
+            duration: marketData.totalSeconds,
             reward: Number(new BigNumber(marketData.optimism.optimismUSDCVaultWellRewardAmount)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
