@@ -42,8 +42,9 @@ export function validateSplits(config: typeof mainConfig): string | null {
 	];
 
 	for (const { name, sum } of networks) {
-		if (Math.abs(sum - 1.0) > 0.0001) {
-			return `${name} splits sum to ${(sum * 100).toFixed(2)}%, must be 100%`;
+		// A network's splits must sum to 100% (active) or 0% (fully wound down, e.g. Moonbeam).
+		if (Math.abs(sum - 1.0) > 0.0001 && Math.abs(sum) > 0.0001) {
+			return `${name} splits sum to ${(sum * 100).toFixed(2)}%, must be 100% (active) or 0% (disabled)`;
 		}
 	}
 	return null;
@@ -61,18 +62,16 @@ export const mainConfig = {
 	// (15th->15th UTC, 28-31 days) from getEpochWindow(); this default is a fallback only.
 	secondsPerEpoch: 60 * 60 * 24 * 7 * 4,
 	moonbeam: {
-		// MOONBEAM WIND-DOWN: Moonbeam incentives are fully zeroed. The actual switch is the
-		// per-market `enabled: false` flags in marketConfigs[1284] below — with every market
-		// disabled, moonbeamTotalMarketPercentage resolves to 0, so no WELL is allocated,
-		// bridged, or transferred to Moonbeam regardless of the split values here. getMarketData
-		// still emits setRewardSpeed=0 / stkWellEmissionsPerSecond=0 wind-down actions.
-		// To RE-ENABLE: flip the marketConfigs[1284] markets back to `enabled: true` and set the
-		// intended split below (these values are currently inert; they only sum to 1.0 to satisfy
-		// validateSplits).
+		// MOONBEAM WIND-DOWN: Moonbeam incentives are fully zeroed. All splits are 0 (so the
+		// network sum is 0, which validateSplits treats as a disabled network), and every
+		// marketConfigs[1284] market has `enabled: false`, driving moonbeamTotalMarketPercentage
+		// to 0. getMarketData still emits setRewardSpeed=0 / stkWellEmissionsPerSecond=0 wind-down
+		// actions. To RE-ENABLE: flip the marketConfigs[1284] markets back to `enabled: true` and
+		// set the intended split below so it sums to 1.0.
 		nativePerEpoch: 0, // GLMR grant fully spent, no more GLMR rewards
-		markets: 0.5,
-		safetyModule: 0.5,
-		dex: 0, // StellaSwap/dex rewards discontinued on Moonbeam
+		markets: 0,
+		safetyModule: 0,
+		dex: 0,
 	},
 	base: {
 		nativePerEpoch: 0,
