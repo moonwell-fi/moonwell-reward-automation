@@ -61,6 +61,14 @@ export const mainConfig = {
 	// (15th->15th UTC, 28-31 days) from getEpochWindow(); this default is a fallback only.
 	secondsPerEpoch: 60 * 60 * 24 * 7 * 4,
 	moonbeam: {
+		// MOONBEAM WIND-DOWN: Moonbeam incentives are fully zeroed. The actual switch is the
+		// per-market `enabled: false` flags in marketConfigs[1284] below — with every market
+		// disabled, moonbeamTotalMarketPercentage resolves to 0, so no WELL is allocated,
+		// bridged, or transferred to Moonbeam regardless of the split values here. getMarketData
+		// still emits setRewardSpeed=0 / stkWellEmissionsPerSecond=0 wind-down actions.
+		// To RE-ENABLE: flip the marketConfigs[1284] markets back to `enabled: true` and set the
+		// intended split below (these values are currently inert; they only sum to 1.0 to satisfy
+		// validateSplits).
 		nativePerEpoch: 0, // GLMR grant fully spent, no more GLMR rewards
 		markets: 0.5,
 		safetyModule: 0.5,
