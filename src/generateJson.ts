@@ -113,6 +113,34 @@ export async function returnJson(marketData: any, network: string) {
     const hasReservesEnabled = marketData["1284"].some((market: MarketType) => market.reservesEnabled);
 
     const result: any = {
+      1: {
+        // Fund the Ethereum governor with xWELL for the Moonbeam bridge, then bridge to Moonbeam.
+        transferFrom: [
+          {
+            amount: Number(BigNumber(parseFloat(marketData.moonbeam.wellPerEpoch).toFixed(18))
+              .shiftedBy(18)
+              .decimalPlaces(0, BigNumber.ROUND_CEIL)
+              .plus(1e17)
+              .toFixed(0)),
+            from: "FOUNDATION_MULTISIG",
+            to: "MULTICHAIN_GOVERNOR_V2_PROXY",
+            token: "xWELL_PROXY",
+          },
+        ].filter((transfer) => transfer.amount > 0),
+        bridgeToRecipient: [
+          {
+            // On-chain Wormhole quoter resolves bridge cost at execution time (no nativeValue).
+            amount: Number(BigNumber(parseFloat(marketData.moonbeam.wellPerEpoch).toFixed(18))
+              .minus(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18))
+              .shiftedBy(18)
+              .decimalPlaces(0, BigNumber.ROUND_CEIL)
+              .plus(1e16)
+              .toFixed(0)),
+            network: 1284,
+            target: "TEMPORAL_GOVERNOR",
+          },
+        ].filter((bridge) => bridge.amount > 0),
+      },
       1284: {
         addRewardInfo: {
           amount: Number(BigNumber(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18))
@@ -153,31 +181,31 @@ export async function returnJson(marketData: any, network: string) {
           .shiftedBy(18)
           .integerValue().toFixed(0)),
         transferFrom: [
-          { // Transfer StellaSwap DEX incentives from F-GLMR-LM multisig to the governor
+          { // StellaSwap DEX incentives: from the bridged funds at the Temporal Governor to the governor
             amount: Number(BigNumber(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18))
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .plus(1e16)
               .toFixed(0)),
-            from: "MGLIMMER_MULTISIG",
+            from: "TEMPORAL_GOVERNOR",
             to: "MULTICHAIN_GOVERNOR_PROXY",
             token: "GOVTOKEN",
           },
-          { // Transfer market rewards from F-GLMR-LM multisig to the Unitroller proxy
+          { // Market rewards: from the Temporal Governor to the Unitroller proxy
             amount: Number(BigNumber(marketData.moonbeam.wellPerEpochMarkets)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .toFixed(0)),
-            from: "MGLIMMER_MULTISIG",
+            from: "TEMPORAL_GOVERNOR",
             to: "UNITROLLER",
             token: "GOVTOKEN",
           },
-          { // Transfer Safety Module rewards from F-GLMR-LM multisig to the Ecosystem Reserve Proxy
+          { // Safety Module rewards: from the Temporal Governor to the Ecosystem Reserve Proxy
             amount: Number(BigNumber(marketData.moonbeam.wellPerEpochSafetyModule)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .toFixed(0)),
-            from: "MGLIMMER_MULTISIG",
+            from: "TEMPORAL_GOVERNOR",
             to: "ECOSYSTEM_RESERVE_PROXY",
             token: "GOVTOKEN",
           },
@@ -212,44 +240,33 @@ export async function returnJson(marketData: any, network: string) {
     const hasReservesEnabled = marketData["8453"].some((market: MarketType) => market.reservesEnabled);
 
     const result: any = {
-      1284: {
+      1: {
         bridgeToRecipient: [
           {
-            // Send all Base incentives (markets + safety module + vaults - dex) to Base Temporal Governor
-            // Add extra padding (1e17) to cover rounding differences in 6 merkle campaigns + MRD transfer
+            // Send all Base incentives (markets + safety module + vaults - dex) to Base Temporal Governor.
+            // On-chain Wormhole quoter resolves bridge cost at execution time (no nativeValue).
+            // Extra padding (1e17) covers rounding across 6 merkle campaigns + the MRD transfer.
             amount: Number(new BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
               .minus(parseFloat(marketData.base.wellPerEpochDex).toFixed(18))
               .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
-              .plus(1e17) // increased padding for merkle campaign rounding
+              .decimalPlaces(0, BigNumber.ROUND_CEIL)
+              .plus(1e17)
               .toFixed(0)),
-            nativeValue: Number(new BigNumber(marketData.bridgeCost * 5).toFixed(0)), // pad bridgeCost by 5x in case of price fluctuations
             network: 8453,
             target: "TEMPORAL_GOVERNOR",
           },
-          /* commented out until we exhaust the funds in F-AERO on Base
-          { // Send Base DEX incentives to DEX Relayer
-            amount: Number(new BigNumber(marketData.base.wellPerEpochDex)
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
-              .plus(1e16)
-              .toFixed(0)),
-              nativeValue: Number(new BigNumber(marketData.bridgeCost * 5).toFixed(0)), // pad bridgeCost by 5x in case of price fluctuations
-            network: 8453,
-            target: "DEX_RELAYER"
-          }, */
         ],
         transferFrom: [
           {
-            // Transfer all Base incentives (markets + safety module + vaults) from F-GLMR-LM to Multichain Governor for bridging
+            // Fund the Ethereum governor with xWELL for the Base bridge.
             amount: Number(new BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
               .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
+              .decimalPlaces(0, BigNumber.ROUND_CEIL)
               .plus(1e17)
               .toFixed(0)),
-            from: "MGLIMMER_MULTISIG",
-            to: "MULTICHAIN_GOVERNOR_PROXY",
-            token: "GOVTOKEN",
+            from: "FOUNDATION_MULTISIG",
+            to: "MULTICHAIN_GOVERNOR_V2_PROXY",
+            token: "xWELL_PROXY",
           },
         ].filter((transfer) => transfer.amount > 0),
       },
@@ -413,40 +430,39 @@ export async function returnJson(marketData: any, network: string) {
     const hasReservesEnabled = marketData["10"].some((market: MarketType) => market.reservesEnabled);
 
     const result: any = {
-      1284: {
+      1: {
         bridgeToRecipient: [
-          { // Send total well per epoch - the DEX incentives to Optimism Temporal Governor
+          { // Send total WELL per epoch minus DEX incentives to the Optimism Temporal Governor.
+            // On-chain Wormhole quoter resolves bridge cost at execution time (no nativeValue).
             amount: Number(BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18))
               .minus(parseFloat(marketData.optimism.wellPerEpochDex).toFixed(18))
               .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
+              .decimalPlaces(0, BigNumber.ROUND_CEIL)
               .plus(1e16)
               .toFixed(0)),
-              nativeValue: Number(BigNumber(marketData.bridgeCost * 5).toFixed(0)), // pad bridgeCost by 5x in case of price fluctuations
             network: 10,
             target: "TEMPORAL_GOVERNOR"
           },
-          ...(parseFloat(marketData.optimism.wellPerEpochDex) > 0 ? [{ // Send Optimism DEX incentives to DEX Relayer
+          ...(parseFloat(marketData.optimism.wellPerEpochDex) > 0 ? [{ // Optimism DEX incentives to DEX Relayer
             amount: Number(BigNumber(marketData.optimism.wellPerEpochDex)
               .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
+              .decimalPlaces(0, BigNumber.ROUND_CEIL)
               .plus(1e16)
               .toFixed(0)),
-              nativeValue: Number(BigNumber(marketData.bridgeCost * 5).toFixed(0)), // pad bridgeCost by 5x in case of price fluctuations
             network: 10,
             target: "DEX_RELAYER"
           }] : []),
         ],
         transferFrom: [
-          { // Transfer all Optimism incentives to the Multichain Governor for bridging
+          { // Fund the Ethereum governor with xWELL for the Optimism bridge.
             amount: Number(BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18))
               .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
+              .decimalPlaces(0, BigNumber.ROUND_CEIL)
               .plus(1e17)
               .toFixed(0)),
-            from: "MGLIMMER_MULTISIG",
-            to: "MULTICHAIN_GOVERNOR_PROXY",
-            token: "GOVTOKEN",
+            from: "FOUNDATION_MULTISIG",
+            to: "MULTICHAIN_GOVERNOR_V2_PROXY",
+            token: "xWELL_PROXY",
           },
         ].filter(transfer => transfer.amount > 0),
       },

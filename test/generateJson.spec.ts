@@ -224,4 +224,61 @@ describe('generateJson', () => {
       expect(amt28).toBeGreaterThan(0);
     });
   });
+
+  describe('Ethereum bridge source', () => {
+    const baseMarketData = () => ({
+      "1284": [], "8453": [], "10": [],
+      moonbeam: {
+        wellPerEpoch: "30000",
+        wellPerEpochDex: "1000",
+        wellPerEpochMarkets: "20000",
+        wellPerEpochSafetyModule: "9000",
+      },
+      base: {
+        wellPerEpoch: "50000",
+        wellPerEpochDex: "0",
+        wellPerEpochMarkets: "40000",
+        wellPerEpochSafetyModule: "5000",
+        wellHolderBalance: "0",
+        vaultAmounts: { USDC: "0", WETH: "0", EURC: "0", cbBTC: "0", meUSDC: "0" },
+      },
+      optimism: {
+        wellPerEpoch: "20000",
+        wellPerEpochDex: "0",
+        wellPerEpochMarkets: "18000",
+        wellPerEpochSafetyModule: "2000",
+        wellHolderBalance: "0",
+        optimismUSDCVaultWellRewardAmount: 0,
+      },
+      baseStkWELLTotalSupply: "0",
+      optimismStkWELLTotalSupply: "0",
+      epochStartTimestamp: 1739577600,
+      epochEndTimestamp: 1739577600 + 28 * 86400,
+      totalSeconds: 28 * 86400,
+    });
+
+    it('Base emits an Ethereum (1) source block from FOUNDATION_MULTISIG with no nativeValue', async () => {
+      const r = await returnJson(baseMarketData(), "Base");
+      expect(r[1]).toBeDefined();
+      expect(r[1].transferFrom[0].from).toBe("FOUNDATION_MULTISIG");
+      expect(r[1].transferFrom[0].to).toBe("MULTICHAIN_GOVERNOR_V2_PROXY");
+      expect(r[1].transferFrom[0].token).toBe("xWELL_PROXY");
+      expect(r[1].bridgeToRecipient[0].network).toBe(8453);
+      expect(r[1].bridgeToRecipient[0].target).toBe("TEMPORAL_GOVERNOR");
+      expect(r[1].bridgeToRecipient[0]).not.toHaveProperty("nativeValue");
+      // legacy Moonbeam source key must NOT carry the bridge anymore
+      expect(r[1284]).toBeUndefined();
+    });
+
+    it('Moonbeam becomes a destination funded from TEMPORAL_GOVERNOR and bridged from Ethereum', async () => {
+      const r = await returnJson(baseMarketData(), "Moonbeam");
+      // Ethereum source carries the bridge to Moonbeam
+      expect(r[1].bridgeToRecipient[0].network).toBe(1284);
+      expect(r[1].transferFrom[0].from).toBe("FOUNDATION_MULTISIG");
+      // Moonbeam destination block funds from TEMPORAL_GOVERNOR, not MGLIMMER
+      const froms = r[1284].transferFrom.map((t: any) => t.from);
+      expect(froms.every((f: string) => f === "TEMPORAL_GOVERNOR")).toBe(true);
+      expect(froms).not.toContain("MGLIMMER_MULTISIG");
+    });
+  });
 });
