@@ -13292,6 +13292,15 @@ export const moonbeamStkWELL = '0x8568a675384d761f36ec269d695d6ce4423cfab1' // M
 
 export const optimismUSDCRewarder = '0x2EED2b7d44E2cF64a41B6b3f78bE2Fdc56223d2B' // Optimism USDC vault rewarder contract
 
+// --- Ethereum (chainId 1) governance hub: bridge source ---
+// xWELL is held by FOUNDATION_MULTISIG on Ethereum and bridged out via Wormhole.
+// These names must exist in moonwell-contracts-v2 chains/1.json so the
+// RewardsDistribution template can resolve them.
+export const ethereumChainId = 1;
+export const ethereumGovernor = "MULTICHAIN_GOVERNOR_V2_PROXY"; // 0x8769B70ac7c93AF0e75de0D69877709B66d75838
+export const ethereumFoundationMultisig = "FOUNDATION_MULTISIG"; // address added to chains/1.json separately
+export const ethereumXWell = "xWELL_PROXY"; // 0xA88594D404727625A9437C3f886C7643872296AE
+
 export const marketConfigs = {
   10: [
     {
