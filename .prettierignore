@@ -4,3 +4,10 @@ src/generateJson.ts
 # config.ts is mostly large contract ABIs; prettier reformatting creates huge
 # unreviewable diffs. Keep it out of prettier to preserve clean diffs.
 src/config.ts
+
+# The repo's existing files predate this .prettierrc, so running prettier on them
+# rewrites the whole file and buries real changes. Keep already-committed source
+# out of prettier; new files can still be formatted.
+src/markets.ts
+src/generateMarkdown.ts
+test/generateJson.spec.ts
