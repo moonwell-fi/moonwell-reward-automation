@@ -61,9 +61,9 @@ export const mainConfig = {
 	secondsPerEpoch: 60 * 60 * 24 * 7 * 4, // 4 weeks
 	moonbeam: {
 		nativePerEpoch: 0, // GLMR grant fully spent, no more GLMR rewards
-		markets: 0.48,
-		safetyModule: 0.47,
-		dex: 0.05,
+		markets: 0.5,
+		safetyModule: 0.5,
+		dex: 0, // StellaSwap/dex rewards discontinued on Moonbeam
 	},
 	base: {
 		nativePerEpoch: 0,
