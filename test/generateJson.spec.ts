@@ -295,4 +295,29 @@ describe('generateJson', () => {
       expect(r[1].bridgeToRecipient).toEqual([]);
     });
   });
+
+  describe('withdrawWell safety margin', () => {
+    it('emits no withdrawWell entry when the capped top-up is below the 1e15 margin (Optimism)', async () => {
+      // Safety-module rewards sit just below the 10% APY cap, so the wellHolder
+      // contribution is a tiny positive value (< 0.001 WELL). After the 1e15 margin
+      // the net is negative, so withdrawWell must be empty (not a negative-dust entry).
+      const md = {
+        "1284": [], "8453": [], "10": [],
+        optimism: {
+          wellPerEpoch: "8",
+          wellPerEpochDex: "0",
+          wellPerEpochMarkets: "0.3",
+          wellPerEpochSafetyModule: "7.671",
+          wellHolderBalance: (1n * 10n ** 18n).toString(), // 1 WELL available
+          optimismUSDCVaultWellRewardAmount: 0,
+        },
+        optimismStkWELLTotalSupply: (1000n * 10n ** 18n).toString(),
+        epochStartTimestamp: 1739577600,
+        epochEndTimestamp: 1739577600 + 28 * 86400,
+        totalSeconds: 28 * 86400,
+      };
+      const r = await returnJson(md, "Optimism");
+      expect(r[10].withdrawWell).toEqual([]);
+    });
+  });
 });

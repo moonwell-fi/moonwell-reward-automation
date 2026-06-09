@@ -322,16 +322,16 @@ export async function returnJson(marketData: any, network: string) {
 
                 if (cappedBalance <= 0) return [];
 
-                return [
-                  {
-                    amount: Number(new BigNumber(cappedBalance)
-                      .shiftedBy(18)
-                      .decimalPlaces(0, BigNumber.ROUND_FLOOR)
-                      .minus(1e15)
-                      .toFixed(0)),
-                    to: "TEMPORAL_GOVERNOR",
-                  },
-                ];
+                // Subtract a 1e15 (0.001 WELL) safety margin; if the capped top-up is
+                // smaller than that margin the net is <= 0, so emit nothing (avoids a
+                // negative-dust withdrawWell when safety-module rewards already hit the cap).
+                const amount = Number(new BigNumber(cappedBalance)
+                  .shiftedBy(18)
+                  .decimalPlaces(0, BigNumber.ROUND_FLOOR)
+                  .minus(1e15)
+                  .toFixed(0));
+
+                return amount > 0 ? [{ amount, to: "TEMPORAL_GOVERNOR" }] : [];
               })(),
         merkleCampaigns: [
           {
@@ -514,16 +514,14 @@ export async function returnJson(marketData: any, network: string) {
             marketData.totalSeconds
           );
           if (cappedBalance <= 0) return [];
-          return [
-            {
-              amount: Number(new BigNumber(cappedBalance)
-                .shiftedBy(18)
-                .decimalPlaces(0, BigNumber.ROUND_FLOOR)
-                .minus(1e15)
-                .toFixed(0)),
-              to: "ECOSYSTEM_RESERVE_PROXY"
-            }
-          ];
+          // Subtract a 1e15 (0.001 WELL) safety margin; if the capped top-up is smaller
+          // than that margin the net is <= 0, so emit nothing (avoids negative-dust withdrawWell).
+          const amount = Number(new BigNumber(cappedBalance)
+            .shiftedBy(18)
+            .decimalPlaces(0, BigNumber.ROUND_FLOOR)
+            .minus(1e15)
+            .toFixed(0));
+          return amount > 0 ? [{ amount, to: "ECOSYSTEM_RESERVE_PROXY" }] : [];
         })(),
         multiRewarder: [
           {
