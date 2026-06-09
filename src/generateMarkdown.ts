@@ -332,7 +332,7 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
 		// Add Merkle Campaigns section for Base network
 		if (networkId === '8453') {
 			markdown += `\n### Merkle Campaigns\n\n`;
-			markdown += `| Campaign | WELL Rewards (28 days) |\n`;
+			markdown += `| Campaign | WELL Rewards (${Math.round(marketData.totalSeconds / 86400)} days) |\n`;
 			markdown += `| -------- | ---------------------- |\n`;
 
 			// stkWELL Merkle Campaign (Safety Module + Capped Auctions)

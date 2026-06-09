@@ -57,8 +57,9 @@ export const mainConfig = {
     .div(13) // 13 epochs per year (4 weeks per epoch)
     .integerValue(BigNumber.ROUND_DOWN)
     .toNumber(), */
-	firstEpochTimestamp: 1757683818,
-	secondsPerEpoch: 60 * 60 * 24 * 7 * 4, // 4 weeks
+	// Overwritten per-request in getMarketData() with the calendar-month epoch length
+	// (15th->15th UTC, 28-31 days) from getEpochWindow(); this default is a fallback only.
+	secondsPerEpoch: 60 * 60 * 24 * 7 * 4,
 	moonbeam: {
 		nativePerEpoch: 0, // GLMR grant fully spent, no more GLMR rewards
 		markets: 0.5,

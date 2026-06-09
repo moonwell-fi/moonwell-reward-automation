@@ -2,6 +2,8 @@
  * Epoch configuration types for the Slack bot
  */
 
+import { fifteenthOfMonthUTC } from '../epochs';
+
 // Chain IDs
 export type ChainId = '1284' | '8453' | '10';
 
@@ -86,11 +88,6 @@ export interface MarketInfo {
 	decimals: number;
 }
 
-/** 15th at 00:00:00 UTC of a given year/month (month 0-indexed), in unix seconds. */
-function fifteenthUTC(year: number, month: number): number {
-	return Math.floor(Date.UTC(year, month, 15, 0, 0, 0) / 1000);
-}
-
 /**
  * Epoch number from a timestamp. Epoch 1 starts on FIRST_EPOCH_YEAR/MONTH the 15th.
  * Counts whole month-epochs elapsed since the anchor.
@@ -100,7 +97,7 @@ export function getEpochNumber(timestamp: number = Date.now() / 1000): number {
 	let year = d.getUTCFullYear();
 	let month = d.getUTCMonth();
 	// Before the 15th, we are still in the previous month's epoch.
-	if (timestamp < fifteenthUTC(year, month)) {
+	if (timestamp < fifteenthOfMonthUTC(year, month)) {
 		month -= 1;
 		if (month < 0) {
 			month = 11;
@@ -119,7 +116,7 @@ export function getEpochStartTimestamp(epochNumber: number): number {
 	const totalMonths = FIRST_EPOCH_MONTH + monthsFromAnchor;
 	const year = FIRST_EPOCH_YEAR + Math.floor(totalMonths / 12);
 	const month = ((totalMonths % 12) + 12) % 12;
-	return fifteenthUTC(year, month);
+	return fifteenthOfMonthUTC(year, month);
 }
 
 /**

@@ -8,7 +8,7 @@ export interface EpochWindow {
 }
 
 /** Unix seconds for the 15th at 00:00:00 UTC of the given month (month: 0–11). */
-function fifteenthOfMonthUTC(year: number, month: number): number {
+export function fifteenthOfMonthUTC(year: number, month: number): number {
 	return Math.floor(Date.UTC(year, month, 15, 0, 0, 0) / 1000);
 }
 
