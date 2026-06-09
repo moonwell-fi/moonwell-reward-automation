@@ -292,5 +292,19 @@ describe('generateJson', () => {
 			expect(froms.every((f: string) => f === 'TEMPORAL_GOVERNOR')).toBe(true);
 			expect(froms).not.toContain('MGLIMMER_MULTISIG');
 		});
+
+		it('emits no Moonbeam source actions (no dust) when all Moonbeam incentives are zero', async () => {
+			const md = baseMarketData();
+			md.moonbeam = {
+				wellPerEpoch: '0',
+				wellPerEpochDex: '0',
+				wellPerEpochMarkets: '0',
+				wellPerEpochSafetyModule: '0',
+			};
+			const r = await returnJson(md, 'Moonbeam');
+			// Zeroed network must not fund or bridge any WELL via the unconditional padding.
+			expect(r[1].transferFrom).toEqual([]);
+			expect(r[1].bridgeToRecipient).toEqual([]);
+		});
 	});
 });

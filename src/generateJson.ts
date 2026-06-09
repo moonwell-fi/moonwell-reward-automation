@@ -26,6 +26,15 @@ function calculateCappedWellHolderBalance(
   return { cappedBalance, remainingBalance };
 }
 
+// Convert a WELL amount (decimal value/string) to integer base units (18 decimals),
+// rounding up and adding a rounding buffer. Returns 0 for a non-positive amount so a
+// zeroed network emits no transfer/bridge (the buffer must never turn a 0 base into dust).
+function toBaseUnits(wellAmount: BigNumber.Value, buffer: number): number {
+  const amount = new BigNumber(wellAmount);
+  if (amount.isLessThanOrEqualTo(0)) return 0;
+  return Number(amount.shiftedBy(18).decimalPlaces(0, BigNumber.ROUND_CEIL).plus(buffer).toFixed(0));
+}
+
 // Build the Ethereum (chain 1) bridge-source block: fund the governor with xWELL from
 // the foundation multisig, then bridge to each destination. Centralizes the source-block
 // shape (from/to/token + zero-amount filtering) so every network branch stays consistent.
@@ -137,28 +146,20 @@ export async function returnJson(marketData: any, network: string) {
 
     const result: any = {
       // Moonbeam no longer distributes StellaSwap/dex rewards, so fund + bridge only
-      // markets + safety module (wellPerEpoch - dex).
-      1: buildEthereumSource(
-        Number(BigNumber(parseFloat(marketData.moonbeam.wellPerEpoch).toFixed(18))
-          .minus(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18))
-          .shiftedBy(18)
-          .decimalPlaces(0, BigNumber.ROUND_CEIL)
-          .plus(1e17)
-          .toFixed(0)),
-        [
+      // markets + safety module (wellPerEpoch - dex). When all Moonbeam markets are
+      // disabled this is 0, so toBaseUnits emits no source actions (no dust).
+      1: (() => {
+        const moonbeamBridgeWell = new BigNumber(parseFloat(marketData.moonbeam.wellPerEpoch).toFixed(18))
+          .minus(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18));
+        return buildEthereumSource(toBaseUnits(moonbeamBridgeWell, 1e17), [
           {
             // On-chain Wormhole quoter resolves bridge cost at execution time (no nativeValue).
-            amount: Number(BigNumber(parseFloat(marketData.moonbeam.wellPerEpoch).toFixed(18))
-              .minus(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18))
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL)
-              .plus(1e16)
-              .toFixed(0)),
+            amount: toBaseUnits(moonbeamBridgeWell, 1e16),
             network: 1284,
             target: "TEMPORAL_GOVERNOR",
           },
-        ],
-      ),
+        ]);
+      })(),
       1284: {
         ...(hasReservesEnabled ? {
           initSale: {
@@ -235,22 +236,17 @@ export async function returnJson(marketData: any, network: string) {
     const result: any = {
       // Fund the Ethereum governor with xWELL for the Base bridge.
       1: buildEthereumSource(
-        Number(new BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
-          .shiftedBy(18)
-          .decimalPlaces(0, BigNumber.ROUND_CEIL)
-          .plus(1e17)
-          .toFixed(0)),
+        toBaseUnits(new BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18)), 1e17),
         [
           {
             // Send all Base incentives (markets + safety module + vaults - dex) to Base Temporal Governor.
             // On-chain Wormhole quoter resolves bridge cost at execution time (no nativeValue).
             // Extra padding (1e17) covers rounding across 6 merkle campaigns + the MRD transfer.
-            amount: Number(new BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
-              .minus(parseFloat(marketData.base.wellPerEpochDex).toFixed(18))
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL)
-              .plus(1e17)
-              .toFixed(0)),
+            amount: toBaseUnits(
+              new BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
+                .minus(parseFloat(marketData.base.wellPerEpochDex).toFixed(18)),
+              1e17,
+            ),
             network: 8453,
             target: "TEMPORAL_GOVERNOR",
           },
@@ -418,29 +414,20 @@ export async function returnJson(marketData: any, network: string) {
     const result: any = {
       // Fund the Ethereum governor with xWELL for the Optimism bridge.
       1: buildEthereumSource(
-        Number(BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18))
-          .shiftedBy(18)
-          .decimalPlaces(0, BigNumber.ROUND_CEIL)
-          .plus(1e17)
-          .toFixed(0)),
+        toBaseUnits(new BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18)), 1e17),
         [
           { // Send total WELL per epoch minus DEX incentives to the Optimism Temporal Governor.
             // On-chain Wormhole quoter resolves bridge cost at execution time (no nativeValue).
-            amount: Number(BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18))
-              .minus(parseFloat(marketData.optimism.wellPerEpochDex).toFixed(18))
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL)
-              .plus(1e16)
-              .toFixed(0)),
+            amount: toBaseUnits(
+              new BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18))
+                .minus(parseFloat(marketData.optimism.wellPerEpochDex).toFixed(18)),
+              1e16,
+            ),
             network: 10,
             target: "TEMPORAL_GOVERNOR"
           },
           ...(parseFloat(marketData.optimism.wellPerEpochDex) > 0 ? [{ // Optimism DEX incentives to DEX Relayer
-            amount: Number(BigNumber(marketData.optimism.wellPerEpochDex)
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL)
-              .plus(1e16)
-              .toFixed(0)),
+            amount: toBaseUnits(new BigNumber(marketData.optimism.wellPerEpochDex), 1e16),
             network: 10,
             target: "DEX_RELAYER"
           }] : []),

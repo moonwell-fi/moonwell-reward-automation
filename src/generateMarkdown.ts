@@ -194,11 +194,6 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
 			markdown += `| **Total WELL acquired in auctions (USD)** | **${formatUSD(wellUsdValue)}** |\n`;
 		}
 
-		if (networkDexInfo) {
-			markdown += `| | |\n`;
-			markdown += `| Total LP (${networkDexInfo?.symbol} on ${networkDexInfo?.dex}) | ${formatUSD(networkDexInfo?.tvl || 0)} |\n`;
-		}
-
 		const dexWell =
 			networkId === '10'
 				? networkMarketData?.wellPerEpochDex
@@ -208,8 +203,19 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
 						? mainConfig.base.dexRelayerAmount
 						: null;
 
-		markdown += `| | |\n`;
-		markdown += `| Total WELL to distribute DEX | ${Math.max(0, Number(dexWell || 0)).toLocaleString()} WELL |\n`;
+		const hasDexRewards = Number(dexWell || 0) > 0;
+
+		// Only show the DEX/LP rows when the network actually has DEX incentives
+		// (skips phantom rows for networks whose DEX program is wound down, e.g. Moonbeam).
+		if (networkDexInfo && hasDexRewards) {
+			markdown += `| | |\n`;
+			markdown += `| Total LP (${networkDexInfo?.symbol} on ${networkDexInfo?.dex}) | ${formatUSD(networkDexInfo?.tvl || 0)} |\n`;
+		}
+
+		if (hasDexRewards) {
+			markdown += `| | |\n`;
+			markdown += `| Total WELL to distribute DEX | ${Math.max(0, Number(dexWell || 0)).toLocaleString()} WELL |\n`;
+		}
 		markdown += `| Total WELL to distribute Safety Module | ${Math.max(0, Number(networkMarketData?.wellPerEpochSafetyModule || 0)).toLocaleString()} WELL |\n`;
 
 		// Add quantity of WELL from auctions if non-zero
