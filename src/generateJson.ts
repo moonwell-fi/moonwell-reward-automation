@@ -26,6 +26,29 @@ function calculateCappedWellHolderBalance(
   return { cappedBalance, remainingBalance };
 }
 
+// Build the Ethereum (chain 1) bridge-source block: fund the governor with xWELL from
+// the foundation multisig, then bridge to each destination. Centralizes the source-block
+// shape (from/to/token + zero-amount filtering) so every network branch stays consistent.
+// Each network branch is responsible only for computing its funding/bridge amounts.
+// Note: each network contributes its own slice; index.ts deep-merge concatenates them, so a
+// single-network request intentionally emits only that network's source actions.
+function buildEthereumSource(
+  fundingAmount: number,
+  bridges: { network: number; target: string; amount: number }[]
+) {
+  return {
+    transferFrom: [
+      {
+        amount: fundingAmount,
+        from: "FOUNDATION_MULTISIG",
+        to: "MULTICHAIN_GOVERNOR_V2_PROXY",
+        token: "xWELL_PROXY",
+      },
+    ].filter((transfer) => transfer.amount > 0),
+    bridgeToRecipient: bridges.filter((bridge) => bridge.amount > 0),
+  };
+}
+
 export async function returnJson(marketData: any, network: string) {
   const moonbeamSetRewardSpeeds = marketData["1284"]
     .filter((market: MarketType) => market.alias !== null)
@@ -113,24 +136,16 @@ export async function returnJson(marketData: any, network: string) {
     const hasReservesEnabled = marketData["1284"].some((market: MarketType) => market.reservesEnabled);
 
     const result: any = {
-      1: {
-        // Fund the Ethereum governor with xWELL for the Moonbeam bridge, then bridge to Moonbeam.
-        // Moonbeam no longer distributes StellaSwap/dex rewards, so only markets + safety
-        // module (wellPerEpoch - dex) are funded and bridged.
-        transferFrom: [
-          {
-            amount: Number(BigNumber(parseFloat(marketData.moonbeam.wellPerEpoch).toFixed(18))
-              .minus(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18))
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL)
-              .plus(1e17)
-              .toFixed(0)),
-            from: "FOUNDATION_MULTISIG",
-            to: "MULTICHAIN_GOVERNOR_V2_PROXY",
-            token: "xWELL_PROXY",
-          },
-        ].filter((transfer) => transfer.amount > 0),
-        bridgeToRecipient: [
+      // Moonbeam no longer distributes StellaSwap/dex rewards, so fund + bridge only
+      // markets + safety module (wellPerEpoch - dex).
+      1: buildEthereumSource(
+        Number(BigNumber(parseFloat(marketData.moonbeam.wellPerEpoch).toFixed(18))
+          .minus(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18))
+          .shiftedBy(18)
+          .decimalPlaces(0, BigNumber.ROUND_CEIL)
+          .plus(1e17)
+          .toFixed(0)),
+        [
           {
             // On-chain Wormhole quoter resolves bridge cost at execution time (no nativeValue).
             amount: Number(BigNumber(parseFloat(marketData.moonbeam.wellPerEpoch).toFixed(18))
@@ -142,8 +157,8 @@ export async function returnJson(marketData: any, network: string) {
             network: 1284,
             target: "TEMPORAL_GOVERNOR",
           },
-        ].filter((bridge) => bridge.amount > 0),
-      },
+        ],
+      ),
       1284: {
         ...(hasReservesEnabled ? {
           initSale: {
@@ -218,8 +233,14 @@ export async function returnJson(marketData: any, network: string) {
     const hasReservesEnabled = marketData["8453"].some((market: MarketType) => market.reservesEnabled);
 
     const result: any = {
-      1: {
-        bridgeToRecipient: [
+      // Fund the Ethereum governor with xWELL for the Base bridge.
+      1: buildEthereumSource(
+        Number(new BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
+          .shiftedBy(18)
+          .decimalPlaces(0, BigNumber.ROUND_CEIL)
+          .plus(1e17)
+          .toFixed(0)),
+        [
           {
             // Send all Base incentives (markets + safety module + vaults - dex) to Base Temporal Governor.
             // On-chain Wormhole quoter resolves bridge cost at execution time (no nativeValue).
@@ -234,20 +255,7 @@ export async function returnJson(marketData: any, network: string) {
             target: "TEMPORAL_GOVERNOR",
           },
         ],
-        transferFrom: [
-          {
-            // Fund the Ethereum governor with xWELL for the Base bridge.
-            amount: Number(new BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL)
-              .plus(1e17)
-              .toFixed(0)),
-            from: "FOUNDATION_MULTISIG",
-            to: "MULTICHAIN_GOVERNOR_V2_PROXY",
-            token: "xWELL_PROXY",
-          },
-        ].filter((transfer) => transfer.amount > 0),
-      },
+      ),
       8453: {
         ...(hasReservesEnabled
           ? {
@@ -408,8 +416,14 @@ export async function returnJson(marketData: any, network: string) {
     const hasReservesEnabled = marketData["10"].some((market: MarketType) => market.reservesEnabled);
 
     const result: any = {
-      1: {
-        bridgeToRecipient: [
+      // Fund the Ethereum governor with xWELL for the Optimism bridge.
+      1: buildEthereumSource(
+        Number(BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18))
+          .shiftedBy(18)
+          .decimalPlaces(0, BigNumber.ROUND_CEIL)
+          .plus(1e17)
+          .toFixed(0)),
+        [
           { // Send total WELL per epoch minus DEX incentives to the Optimism Temporal Governor.
             // On-chain Wormhole quoter resolves bridge cost at execution time (no nativeValue).
             amount: Number(BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18))
@@ -431,19 +445,7 @@ export async function returnJson(marketData: any, network: string) {
             target: "DEX_RELAYER"
           }] : []),
         ],
-        transferFrom: [
-          { // Fund the Ethereum governor with xWELL for the Optimism bridge.
-            amount: Number(BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18))
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL)
-              .plus(1e17)
-              .toFixed(0)),
-            from: "FOUNDATION_MULTISIG",
-            to: "MULTICHAIN_GOVERNOR_V2_PROXY",
-            token: "xWELL_PROXY",
-          },
-        ].filter(transfer => transfer.amount > 0),
-      },
+      ),
       10: {
         ...(hasReservesEnabled ? {
           initSale: {
