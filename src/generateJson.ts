@@ -140,6 +140,25 @@ export async function returnJson(marketData: any, network: string) {
     return [wellRewardSpeeds];
   });
 
+  const ethereumSetRewardSpeeds = (marketData["1"] ?? [])
+    .filter((market: MarketType) => market.alias !== null)
+    .flatMap((market: MarketType) => {
+    const wellRewardSpeeds = {
+      emissionToken: "xWELL_PROXY",
+      market: market.alias,
+      newBorrowSpeed: new BigNumber(market.newWellBorrowSpeed).isLessThanOrEqualTo(0) ? -1 :
+        new BigNumber(market.newWellBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? 1 : Number(new BigNumber(market.newWellBorrowSpeed)
+        .shiftedBy(18)
+        .integerValue().toFixed(0)),
+      newEndTime: marketData.epochEndTimestamp,
+      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isLessThanOrEqualTo(0) ? -1 :
+        new BigNumber(market.newWellSupplySpeed).isZero() ? 0 : Number(new BigNumber(market.newWellSupplySpeed)
+        .shiftedBy(18)
+        .integerValue().toFixed(0)),
+    };
+    return [wellRewardSpeeds];
+  });
+
   if (network === "Moonbeam") {
     // Check if any market has reservesEnabled=true
     const hasReservesEnabled = marketData["1284"].some((market: MarketType) => market.reservesEnabled);
@@ -537,6 +556,33 @@ export async function returnJson(marketData: any, network: string) {
           }
         ].filter(entry => entry.reward > 0),
         merkleCampaigns: [],
+      },
+      endTimeSTamp: marketData.epochEndTimestamp,
+      startTimeStamp: marketData.epochStartTimestamp,
+    };
+
+    return result;
+  } else if (network === "Ethereum") {
+    // Ethereum is both the governance hub and a market destination. The governor
+    // executes natively here, so market rewards move by a single direct transfer
+    // from the foundation multisig to the MRD — no bridge, no governor hop. These
+    // destination actions share the chain-1 key with the bridge-source actions
+    // emitted by the other networks; index.ts deep-merge concatenates them.
+    const result: any = {
+      1: {
+        setMRDSpeeds: ethereumSetRewardSpeeds,
+        transferFrom: [
+          {
+            // Fund the Ethereum MRD directly with xWELL for market rewards.
+            amount: toBaseUnits(new BigNumber(parseFloat(marketData.ethereum.wellPerEpochMarkets).toFixed(18)), 1e16),
+            from: "FOUNDATION_MULTISIG",
+            to: "MRD_PROXY",
+            token: "xWELL_PROXY",
+          },
+        ].filter((transfer) => transfer.amount > 0),
+        withdrawWell: [],
+        merkleCampaigns: [],
+        multiRewarder: [],
       },
       endTimeSTamp: marketData.epochEndTimestamp,
       startTimeStamp: marketData.epochStartTimestamp,

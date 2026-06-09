@@ -9,6 +9,9 @@ interface MarketData {
   glmrPrice: string;
   usdcPrice: string;
   opPrice: string;
+  1: {
+    [key: string]: any;
+  };
   10: {
     [key: string]: any;
   };
@@ -42,10 +45,11 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
 
   let markdown =  '';
 
-  const networkId = network === 'Optimism' ? '10' : network === 'Moonbeam' ? '1284' : network === 'Base' ? '8453' : null;
+  const networkId = network === 'Optimism' ? '10' : network === 'Moonbeam' ? '1284' : network === 'Base' ? '8453' : network === 'Ethereum' ? '1' : null;
 
   if (networkId && marketData[networkId]) {
-    const networkName = networkId === '1284' ? 'Moonbeam' : networkId === '10' ? 'Optimism' : 'Base';
+    const networkName = networkId === '1284' ? 'Moonbeam' : networkId === '10' ? 'Optimism' : networkId === '1' ? 'Ethereum' : 'Base';
+    // Ethereum has no native reward token (nativePerEpoch is 0, so the rows are gated off).
     const nativeToken = networkId === '1284' ? 'GLMR' : networkId === '10' ? 'OP' : 'USDC';
 
     markdown += `## ${networkName} Network\n\n`;
@@ -73,7 +77,7 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
       }
     }, { supplyUSD: 0, borrowUSD: 0, totalWell: 0, supplyWell: 0, borrowWell: 0, totalWellBySpeed: 0, totalNative: 0, supplyNative: 0, borrowNative: 0, totalNativeBySpeed: 0,  })
 
-    const blockNumber = networkId === '10' ? marketData.optimismBlockNumber : networkId === '1284' ? marketData.moonbeamBlockNumber : networkId === '8453' ? marketData.baseBlockNumber : null;
+    const blockNumber = networkId === '10' ? marketData.optimismBlockNumber : networkId === '1284' ? marketData.moonbeamBlockNumber : networkId === '8453' ? marketData.baseBlockNumber : networkId === '1' ? marketData.ethereumBlockNumber : null;
 
     markdown += `| Metric | Value |\n`;
     markdown += `| ------ | ----- |\n`;

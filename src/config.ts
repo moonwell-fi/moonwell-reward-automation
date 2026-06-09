@@ -2,6 +2,7 @@ export interface ConfigOverrides {
 	moonbeam?: { markets?: number; safetyModule?: number; dex?: number };
 	base?: { markets?: number; safetyModule?: number; dex?: number; vaults?: number };
 	optimism?: { markets?: number; safetyModule?: number; dex?: number; vaults?: number };
+	ethereum?: { markets?: number; safetyModule?: number; dex?: number };
 }
 
 // Apply split overrides to mainConfig, always returning a fresh deep copy
@@ -30,6 +31,7 @@ export function applyConfigOverrides(overrides?: ConfigOverrides): typeof mainCo
 	applyNetworkOverrides(config.moonbeam, overrides.moonbeam);
 	applyNetworkOverrides(config.base, overrides.base);
 	applyNetworkOverrides(config.optimism, overrides.optimism);
+	applyNetworkOverrides(config.ethereum, overrides.ethereum);
 	return config;
 }
 
@@ -39,6 +41,7 @@ export function validateSplits(config: typeof mainConfig): string | null {
 		{ name: 'moonbeam', sum: config.moonbeam.markets + config.moonbeam.safetyModule + config.moonbeam.dex },
 		{ name: 'base', sum: config.base.markets + config.base.safetyModule + config.base.dex + config.base.vaults },
 		{ name: 'optimism', sum: config.optimism.markets + config.optimism.safetyModule + config.optimism.dex + config.optimism.vaults },
+		{ name: 'ethereum', sum: config.ethereum.markets + config.ethereum.safetyModule + config.ethereum.dex },
 	];
 
 	for (const { name, sum } of networks) {
@@ -115,6 +118,15 @@ export const mainConfig = {
 		markets: 0.95,
 		safetyModule: 0.05,
 		dex: 0.0,
+	},
+	ethereum: {
+		// Ethereum mainnet markets (WETH/USDC/USDT/cbBTC). The governor executes natively
+		// here, so funds move by direct transferFrom (no bridge). 100% to markets; the
+		// Ethereum stkWELL (STK_GOVTOKEN_PROXY) is unfunded for now.
+		nativePerEpoch: 0, // no native reward token on mainnet
+		markets: 1.0,
+		safetyModule: 0,
+		dex: 0,
 	},
 	initSale: {
 		auctionPeriod: 1209600, // 14 days
@@ -13149,7 +13161,83 @@ export const ethereumGovernor = "MULTICHAIN_GOVERNOR_V2_PROXY"; // 0x8769B70ac7c
 export const ethereumFoundationMultisig = "FOUNDATION_MULTISIG"; // address added to chains/1.json separately
 export const ethereumXWell = "xWELL_PROXY"; // 0xA88594D404727625A9437C3f886C7643872296AE
 
+// Ethereum mainnet market infrastructure (chains/1.json). Same v2 contracts as
+// Base/Optimism, so the Base ABIs are reused rather than duplicating ~2k-line blobs.
+export const ethereumComptroller = {
+  address: '0xdec80bB934397575594E91970b37baf65f5b21bE' as `0x${string}`, // UNITROLLER
+  abi: baseComptroller.abi,
+};
+
+export const ethereumOracleContract = {
+  address: '0x599A01297fc181558BdFa1737caFeE513694B654' as `0x${string}`, // CHAINLINK_ORACLE
+  abi: baseOracleContract.abi,
+};
+
+export const ethereumMultiRewardDistributor = {
+  address: '0x60142B8d76FaC5b88cfB422Ba1aA905d2171851c' as `0x${string}`, // MRD_PROXY
+  abi: baseMultiRewardDistributor.abi,
+};
+
+export const ethereumViewsContract = {
+  address: '0x2d85b9c48a8c582f0AA244e134e9C6f30Cf7786e' as `0x${string}`, // MOONWELL_VIEWS_PROXY
+  abi: baseViewsContract.abi,
+};
+
 export const marketConfigs = {
+  1: [
+    {
+      address: '0xb85Ca1decc4971F8094DA7676F8b71002a9590C4',
+      nameOverride: 'ETH',
+      alias: 'MOONWELL_WETH',
+      digits: 18,
+      boost: 0,
+      deboost: 0,
+      supply: 1,
+      borrow: 0,
+      enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
+    },
+    {
+      address: '0xE655790552C68F2871Eb44B2cFe3dcFE6A63e62E',
+      nameOverride: 'USDC',
+      alias: 'MOONWELL_USDC',
+      digits: 6,
+      boost: 0,
+      deboost: 0,
+      supply: 1,
+      borrow: 0,
+      enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
+    },
+    {
+      address: '0xeddC25B67D474EEEcFA4F69227b81D870C467011',
+      nameOverride: 'USDT',
+      alias: 'MOONWELL_USDT',
+      digits: 6,
+      boost: 0,
+      deboost: 0,
+      supply: 1,
+      borrow: 0,
+      enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
+    },
+    {
+      address: '0x636080eb65F1b665b646f47D31f21901cDAaeE9F',
+      nameOverride: 'cbBTC',
+      alias: 'MOONWELL_cbBTC',
+      digits: 8,
+      boost: 0,
+      deboost: 0,
+      supply: 1,
+      borrow: 0,
+      enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
+    },
+  ],
   10: [
     {
       address: '0x8E08617b0d66359D73Aa11E11017834C29155525',

@@ -1,13 +1,14 @@
 import { formatUnits } from "viem";
 import { marketConfigs, applyConfigOverrides, type ConfigOverrides } from "./config";
 import { getSafetyModuleDataForAllChains } from "./safetyModule";
-import { ContractCall, createClients, baseClient as defaultBaseClient, moonbeamClient as defaultMoonbeamClient, optimismClient as defaultOptimismClient } from "./utils";
+import { ContractCall, createClients, baseClient as defaultBaseClient, moonbeamClient as defaultMoonbeamClient, optimismClient as defaultOptimismClient, ethereumClient as defaultEthereumClient } from "./utils";
 import { getEpochWindow } from "./epochs";
 
 // These will be set in getMarketData
 let moonbeamClient = defaultMoonbeamClient;
 let baseClient = defaultBaseClient;
 let optimismClient = defaultOptimismClient;
+let ethereumClient = defaultEthereumClient;
 
 import {
   aeroMarketContract,
@@ -18,6 +19,10 @@ import {
   baseStkWELL,
   baseViewsContract,
   baseWellHolder,
+  ethereumComptroller,
+  ethereumMultiRewardDistributor,
+  ethereumOracleContract,
+  ethereumViewsContract,
   excludedMarkets,
   moonbeamComptroller,
   moonbeamOracleContract,
@@ -176,6 +181,15 @@ async function getOptimismMarkets() {
   return await filterExcludedMarkets(markets as string[], 10);
 }
 
+async function getEthereumMarkets() {
+  const markets = await ethereumClient.readContract({
+    ...ethereumComptroller,
+    functionName: "getAllMarkets",
+    args: [],
+  } as ContractCall);
+  return await filterExcludedMarkets(markets as string[], 1);
+}
+
 export async function getMarketData(timestamp: number, env?: any, configOverrides?: ConfigOverrides) {
   // Apply config overrides to get effective config for this request
   const config = applyConfigOverrides(configOverrides);
@@ -192,6 +206,7 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     moonbeamClient = clients.moonbeamClient;
     baseClient = clients.baseClient;
     optimismClient = clients.optimismClient;
+    ethereumClient = clients.ethereumClient;
   }
   const moonbeamBlockNumber = await getClosestBlockNumber(
     moonbeamClient,
@@ -208,6 +223,11 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     timestamp,
     2 // Optimism block time is ~2 seconds
   );
+  const ethereumBlockNumber = await getClosestBlockNumber(
+    ethereumClient,
+    timestamp,
+    12 // Ethereum block time is ~12 seconds
+  );
   const safetyModuleData = await getSafetyModuleDataForAllChains(
     BigInt(moonbeamBlockNumber),
     BigInt(baseBlockNumber),
@@ -217,8 +237,9 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
   const moonbeamMarkets = await getMoonbeamMarkets();
   const baseMarkets = await getBaseMarkets();
   const optimismMarkets = await getOptimismMarkets();
+  const ethereumMarkets = await getEthereumMarkets();
 
-  if (!moonbeamMarkets.length || !baseMarkets.length || !optimismMarkets.length) {
+  if (!moonbeamMarkets.length || !baseMarkets.length || !optimismMarkets.length || !ethereumMarkets.length) {
     throw new Error("No markets found");
   }
 
@@ -342,6 +363,47 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     return config ? config.enabled : null;
   });
 
+  // Ethereum market config maps (grouped; same lookups as the per-attribute maps above)
+  const ethereumNames = ethereumMarkets.map(market => {
+    const config = marketConfigs[1].find(config => config.address === market);
+    return config ? config.nameOverride : null;
+  });
+
+  const ethereumAliases = ethereumMarkets.map(market => {
+    const config = marketConfigs[1].find(config => config.address === market);
+    return config ? config.alias : null;
+  });
+
+  const ethereumDigits = ethereumMarkets.map(market => {
+    const config = marketConfigs[1].find(config => config.address === market);
+    return config ? config.digits : null;
+  });
+
+  const ethereumBoosts = ethereumMarkets.map(market => {
+    const config = marketConfigs[1].find(config => config.address === market);
+    return config ? config.boost : null;
+  });
+
+  const ethereumDeboosts = ethereumMarkets.map(market => {
+    const config = marketConfigs[1].find(config => config.address === market);
+    return config ? config.deboost : null;
+  });
+
+  const ethereumSupplyRatios = ethereumMarkets.map(market => {
+    const config = marketConfigs[1].find(config => config.address === market);
+    return config ? config.supply : null;
+  });
+
+  const ethereumBorrowRatios = ethereumMarkets.map(market => {
+    const config = marketConfigs[1].find(config => config.address === market);
+    return config ? config.borrow : null;
+  });
+
+  const ethereumEnabled = ethereumMarkets.map(market => {
+    const config = marketConfigs[1].find(config => config.address === market);
+    return config ? config.enabled : null;
+  });
+
   // Fetch prices from oracle
   const moonbeamPricesResponse = await moonbeamClient.multicall({
     contracts: moonbeamMarkets.map(market => ({
@@ -462,6 +524,31 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     opPrice,
     (36 - 18)
   );
+
+  // Fetch prices from oracle for Ethereum
+  const ethereumPricesResponse = await ethereumClient.multicall({
+    contracts: ethereumMarkets.map(market => ({
+      ...ethereumOracleContract,
+      functionName: "getUnderlyingPrice",
+      blockNumber: BigInt(ethereumBlockNumber),
+      args: [market],
+    } as ContractCall)),
+  });
+
+  // Check for zero prices and log them
+  const ethereumPrices = ethereumPricesResponse.map((price, index) => {
+    if (price.status === 'failure' || price.result === undefined) {
+      const errorDetails = price.error ? JSON.stringify(price.error, null, 2) : 'RPC call failed';
+      console.error(`⚠️ ERROR: Ethereum market ${ethereumNames[index]} (${ethereumMarkets[index]}) price fetch failed:`);
+      console.error(errorDetails);
+      return undefined;
+    }
+    const priceValue = price.result as bigint;
+    if (priceValue === BigInt(0)) {
+      console.log(`⚠️ ZERO PRICE ALERT: Ethereum market ${ethereumNames[index]} (${ethereumMarkets[index]}) has price = 0`);
+    }
+    return priceValue;
+  });
 
   const ethPrice = basePrices.find(
     (_price, index) => baseMarkets[index].toLowerCase() === marketConfigs[8453].find(config => config.nameOverride === 'ETH')?.address.toLowerCase()
@@ -590,6 +677,43 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     } as ContractCall)),
   })).map((exchangeRate) => exchangeRate.result as bigint);
 
+  // Ethereum market state (grouped: supplies / borrows / reserves / exchange rates)
+  const ethereumSupplies = (await ethereumClient.multicall({
+    contracts: ethereumMarkets.map(market => ({
+      address: market as `0x${string}`,
+      abi: mTokenv2ABI,
+      functionName: "totalSupply",
+      blockNumber: BigInt(ethereumBlockNumber),
+    } as ContractCall)),
+  })).map((supply) => supply.result as bigint);
+
+  const ethereumBorrows = (await ethereumClient.multicall({
+    contracts: ethereumMarkets.map(market => ({
+      address: market as `0x${string}`,
+      abi: mTokenv2ABI,
+      functionName: "totalBorrows",
+      blockNumber: BigInt(ethereumBlockNumber),
+    } as ContractCall)),
+  })).map((borrow) => borrow.result as bigint);
+
+  const ethereumReserves = (await ethereumClient.multicall({
+    contracts: ethereumMarkets.map(market => ({
+      address: market as `0x${string}`,
+      abi: mTokenv2ABI,
+      functionName: "totalReserves",
+      blockNumber: BigInt(ethereumBlockNumber),
+    })),
+  })).map((reserves) => reserves.result as bigint);
+
+  const ethereumExchangeRates = (await ethereumClient.multicall({
+    contracts: ethereumMarkets.map(market => ({
+      address: market as `0x${string}`,
+      abi: mTokenv2ABI,
+      functionName: "exchangeRateStored",
+      blockNumber: BigInt(ethereumBlockNumber),
+    } as ContractCall)),
+  })).map((exchangeRate) => exchangeRate.result as bigint);
+
   // Functions to get emissions per second
   const moonbeamWellSupplySpeeds = (await moonbeamClient.multicall({
     contracts: moonbeamMarkets.map(market => ({
@@ -662,6 +786,37 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     const result = borrowRewardSpeed.result as { borrowEmissionsPerSec: bigint } | undefined;
     return result ? result.borrowEmissionsPerSec : BigInt(0);
   });
+
+  const ethereumWellSupplySpeeds = (await ethereumClient.multicall({
+    contracts: ethereumMarkets.map(market => ({
+      address: ethereumMultiRewardDistributor.address,
+      abi: ethereumMultiRewardDistributor.abi,
+      functionName: "getConfigForMarket",
+      blockNumber: BigInt(ethereumBlockNumber),
+      args: [market, xWellToken.address],
+    } as ContractCall)),
+  })).map((supplyRewardSpeed) => {
+    const result = supplyRewardSpeed.result as { supplyEmissionsPerSec: bigint } | undefined;
+    return result ? result.supplyEmissionsPerSec : BigInt(0);
+  });
+
+  const ethereumWellBorrowSpeeds = (await ethereumClient.multicall({
+    contracts: ethereumMarkets.map(market => ({
+      address: ethereumMultiRewardDistributor.address,
+      abi: ethereumMultiRewardDistributor.abi,
+      functionName: "getConfigForMarket",
+      blockNumber: BigInt(ethereumBlockNumber),
+      args: [market, xWellToken.address],
+    } as ContractCall)),
+  })).map((borrowRewardSpeed) => {
+    const result = borrowRewardSpeed.result as { borrowEmissionsPerSec: bigint } | undefined;
+    return result ? result.borrowEmissionsPerSec : BigInt(0);
+  });
+
+  // No native reward token on Ethereum mainnet (nativePerEpoch is 0): zero arrays
+  // keep the shared formatResults shape without querying a nonexistent rewarder.
+  const ethereumNativeSupplySpeeds = ethereumMarkets.map(() => BigInt(0));
+  const ethereumNativeBorrowSpeeds = ethereumMarkets.map(() => BigInt(0));
 
   const moonbeamNativeSupplySpeeds = (await moonbeamClient.multicall({
     contracts: moonbeamMarkets.map(market => ({
@@ -814,6 +969,32 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     return (market.result as { borrowRate: bigint }).borrowRate;
   });
 
+  const ethereumMarketInfo = (await ethereumClient.multicall({
+    contracts: ethereumMarkets.map(market => ({
+      address: ethereumViewsContract.address,
+      abi: ethereumViewsContract.abi,
+      functionName: "getMarketInfo",
+      blockNumber: BigInt(ethereumBlockNumber),
+      args: [market],
+    } as ContractCall)),
+  }));
+
+  const ethereumSupplyRates = ethereumMarketInfo.map((market, index) => {
+    if (!market || !market.result) {
+      console.log(`⚠️ UNDEFINED RESULT: Ethereum market at index ${index} has undefined result`, ethereumMarkets[index]);
+      return BigInt(0); // Provide a default value to prevent the error
+    }
+    return (market.result as { supplyRate: bigint }).supplyRate;
+  });
+
+  const ethereumBorrowRates = ethereumMarketInfo.map((market, index) => {
+    if (!market || !market.result) {
+      console.log(`⚠️ UNDEFINED RESULT: Ethereum market at index ${index} has undefined result`, ethereumMarkets[index]);
+      return BigInt(0); // Provide a default value to prevent the error
+    }
+    return (market.result as { borrowRate: bigint }).borrowRate;
+  });
+
   const moonbeamWellSupplyPerDay = moonbeamWellSupplySpeeds.map((speed) => speed * BigInt(86400));
   const moonbeamWellBorrowPerDay = moonbeamWellBorrowSpeeds.map((speed) => speed * BigInt(86400));
 
@@ -861,6 +1042,25 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     (borrowPerDay) =>
       Number(formatUnits(borrowPerDay, 18)) * Number(formatUnits(wellPrice, 36))
   );
+
+  // Ethereum per-day amounts (native entries are zeros: no native reward token)
+  const ethereumWellSupplyPerDay = ethereumWellSupplySpeeds.map((speed) => speed * BigInt(86400));
+  const ethereumWellBorrowPerDay = ethereumWellBorrowSpeeds.map((speed) => speed * BigInt(86400));
+  const ethereumNativeSupplyPerDay = ethereumNativeSupplySpeeds.map((speed) => speed * BigInt(86400));
+  const ethereumNativeBorrowPerDay = ethereumNativeBorrowSpeeds.map((speed) => speed * BigInt(86400));
+
+  const ethereumWellSupplyPerDayUsd = ethereumWellSupplyPerDay.map(
+    (supplyPerDay) =>
+      Number(formatUnits(supplyPerDay, 18)) * Number(formatUnits(wellPrice, 36))
+  );
+
+  const ethereumWellBorrowPerDayUsd = ethereumWellBorrowPerDay.map(
+    (borrowPerDay) =>
+      Number(formatUnits(borrowPerDay, 18)) * Number(formatUnits(wellPrice, 36))
+  );
+
+  const ethereumNativeSupplyPerDayUsd = ethereumNativeSupplyPerDay.map(() => 0);
+  const ethereumNativeBorrowPerDayUsd = ethereumNativeBorrowPerDay.map(() => 0);
 
   const moonbeamNativeSupplyPerDayUsd = moonbeamNativeSupplyPerDay.map(
     (supplyPerDay) =>
@@ -970,6 +1170,32 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     );
   });
 
+  const ethereumTotalSupplyUsd = ethereumMarkets.map((_market, index) => {
+    if (!ethereumEnabled[index]) { // Only include markets that are enabled
+      return 0;
+    }
+    const supply = ethereumSupplies[index];
+    const exchangeRate = ethereumExchangeRates[index];
+    const price = ethereumPrices[index];
+    const digit = ethereumDigits.filter((digit): digit is number => digit !== null)[index];
+    const boost = ethereumBoosts.filter((boost): boost is number => boost !== null)[index];
+    const deboost = ethereumDeboosts.filter((deboost): deboost is number => deboost !== null)[index];
+
+    // Add null checks before using formatUnits
+    if (supply === undefined || exchangeRate === undefined || price === undefined ||
+        digit === undefined || boost === undefined || deboost === undefined) {
+      console.log(`⚠️ MISSING DATA: Ethereum market ${index} missing data for totalSupplyUSD calculation`);
+      return 0;
+    }
+
+    return ((
+      Number(formatUnits(supply, 8)) *
+      Number(formatUnits(exchangeRate, 18 + digit - 8)) *
+      Number(formatUnits(price, 36 - digit)))
+      + boost - deboost
+    );
+  });
+
   function calculatePercentages(totalSupplyUsd: number[]) {
     const total = totalSupplyUsd.reduce((sum, value) => sum + value, 0);
     // Guard against a fully-disabled network (total === 0) producing NaN percentages.
@@ -979,6 +1205,7 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
   const moonbeamPercentages = calculatePercentages(moonbeamTotalSupplyUsd);
   const basePercentages = calculatePercentages(baseTotalSupplyUsd);
   const optimismPercentages = calculatePercentages(optimismTotalSupplyUsd);
+  const ethereumPercentages = calculatePercentages(ethereumTotalSupplyUsd);
 
   const moonbeamTotalBorrowsUsd = moonbeamMarkets.map((_market, index) => {
     if (!moonbeamEnabled[index]) { // Only include markets that are enabled
@@ -1034,6 +1261,26 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
       return 0;
     }
     
+    return (
+      Number(formatUnits(borrow, digit)) *
+      Number(formatUnits(price, 36 - digit))
+    );
+  });
+
+  const ethereumTotalBorrowsUsd = ethereumMarkets.map((_market, index) => {
+    if (!ethereumEnabled[index]) { // Only include markets that are enabled
+      return 0;
+    }
+    const borrow = ethereumBorrows[index];
+    const price = ethereumPrices[index];
+    const digit = ethereumDigits.filter((digit): digit is number => digit !== null)[index];
+
+    // Add null checks before using formatUnits
+    if (borrow === undefined || price === undefined || digit === undefined) {
+      console.log(`⚠️ MISSING DATA: Ethereum market ${index} missing data for totalBorrowsUSD calculation`);
+      return 0;
+    }
+
     return (
       Number(formatUnits(borrow, digit)) *
       Number(formatUnits(price, 36 - digit))
@@ -1118,17 +1365,27 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     optimismEnabled.filter((enabled): enabled is boolean => enabled !== null),
   );
 
-  const moonbeamTotalMarketPercentage = (
-    moonbeamNetworkTotalUsd / (moonbeamNetworkTotalUsd + baseNetworkTotalUsd + optimismNetworkTotalUsd)
+  const ethereumNetworkTotalUsd = calculateNetworkTotalUSD(
+    ethereumMarkets,
+    ethereumSupplies,
+    ethereumExchangeRates,
+    ethereumPrices,
+    ethereumDigits.filter((digit): digit is number => digit !== null),
+    ethereumBoosts.filter((boost): boost is number => boost !== null),
+    ethereumDeboosts.filter((deboost): deboost is number => deboost !== null),
+    ethereumBorrows,
+    ethereumEnabled.filter((enabled): enabled is boolean => enabled !== null),
   );
 
-  const baseTotalMarketPercentage = (
-    baseNetworkTotalUsd / (moonbeamNetworkTotalUsd + baseNetworkTotalUsd + optimismNetworkTotalUsd)
-  );
+  const allNetworksTotalUsd = moonbeamNetworkTotalUsd + baseNetworkTotalUsd + optimismNetworkTotalUsd + ethereumNetworkTotalUsd;
 
-  const optimismTotalMarketPercentage = (
-    optimismNetworkTotalUsd / (moonbeamNetworkTotalUsd + baseNetworkTotalUsd + optimismNetworkTotalUsd)
-  );
+  const moonbeamTotalMarketPercentage = moonbeamNetworkTotalUsd / allNetworksTotalUsd;
+
+  const baseTotalMarketPercentage = baseNetworkTotalUsd / allNetworksTotalUsd;
+
+  const optimismTotalMarketPercentage = optimismNetworkTotalUsd / allNetworksTotalUsd;
+
+  const ethereumTotalMarketPercentage = ethereumNetworkTotalUsd / allNetworksTotalUsd;
 
   const moonbeamNewWellSupplySpeeds = moonbeamMarkets.map((_market, index) => {
     const currentSpeed = Number(formatUnits(moonbeamWellSupplySpeeds[index], 18));
@@ -1260,6 +1517,56 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     // Return 1e-18 if the calculated speed is 0
     return calculatedSpeed === 0 ? 1e-18 : calculatedSpeed;
   });
+
+  const ethereumNewWellSupplySpeeds = ethereumMarkets.map((_market, index) => {
+    const currentSpeed = Number(formatUnits(ethereumWellSupplySpeeds[index], 18));
+
+    if (!ethereumEnabled[index]) { // Only include markets that are enabled
+      return currentSpeed === 0 ? -1e-18 : 0;
+    }
+    const totalWellPerEpochMarkets =
+      config.totalWellPerEpoch
+      * ethereumTotalMarketPercentage
+      * config.ethereum.markets;
+    const percentage = ethereumPercentages[index];
+    const supplyRatio = ethereumSupplyRatios[index] ?? 0;
+    const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * supplyRatio) / config.secondsPerEpoch);
+
+    // Return -1 if the speeds are the same, otherwise return the calculated speed
+    return Math.abs(calculatedSpeed - currentSpeed) < 1e-18 ? -1e-18 : calculatedSpeed;
+  });
+
+  const ethereumNewWellBorrowSpeeds = ethereumMarkets.map((_market, index) => {
+    const currentSpeed = Number(formatUnits(ethereumWellBorrowSpeeds[index], 18));
+
+    if (!ethereumEnabled[index]) { // Only include markets that are enabled
+      return currentSpeed === 1e-18 ? -1e-18 : 1e-18;
+    }
+
+    const totalWellPerEpochMarkets =
+      config.totalWellPerEpoch
+      * ethereumTotalMarketPercentage
+      * config.ethereum.markets;
+    const percentage = ethereumPercentages[index];
+    const borrowRatio = ethereumBorrowRatios[index] ?? 0;
+    const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * borrowRatio) / config.secondsPerEpoch);
+    // Return -1e-18 if the current speed is 1e-18 and the calculated speed is 0
+    if (currentSpeed === 1e-18 && calculatedSpeed === 0) {
+      return -1e-18;
+    }
+
+    // Return -1 if the speeds are the same
+    if (Math.abs(calculatedSpeed - currentSpeed) < 1e-18) {
+      return -1e-18;
+    }
+
+    // Return 1e-18 if the calculated speed is 0
+    return calculatedSpeed === 0 ? 1e-18 : calculatedSpeed;
+  });
+
+  // No native rewards on Ethereum: "no change" sentinels keep the MRD untouched.
+  const ethereumNewNativeSupplySpeeds = ethereumMarkets.map(() => -1e-18);
+  const ethereumNewNativeBorrowSpeeds = ethereumMarkets.map(() => -1e-18);
 
   const moonbeamNewNativeSupplySpeeds = moonbeamMarkets.map((_market, index) => {
     const currentSpeed = Number(formatUnits(moonbeamNativeSupplySpeeds[index], 18));
@@ -1798,6 +2105,48 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
   }) as bigint;
 
   return {
+    1: formatResults(
+      ethereumMarkets,
+      1,
+      ethereumNames,
+      ethereumAliases,
+      ethereumDigits.filter((digit): digit is number => digit !== null),
+      ethereumBoosts,
+      ethereumDeboosts,
+      ethereumSupplyRatios,
+      ethereumBorrowRatios,
+      ethereumEnabled,
+      ethereumPrices,
+      ethereumSupplies,
+      ethereumBorrows,
+      ethereumReserves,
+      ethereumTotalSupplyUsd,
+      ethereumTotalBorrowsUsd,
+      ethereumExchangeRates,
+      ethereumSupplyRates,
+      ethereumBorrowRates,
+      ethereumWellSupplySpeeds,
+      ethereumWellBorrowSpeeds,
+      ethereumNativeSupplySpeeds,
+      ethereumNativeBorrowSpeeds,
+      ethereumWellSupplyPerDay,
+      ethereumWellBorrowPerDay,
+      ethereumNativeSupplyPerDay,
+      ethereumNativeBorrowPerDay,
+      ethereumWellSupplyPerDayUsd,
+      ethereumWellBorrowPerDayUsd,
+      ethereumNativeSupplyPerDayUsd,
+      ethereumNativeBorrowPerDayUsd,
+      ethereumPercentages,
+      Number((config.totalWellPerEpoch * ethereumTotalMarketPercentage) * config.ethereum.markets),
+      ethereumNewWellSupplySpeeds,
+      ethereumNewWellBorrowSpeeds,
+      ethereumNewNativeSupplySpeeds,
+      ethereumNewNativeBorrowSpeeds,
+      formatUnits(wellPrice, 36),
+      "0", // no native reward token on Ethereum
+      Number(config.ethereum.nativePerEpoch),
+    ),
     10: formatResults(
       optimismMarkets,
       10,
@@ -1936,6 +2285,17 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     moonbeamBlockNumber: moonbeamBlockNumber,
     baseBlockNumber: baseBlockNumber,
     optimismBlockNumber: optimismBlockNumber,
+    ethereumBlockNumber: ethereumBlockNumber,
+    ethereum: {
+      ...config.ethereum,
+      networkTotalUsd: ethereumNetworkTotalUsd,
+      totalMarketPercentage: ethereumTotalMarketPercentage,
+      wellPerEpoch: Number(config.totalWellPerEpoch * ethereumTotalMarketPercentage).toFixed(18),
+      nativePerEpoch: config.ethereum.nativePerEpoch,
+      wellPerEpochMarkets: Number((config.totalWellPerEpoch * ethereumTotalMarketPercentage) * config.ethereum.markets).toFixed(18),
+      wellPerEpochSafetyModule: Number((config.totalWellPerEpoch * ethereumTotalMarketPercentage) * config.ethereum.safetyModule).toFixed(18),
+      wellPerEpochDex: Number((config.totalWellPerEpoch * ethereumTotalMarketPercentage) * config.ethereum.dex).toFixed(18),
+    },
     moonbeam: {
       ...config.moonbeam,
       networkTotalUsd: moonbeamNetworkTotalUsd,

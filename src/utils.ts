@@ -1,4 +1,4 @@
-import { moonbeam, base, optimism } from "viem/chains";
+import { moonbeam, base, optimism, mainnet } from "viem/chains";
 import { createPublicClient, http } from "viem";
 
 export interface ContractCall {
@@ -15,33 +15,43 @@ export const createClients = (env: any) => {
   const moonbeamRpcUrl = env?.MOONBEAM_RPC_URL;
   const baseRpcUrl = env?.BASE_RPC_URL;
   const optimismRpcUrl = env?.OPTIMISM_RPC_URL;
-  
+  const ethereumRpcUrl = env?.ETHEREUM_RPC_URL;
+
   if (!moonbeamRpcUrl) {
     console.warn("⚠️ MOONBEAM_RPC_URL not set. Using public RPC endpoint for Moonbeam. Set MOONBEAM_RPC_URL for better reliability.");
   }
-  
+
   if (!baseRpcUrl) {
     console.warn("⚠️ BASE_RPC_URL not set. Using public RPC endpoint for Base. Set BASE_RPC_URL for better reliability.");
   }
-  
+
   if (!optimismRpcUrl) {
     console.warn("⚠️ OPTIMISM_RPC_URL not set. Using public RPC endpoint for Optimism. Set OPTIMISM_RPC_URL for better reliability.");
   }
-  
+
+  if (!ethereumRpcUrl) {
+    console.warn("⚠️ ETHEREUM_RPC_URL not set. Using public RPC endpoint for Ethereum. Set ETHEREUM_RPC_URL for better reliability.");
+  }
+
   return {
     moonbeamClient: createPublicClient({
       chain: moonbeam,
       transport: http(moonbeamRpcUrl),
     }),
-    
+
     baseClient: createPublicClient({
       chain: base,
       transport: http(baseRpcUrl),
     }),
-    
+
     optimismClient: createPublicClient({
       chain: optimism,
       transport: http(optimismRpcUrl),
+    }),
+
+    ethereumClient: createPublicClient({
+      chain: mainnet,
+      transport: http(ethereumRpcUrl),
     })
   };
 };
@@ -59,5 +69,10 @@ export const baseClient = createPublicClient({
 
 export const optimismClient = createPublicClient({
   chain: optimism,
+  transport: http(),
+});
+
+export const ethereumClient = createPublicClient({
+  chain: mainnet,
   transport: http(),
 });

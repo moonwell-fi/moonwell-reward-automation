@@ -320,4 +320,56 @@ describe('generateJson', () => {
       expect(r[10].withdrawWell).toEqual([]);
     });
   });
+
+  describe('Ethereum destination (markets on chain 1)', () => {
+    const ethMarketData = () => ({
+      "1": [
+        {
+          alias: "MOONWELL_USDC",
+          newWellSupplySpeed: "0.5",
+          newWellBorrowSpeed: "1e-18",
+          newNativeSupplySpeed: "-1e-18",
+          newNativeBorrowSpeed: "-1e-18",
+        },
+      ],
+      "1284": [], "8453": [], "10": [],
+      ethereum: {
+        wellPerEpoch: "100000",
+        wellPerEpochDex: "0",
+        wellPerEpochMarkets: "100000",
+        wellPerEpochSafetyModule: "0",
+      },
+      epochStartTimestamp: 1739577600,
+      epochEndTimestamp: 1739577600 + 28 * 86400,
+      totalSeconds: 28 * 86400,
+    });
+
+    it('emits setMRDSpeeds and a direct FOUNDATION_MULTISIG -> MRD_PROXY transfer, no bridge', async () => {
+      const r = await returnJson(ethMarketData(), "Ethereum");
+      expect(r[1]).toBeDefined();
+
+      // MRD speeds: WELL-only entries with the epoch end time
+      expect(r[1].setMRDSpeeds).toHaveLength(1);
+      expect(r[1].setMRDSpeeds[0].emissionToken).toBe("xWELL_PROXY");
+      expect(r[1].setMRDSpeeds[0].market).toBe("MOONWELL_USDC");
+      expect(r[1].setMRDSpeeds[0].newEndTime).toBe(1739577600 + 28 * 86400);
+      expect(r[1].setMRDSpeeds[0].newSupplySpeed).toBe(0.5e18);
+      expect(r[1].setMRDSpeeds[0].newBorrowSpeed).toBe(1); // 1e-18 sentinel -> 1 wei
+
+      // Direct funding: no bridge, no governor hop
+      expect(r[1].transferFrom).toHaveLength(1);
+      expect(r[1].transferFrom[0].from).toBe("FOUNDATION_MULTISIG");
+      expect(r[1].transferFrom[0].to).toBe("MRD_PROXY");
+      expect(r[1].transferFrom[0].token).toBe("xWELL_PROXY");
+      expect(r[1].transferFrom[0].amount).toBeGreaterThan(100000e18); // includes rounding buffer
+      expect(r[1].bridgeToRecipient).toBeUndefined();
+    });
+
+    it('emits no transfer when Ethereum markets allocation is zero', async () => {
+      const md = ethMarketData();
+      md.ethereum = { wellPerEpoch: "0", wellPerEpochDex: "0", wellPerEpochMarkets: "0", wellPerEpochSafetyModule: "0" };
+      const r = await returnJson(md, "Ethereum");
+      expect(r[1].transferFrom).toEqual([]);
+    });
+  });
 });
