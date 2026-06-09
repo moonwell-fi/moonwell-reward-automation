@@ -115,9 +115,12 @@ export async function returnJson(marketData: any, network: string) {
     const result: any = {
       1: {
         // Fund the Ethereum governor with xWELL for the Moonbeam bridge, then bridge to Moonbeam.
+        // Moonbeam no longer distributes StellaSwap/dex rewards, so only markets + safety
+        // module (wellPerEpoch - dex) are funded and bridged.
         transferFrom: [
           {
             amount: Number(BigNumber(parseFloat(marketData.moonbeam.wellPerEpoch).toFixed(18))
+              .minus(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18))
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL)
               .plus(1e17)
@@ -142,21 +145,6 @@ export async function returnJson(marketData: any, network: string) {
         ].filter((bridge) => bridge.amount > 0),
       },
       1284: {
-        addRewardInfo: {
-          amount: Number(BigNumber(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18))
-            .shiftedBy(18)
-            .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
-            .plus(1e16)
-            .toFixed(0)),
-          endTimestamp: marketData.epochEndTimestamp,
-          pid: 15,
-          rewardPerSec: Number(BigNumber(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18))
-            .div(BigNumber(marketData.totalSeconds))
-            .shiftedBy(18)
-            .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
-            .toFixed(0)),
-          target: "STELLASWAP_REWARDER",
-        },
         ...(hasReservesEnabled ? {
           initSale: {
             ...mainConfig.initSale,
@@ -181,16 +169,6 @@ export async function returnJson(marketData: any, network: string) {
           .shiftedBy(18)
           .integerValue().toFixed(0)),
         transferFrom: [
-          { // StellaSwap DEX incentives: from the bridged funds at the Temporal Governor to the governor
-            amount: Number(BigNumber(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18))
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
-              .plus(1e16)
-              .toFixed(0)),
-            from: "TEMPORAL_GOVERNOR",
-            to: "MULTICHAIN_GOVERNOR_PROXY",
-            token: "GOVTOKEN",
-          },
           { // Market rewards: from the Temporal Governor to the Unitroller proxy
             amount: Number(BigNumber(marketData.moonbeam.wellPerEpochMarkets)
               .shiftedBy(18)
