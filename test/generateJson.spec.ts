@@ -189,4 +189,39 @@ describe('generateJson', () => {
       );
     });
   });
+
+  describe('stkWELL APY cap scales with epoch duration', () => {
+    it('caps wellHolderBalance differently for 28- vs 31-day epochs (Optimism)', async () => {
+      const base = {
+        "1284": [], "8453": [], "10": [],
+        optimism: {
+          wellPerEpoch: "0",
+          wellPerEpochDex: "0",
+          wellPerEpochMarkets: "0",
+          wellPerEpochSafetyModule: "0",
+          wellHolderBalance: (1_000_000n * 10n ** 18n).toString(),
+        },
+        optimismStkWELLTotalSupply: (100_000_000n * 10n ** 18n).toString(),
+        epochStartTimestamp: 1739577600,
+      };
+
+      const make = (durationSeconds: number) => ({
+        ...base,
+        epochEndTimestamp: 1739577600 + durationSeconds,
+        totalSeconds: durationSeconds,
+      });
+
+      const r28 = await returnJson(make(28 * 86400), "Optimism");
+      const r31 = await returnJson(make(31 * 86400), "Optimism");
+
+      // The 10% APY cap bounds the wellHolderBalance contribution (withdrawWell).
+      // With the OLD fixed 365/28 epochs-per-year constant this cap is identical
+      // for any month length; with the duration-based cap a 31-day epoch permits
+      // a larger contribution than a 28-day epoch.
+      const amt28 = r28[10].withdrawWell[0].amount;
+      const amt31 = r31[10].withdrawWell[0].amount;
+      expect(amt31).toBeGreaterThan(amt28);
+      expect(amt28).toBeGreaterThan(0);
+    });
+  });
 });

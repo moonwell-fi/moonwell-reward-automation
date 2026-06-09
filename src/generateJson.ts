@@ -9,15 +9,17 @@ BigNumber.config({
 const TOKEN_HOLDING_CAMPAIGN = 18;
 const MORPHO_VAULT_CAMPAIGN = 56;
 const TARGET_STKWELL_APY = 0.10; // 10% APY cap for stkWELL
-const EPOCHS_PER_YEAR = 365 / 28;
+const SECONDS_PER_YEAR = 31_536_000;
 
 // Calculate capped wellHolderBalance to achieve target APY for stkWELL
 function calculateCappedWellHolderBalance(
   safetyModuleRewards: number,
   wellHolderBalance: number,
-  stkWellTotalSupply: number
+  stkWellTotalSupply: number,
+  durationSeconds: number
 ): { cappedBalance: number; remainingBalance: number } {
-  const maxRewardsPerEpoch = (TARGET_STKWELL_APY * stkWellTotalSupply) / EPOCHS_PER_YEAR;
+  const maxRewardsPerEpoch =
+    TARGET_STKWELL_APY * stkWellTotalSupply * (durationSeconds / SECONDS_PER_YEAR);
   const maxWellHolderContribution = Math.max(0, maxRewardsPerEpoch - safetyModuleRewards);
   const cappedBalance = Math.min(wellHolderBalance, maxWellHolderContribution);
   const remainingBalance = wellHolderBalance - cappedBalance;
@@ -315,7 +317,8 @@ export async function returnJson(marketData: any, network: string) {
                 const { cappedBalance } = calculateCappedWellHolderBalance(
                   parseFloat(marketData.base.wellPerEpochSafetyModule),
                   parseFloat(marketData.base.wellHolderBalance) / 1e18,
-                  parseFloat(marketData.baseStkWELLTotalSupply) / 1e18
+                  parseFloat(marketData.baseStkWELLTotalSupply) / 1e18,
+                  marketData.totalSeconds
                 );
 
                 if (cappedBalance <= 0) return [];
@@ -339,7 +342,8 @@ export async function returnJson(marketData: any, network: string) {
               const { cappedBalance } = calculateCappedWellHolderBalance(
                 safetyModuleRewards,
                 parseFloat(marketData.base.wellHolderBalance) / 1e18,
-                parseFloat(marketData.baseStkWELLTotalSupply) / 1e18
+                parseFloat(marketData.baseStkWELLTotalSupply) / 1e18,
+                marketData.totalSeconds
               );
               const totalRewards = safetyModuleRewards + cappedBalance;
               return Number(new BigNumber(totalRewards)
@@ -471,7 +475,8 @@ export async function returnJson(marketData: any, network: string) {
           const { cappedBalance } = calculateCappedWellHolderBalance(
             safetyModuleRewards,
             parseFloat(marketData.optimism.wellHolderBalance) / 1e18,
-            parseFloat(marketData.optimismStkWELLTotalSupply) / 1e18
+            parseFloat(marketData.optimismStkWELLTotalSupply) / 1e18,
+            marketData.totalSeconds
           );
           return Number(BigNumber(safetyModuleRewards + cappedBalance)
             .div(marketData.totalSeconds)
@@ -522,7 +527,8 @@ export async function returnJson(marketData: any, network: string) {
           const { cappedBalance } = calculateCappedWellHolderBalance(
             parseFloat(marketData.optimism.wellPerEpochSafetyModule),
             parseFloat(marketData.optimism.wellHolderBalance) / 1e18,
-            parseFloat(marketData.optimismStkWELLTotalSupply) / 1e18
+            parseFloat(marketData.optimismStkWELLTotalSupply) / 1e18,
+            marketData.totalSeconds
           );
           if (cappedBalance <= 0) return [];
           return [
