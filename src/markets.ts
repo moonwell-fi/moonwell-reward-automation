@@ -406,10 +406,10 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
 
   // Fetch prices from oracle
   const moonbeamPricesResponse = await moonbeamClient.multicall({
+    blockNumber: BigInt(moonbeamBlockNumber),
     contracts: moonbeamMarkets.map(market => ({
       ...moonbeamOracleContract,
       functionName: "getUnderlyingPrice",
-      blockNumber: BigInt(moonbeamBlockNumber),
       args: [market],
     } as ContractCall)),
   });
@@ -441,10 +441,10 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
 
   // Fetch prices from oracle for Base
   const basePricesResponse = await baseClient.multicall({
+    blockNumber: BigInt(baseBlockNumber),
     contracts: baseMarkets.map(market => ({
       ...baseOracleContract,
       functionName: "getUnderlyingPrice",
-      blockNumber: BigInt(baseBlockNumber),
       args: [market],
     } as ContractCall)),
   });
@@ -484,10 +484,10 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
 
   // Fetch prices from oracle for Optimism
   const optimismPricesResponse = await optimismClient.multicall({
+    blockNumber: BigInt(optimismBlockNumber),
     contracts: optimismMarkets.map(market => ({
       ...optimismOracleContract,
       functionName: "getUnderlyingPrice",
-      blockNumber: BigInt(optimismBlockNumber),
       args: [market],
     } as ContractCall)),
   });
@@ -527,10 +527,10 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
 
   // Fetch prices from oracle for Ethereum
   const ethereumPricesResponse = await ethereumClient.multicall({
+    blockNumber: BigInt(ethereumBlockNumber),
     contracts: ethereumMarkets.map(market => ({
       ...ethereumOracleContract,
       functionName: "getUnderlyingPrice",
-      blockNumber: BigInt(ethereumBlockNumber),
       args: [market],
     } as ContractCall)),
   });
@@ -570,177 +570,177 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
   })) * BigInt(ethPrice) as bigint;
 
   const moonbeamSupplies = (await moonbeamClient.multicall({
+    blockNumber: BigInt(moonbeamBlockNumber),
     contracts: moonbeamMarkets.map(market => ({
       address: market as `0x${string}`,
       abi: mTokenv1ABI,
       functionName: "totalSupply",
-      blockNumber: BigInt(moonbeamBlockNumber),
     })),
   })).map((supply) => supply.result as bigint);
 
   const baseSupplies = (await baseClient.multicall({
+    blockNumber: BigInt(baseBlockNumber),
     contracts: baseMarkets.map(market => ({
       address: market as `0x${string}`,
       abi: mTokenv2ABI,
       functionName: "totalSupply",
-      blockNumber: BigInt(baseBlockNumber),
     } as ContractCall)),
   })).map((supply) => supply.result as bigint);
 
   const optimismSupplies = (await optimismClient.multicall({
+    blockNumber: BigInt(optimismBlockNumber),
     contracts: optimismMarkets.map(market => ({
       address: market as `0x${string}`,
       abi: mTokenv2ABI,
       functionName: "totalSupply",
-      blockNumber: BigInt(optimismBlockNumber),
     } as ContractCall)),
   })).map((supply) => supply.result as bigint);
 
   const moonbeamBorrows = (await moonbeamClient.multicall({
+    blockNumber: BigInt(moonbeamBlockNumber),
     contracts: moonbeamMarkets.map(market => ({
       address: market as `0x${string}`,
       abi: mTokenv1ABI,
       functionName: "totalBorrows",
-      blockNumber: BigInt(moonbeamBlockNumber),
     } as ContractCall)),
   })).map((borrow) => borrow.result as bigint);
 
   const baseBorrows = (await baseClient.multicall({
+    blockNumber: BigInt(baseBlockNumber),
     contracts: baseMarkets.map(market => ({
       address: market as `0x${string}`,
       abi: mTokenv2ABI,
       functionName: "totalBorrows",
-      blockNumber: BigInt(baseBlockNumber),
     } as ContractCall)),
   })).map((borrow) => borrow.result as bigint);
 
   const optimismBorrows = (await optimismClient.multicall({
+    blockNumber: BigInt(optimismBlockNumber),
     contracts: optimismMarkets.map(market => ({
       address: market as `0x${string}`,
       abi: mTokenv2ABI,
       functionName: "totalBorrows",
-      blockNumber: BigInt(optimismBlockNumber),
     } as ContractCall)),
   })).map((borrow) => borrow.result as bigint);
 
   const baseReserves = (await baseClient.multicall({
+    blockNumber: BigInt(baseBlockNumber),
     contracts: baseMarkets.map(market => ({
       address: market as `0x${string}`,
       abi: mTokenv2ABI,
       functionName: "totalReserves",
-      blockNumber: BigInt(baseBlockNumber),
     })),
   })).map((reserves) => reserves.result as bigint);
 
   const optimismReserves = (await optimismClient.multicall({
+    blockNumber: BigInt(optimismBlockNumber),
     contracts: optimismMarkets.map(market => ({
       address: market as `0x${string}`,
       abi: mTokenv2ABI,
       functionName: "totalReserves",
-      blockNumber: BigInt(optimismBlockNumber),
     })),
   })).map((reserves) => reserves.result as bigint);
 
   const moonbeamReserves = (await moonbeamClient.multicall({
+    blockNumber: BigInt(moonbeamBlockNumber),
     contracts: moonbeamMarkets.map(market => ({
       address: market as `0x${string}`,
       abi: mTokenv1ABI,
       functionName: "totalReserves",
-      blockNumber: BigInt(moonbeamBlockNumber),
     })),
   })).map((reserves) => reserves.result as bigint);
 
   const moonbeamExchangeRates = (await moonbeamClient.multicall({
+    blockNumber: BigInt(moonbeamBlockNumber),
     contracts: moonbeamMarkets.map(market => ({
       address: market as `0x${string}`,
       abi: mTokenv1ABI,
       functionName: "exchangeRateStored",
-      blockNumber: BigInt(moonbeamBlockNumber),
     } as ContractCall)),
   })).map((exchangeRate) => exchangeRate.result as bigint);
 
   const baseExchangeRates = (await baseClient.multicall({
+    blockNumber: BigInt(baseBlockNumber),
     contracts: baseMarkets.map(market => ({
       address: market as `0x${string}`,
       abi: mTokenv2ABI,
       functionName: "exchangeRateStored",
-      blockNumber: BigInt(baseBlockNumber),
     } as ContractCall)),
   })).map((exchangeRate) => exchangeRate.result as bigint);
 
   const optimismExchangeRates = (await optimismClient.multicall({
+    blockNumber: BigInt(optimismBlockNumber),
     contracts: optimismMarkets.map(market => ({
       address: market as `0x${string}`,
       abi: mTokenv2ABI,
       functionName: "exchangeRateStored",
-      blockNumber: BigInt(optimismBlockNumber),
     } as ContractCall)),
   })).map((exchangeRate) => exchangeRate.result as bigint);
 
   // Ethereum market state (grouped: supplies / borrows / reserves / exchange rates)
   const ethereumSupplies = (await ethereumClient.multicall({
+    blockNumber: BigInt(ethereumBlockNumber),
     contracts: ethereumMarkets.map(market => ({
       address: market as `0x${string}`,
       abi: mTokenv2ABI,
       functionName: "totalSupply",
-      blockNumber: BigInt(ethereumBlockNumber),
     } as ContractCall)),
   })).map((supply) => supply.result as bigint);
 
   const ethereumBorrows = (await ethereumClient.multicall({
+    blockNumber: BigInt(ethereumBlockNumber),
     contracts: ethereumMarkets.map(market => ({
       address: market as `0x${string}`,
       abi: mTokenv2ABI,
       functionName: "totalBorrows",
-      blockNumber: BigInt(ethereumBlockNumber),
     } as ContractCall)),
   })).map((borrow) => borrow.result as bigint);
 
   const ethereumReserves = (await ethereumClient.multicall({
+    blockNumber: BigInt(ethereumBlockNumber),
     contracts: ethereumMarkets.map(market => ({
       address: market as `0x${string}`,
       abi: mTokenv2ABI,
       functionName: "totalReserves",
-      blockNumber: BigInt(ethereumBlockNumber),
     })),
   })).map((reserves) => reserves.result as bigint);
 
   const ethereumExchangeRates = (await ethereumClient.multicall({
+    blockNumber: BigInt(ethereumBlockNumber),
     contracts: ethereumMarkets.map(market => ({
       address: market as `0x${string}`,
       abi: mTokenv2ABI,
       functionName: "exchangeRateStored",
-      blockNumber: BigInt(ethereumBlockNumber),
     } as ContractCall)),
   })).map((exchangeRate) => exchangeRate.result as bigint);
 
   // Functions to get emissions per second
   const moonbeamWellSupplySpeeds = (await moonbeamClient.multicall({
+    blockNumber: BigInt(moonbeamBlockNumber),
     contracts: moonbeamMarkets.map(market => ({
       address: moonbeamComptroller.address,
       abi: moonbeamComptroller.abi,
       functionName: "supplyRewardSpeeds",
-      blockNumber: BigInt(moonbeamBlockNumber),
       args: [0, market], // 0 = WELL
     } as ContractCall)),
   })).map((supplyRewardSpeed) => supplyRewardSpeed.result as bigint);
 
   const moonbeamWellBorrowSpeeds = (await moonbeamClient.multicall({
+    blockNumber: BigInt(moonbeamBlockNumber),
     contracts: moonbeamMarkets.map(market => ({
       address: moonbeamComptroller.address,
       abi: moonbeamComptroller.abi,
       functionName: "borrowRewardSpeeds",
-      blockNumber: BigInt(moonbeamBlockNumber),
       args: [0, market], // 0 = WELL
     } as ContractCall)),
   })).map((borrowRewardSpeed) => borrowRewardSpeed.result as bigint);
 
   const baseWellSupplySpeeds = (await baseClient.multicall({
+    blockNumber: BigInt(baseBlockNumber),
     contracts: baseMarkets.map(market => ({
       address: baseMultiRewardDistributor.address,
       abi: baseMultiRewardDistributor.abi,
       functionName: "getConfigForMarket",
-      blockNumber: BigInt(baseBlockNumber),
       args: [market, xWellToken.address],
     } as ContractCall)),
   })).map((supplyRewardSpeed) => {
@@ -749,11 +749,11 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
   });
 
   const baseWellBorrowSpeeds = (await baseClient.multicall({
+    blockNumber: BigInt(baseBlockNumber),
     contracts: baseMarkets.map(market => ({
       address: baseMultiRewardDistributor.address,
       abi: baseMultiRewardDistributor.abi,
       functionName: "getConfigForMarket",
-      blockNumber: BigInt(baseBlockNumber),
       args: [market, xWellToken.address],
     } as ContractCall)),
   })).map((borrowRewardSpeed) => {
@@ -762,11 +762,11 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
   });
 
   const optimismWellSupplySpeeds = (await optimismClient.multicall({
+    blockNumber: BigInt(optimismBlockNumber),
     contracts: optimismMarkets.map(market => ({
       address: optimismMultiRewardDistributor.address,
       abi: optimismMultiRewardDistributor.abi,
       functionName: "getConfigForMarket",
-      blockNumber: BigInt(optimismBlockNumber),
       args: [market, xWellToken.address],
     } as ContractCall)),
   })).map((supplyRewardSpeed) => {
@@ -775,11 +775,11 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
   });
 
   const optimismWellBorrowSpeeds = (await optimismClient.multicall({
+    blockNumber: BigInt(optimismBlockNumber),
     contracts: optimismMarkets.map(market => ({
       address: optimismMultiRewardDistributor.address,
       abi: optimismMultiRewardDistributor.abi,
       functionName: "getConfigForMarket",
-      blockNumber: BigInt(optimismBlockNumber),
       args: [market, xWellToken.address],
     } as ContractCall)),
   })).map((borrowRewardSpeed) => {
@@ -788,11 +788,11 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
   });
 
   const ethereumWellSupplySpeeds = (await ethereumClient.multicall({
+    blockNumber: BigInt(ethereumBlockNumber),
     contracts: ethereumMarkets.map(market => ({
       address: ethereumMultiRewardDistributor.address,
       abi: ethereumMultiRewardDistributor.abi,
       functionName: "getConfigForMarket",
-      blockNumber: BigInt(ethereumBlockNumber),
       args: [market, xWellToken.address],
     } as ContractCall)),
   })).map((supplyRewardSpeed) => {
@@ -801,11 +801,11 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
   });
 
   const ethereumWellBorrowSpeeds = (await ethereumClient.multicall({
+    blockNumber: BigInt(ethereumBlockNumber),
     contracts: ethereumMarkets.map(market => ({
       address: ethereumMultiRewardDistributor.address,
       abi: ethereumMultiRewardDistributor.abi,
       functionName: "getConfigForMarket",
-      blockNumber: BigInt(ethereumBlockNumber),
       args: [market, xWellToken.address],
     } as ContractCall)),
   })).map((borrowRewardSpeed) => {
@@ -819,21 +819,21 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
   const ethereumNativeBorrowSpeeds = ethereumMarkets.map(() => BigInt(0));
 
   const moonbeamNativeSupplySpeeds = (await moonbeamClient.multicall({
+    blockNumber: BigInt(moonbeamBlockNumber),
     contracts: moonbeamMarkets.map(market => ({
       address: moonbeamComptroller.address,
       abi: moonbeamComptroller.abi,
       functionName: "supplyRewardSpeeds",
-      blockNumber: BigInt(moonbeamBlockNumber),
       args: [1, market], // 1 = GLMR (native token)
     } as ContractCall)),
   })).map((supplyRewardSpeed) => supplyRewardSpeed.result as bigint);
 
   const baseNativeSupplySpeeds = (await baseClient.multicall({
+    blockNumber: BigInt(baseBlockNumber),
     contracts: baseMarkets.map(market => ({
       address: baseMultiRewardDistributor.address,
       abi: baseMultiRewardDistributor.abi,
       functionName: "getConfigForMarket",
-      blockNumber: BigInt(baseBlockNumber),
       args: [market, baseNativeToken],
     } as ContractCall)),
   })).map((supplyRewardSpeed) => {
@@ -842,11 +842,11 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
   });
 
   const optimismNativeSupplySpeeds = (await optimismClient.multicall({
+    blockNumber: BigInt(optimismBlockNumber),
     contracts: optimismMarkets.map(market => ({
       address: optimismMultiRewardDistributor.address,
       abi: optimismMultiRewardDistributor.abi,
       functionName: "getConfigForMarket",
-      blockNumber: BigInt(optimismBlockNumber),
       args: [market, optimismNativeToken],
     } as ContractCall)),
   })).map((supplyRewardSpeed) => {
@@ -855,21 +855,21 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
   });
 
   const moonbeamNativeBorrowSpeeds = (await moonbeamClient.multicall({
+    blockNumber: BigInt(moonbeamBlockNumber),
     contracts: moonbeamMarkets.map(market => ({
       address: moonbeamComptroller.address,
       abi: moonbeamComptroller.abi,
       functionName: "borrowRewardSpeeds",
-      blockNumber: BigInt(moonbeamBlockNumber),
       args: [1, market], // 1 = GLMR (native token)
     } as ContractCall)),
   })).map((borrowRewardSpeed) => borrowRewardSpeed.result as bigint);
 
   const baseNativeBorrowSpeeds = (await baseClient.multicall({
+    blockNumber: BigInt(baseBlockNumber),
     contracts: baseMarkets.map(market => ({
       address: baseMultiRewardDistributor.address,
       abi: baseMultiRewardDistributor.abi,
       functionName: "getConfigForMarket",
-      blockNumber: BigInt(baseBlockNumber),
       args: [market, baseNativeToken],
     } as ContractCall)),
   })).map((borrowRewardSpeed) => {
@@ -878,11 +878,11 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
   });
 
   const optimismNativeBorrowSpeeds = (await optimismClient.multicall({
+    blockNumber: BigInt(optimismBlockNumber),
     contracts: optimismMarkets.map(market => ({
       address: optimismMultiRewardDistributor.address,
       abi: optimismMultiRewardDistributor.abi,
       functionName: "getConfigForMarket",
-      blockNumber: BigInt(optimismBlockNumber),
       args: [market, optimismNativeToken],
     } as ContractCall)),
   })).map((borrowRewardSpeed) => {
@@ -891,11 +891,11 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
   });
 
   const moonbeamMarketInfo = (await moonbeamClient.multicall({
+    blockNumber: BigInt(moonbeamBlockNumber),
     contracts: moonbeamMarkets.map(market => ({
       address: moonbeamViewsContract.address,
       abi: moonbeamViewsContract.abi,
       functionName: "getMarketInfo",
-      blockNumber: BigInt(moonbeamBlockNumber),
       args: [market],
     } as ContractCall)),
   }));
@@ -917,11 +917,11 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
   });
 
   const baseMarketInfo = (await baseClient.multicall({
+    blockNumber: BigInt(baseBlockNumber),
     contracts: baseMarkets.map(market => ({
       address: baseViewsContract.address,
       abi: baseViewsContract.abi,
       functionName: "getMarketInfo",
-      blockNumber: BigInt(baseBlockNumber),
       args: [market],
     } as ContractCall)),
   }));
@@ -944,11 +944,11 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
   });
 
   const optimismMarketInfo = (await optimismClient.multicall({
+    blockNumber: BigInt(optimismBlockNumber),
     contracts: optimismMarkets.map(market => ({
       address: optimismViewsContract.address,
       abi: optimismViewsContract.abi,
       functionName: "getMarketInfo",
-      blockNumber: BigInt(optimismBlockNumber),
       args: [market],
     } as ContractCall)),
   }));
@@ -970,11 +970,11 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
   });
 
   const ethereumMarketInfo = (await ethereumClient.multicall({
+    blockNumber: BigInt(ethereumBlockNumber),
     contracts: ethereumMarkets.map(market => ({
       address: ethereumViewsContract.address,
       abi: ethereumViewsContract.abi,
       functionName: "getMarketInfo",
-      blockNumber: BigInt(ethereumBlockNumber),
       args: [market],
     } as ContractCall)),
   }));
