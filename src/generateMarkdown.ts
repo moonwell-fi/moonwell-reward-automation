@@ -24,13 +24,16 @@ interface MarketData {
 }
 
 function formatDate(timestamp: number): string {
+  // UTC getters: the label says UTC, so the date must be rendered in UTC.
+  // (Local getters produced e.g. "2026-06-14 at 21:00:00 UTC" for the
+  // 15th-00:00-UTC epoch boundary when generated from a UTC-3 machine.)
   const date = new Date(timestamp * 1000);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const hours = String(date.getUTCHours()).padStart(2, '0');
+  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+  const seconds = String(date.getUTCSeconds()).padStart(2, '0');
   return `${year}-${month}-${day} at ${hours}:${minutes}:${seconds} UTC`;
 }
 
