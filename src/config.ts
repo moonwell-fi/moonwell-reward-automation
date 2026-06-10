@@ -16,6 +16,12 @@ export function applyConfigOverrides(overrides?: ConfigOverrides): typeof mainCo
 	) => {
 		if (!source) return;
 		for (const [key, value] of Object.entries(source)) {
+			// Only the split percentages are overridable via the API. Everything else on a
+			// network block (rewardsEnabled, nativePerEpoch, dexRelayerAmount, ...) is
+			// config-only and must not be reachable from a URL parameter.
+			if (!['markets', 'safetyModule', 'dex', 'vaults'].includes(key)) {
+				throw new Error(`Invalid override: unknown key "${key}" (only markets, safetyModule, dex, vaults may be overridden)`);
+			}
 			if (value !== undefined) {
 				if (typeof value !== 'number' || !isFinite(value)) {
 					throw new Error(`Invalid override: ${key} must be a finite number, got ${typeof value}`);
@@ -58,11 +64,18 @@ export function validateSplits(config: typeof mainConfig): string | null {
 		return 'ethereum safetyModule/dex splits are not supported yet (no funding actions are emitted); only markets may be nonzero';
 	}
 
+	// With every network ineligible the cross-network split has no destination and the
+	// proposal would distribute nothing — almost certainly a misconfiguration.
+	if (!config.moonbeam.rewardsEnabled && !config.base.rewardsEnabled && !config.optimism.rewardsEnabled && !config.ethereum.rewardsEnabled) {
+		return 'at least one network must have rewardsEnabled: true';
+	}
+
 	return null;
 }
 
 export const mainConfig = {
-	totalWellPerEpoch: 13_139_447.412450949,
+	totalWellPerEpoch: 14_471_834.68769526,
+  // Note June 9th, 2026 - temporary 2 month emissions = 14,471,834.68769526 per month
 	/* Note: updated to reduce by 18M from currently remaining ~293M on 11/18/2024, original schedule below
     new BigNumber(750_000_000) // 750 million
     .div(4) // 4 years emission schedule
@@ -77,14 +90,19 @@ export const mainConfig = {
 		// network sum is 0, which validateSplits treats as a disabled network), and every
 		// marketConfigs[1284] market has `enabled: false`, driving moonbeamTotalMarketPercentage
 		// to 0. getMarketData still emits setRewardSpeed=0 / stkWellEmissionsPerSecond=0 wind-down
-		// actions. To RE-ENABLE: flip the marketConfigs[1284] markets back to `enabled: true` and
-		// set the intended split below so it sums to 1.0.
+		// actions. To RE-ENABLE: set `rewardsEnabled: true`, flip the marketConfigs[1284] markets
+		// back to `enabled: true`, and set the intended split below so it sums to 1.0.
+		// rewardsEnabled: when false, this network's TVL is treated as 0 in the cross-network
+		// WELL split (it receives no WELL; the other networks absorb its share proportionally).
+		// Config-only by design — not settable via the configOverrides API param.
+		rewardsEnabled: false,
 		nativePerEpoch: 0, // GLMR grant fully spent, no more GLMR rewards
 		markets: 0,
 		safetyModule: 0,
 		dex: 0,
 	},
 	base: {
+		rewardsEnabled: true,
 		nativePerEpoch: 0,
 		markets: 0.55, // 55% - Proportionally reduced to accommodate vaults
 		safetyModule: 0.20, // 20% - Proportionally reduced to accommodate vaults
@@ -119,18 +137,25 @@ export const mainConfig = {
     3. 40,000 in June for core markets and 10,000 for the USDC vault
     4. 50,000 in July for core markets and 10,000 for the USDC vault
     5. 50,000 in August for core markets and 10,000 for the USDC vault */
+		// OPTIMISM WIND-DOWN: rewardsEnabled false treats Optimism TVL as 0 in the cross-network
+		// WELL split, so Base/Ethereum absorb its share and Optimism markets get zero-speed
+		// wind-down actions. stkWELL auction recycling (wellHolderBalance) is independent of
+		// this flag and keeps emitting. To RE-ENABLE: set `rewardsEnabled: true` (splits below
+		// already sum to 1.0).
+		rewardsEnabled: false,
 		nativePerEpoch: 0,
 		rewarderNames: ['USDC_MULTI_REWARDER'], // Names of multi-rewarders to distribute rewards to
 		vaultNativePerEpoch: 0,
 		vaults: 0.00, // 0% of the WELL allocation to the vault staking contract
-		markets: 0.95,
-		safetyModule: 0.05,
+		markets: 1.0,
+		safetyModule: 0,
 		dex: 0.0,
 	},
 	ethereum: {
 		// Ethereum mainnet markets (WETH/USDC/USDT/cbBTC). The governor executes natively
 		// here, so funds move by direct transferFrom (no bridge). 100% to markets; the
 		// Ethereum stkWELL (STK_GOVTOKEN_PROXY) is unfunded for now.
+		rewardsEnabled: true,
 		nativePerEpoch: 0, // no native reward token on mainnet
 		markets: 1.0,
 		safetyModule: 0,
@@ -13198,7 +13223,7 @@ export const marketConfigs = {
       nameOverride: 'ETH',
       alias: 'MOONWELL_WETH',
       digits: 18,
-      boost: 0,
+      boost: 10_000_000,
       deboost: 0,
       supply: 1,
       borrow: 0,
@@ -13211,7 +13236,7 @@ export const marketConfigs = {
       nameOverride: 'USDC',
       alias: 'MOONWELL_USDC',
       digits: 6,
-      boost: 0,
+      boost: 10_000_000,
       deboost: 0,
       supply: 1,
       borrow: 0,
@@ -13224,7 +13249,7 @@ export const marketConfigs = {
       nameOverride: 'USDT',
       alias: 'MOONWELL_USDT',
       digits: 6,
-      boost: 0,
+      boost: 10_000_000,
       deboost: 0,
       supply: 1,
       borrow: 0,
@@ -13237,7 +13262,7 @@ export const marketConfigs = {
       nameOverride: 'cbBTC',
       alias: 'MOONWELL_cbBTC',
       digits: 8,
-      boost: 0,
+      boost: 5_000_000,
       deboost: 0,
       supply: 1,
       borrow: 0,
@@ -13252,7 +13277,7 @@ export const marketConfigs = {
       alias: 'MOONWELL_USDC',
       nameOverride: 'USDC',
       digits: 6,
-      boost: 3_000_000,
+      boost: 0,
       deboost: 0,
       supply: 1,
       borrow: 0,
@@ -13317,7 +13342,7 @@ export const marketConfigs = {
       nameOverride: 'ETH',
       alias: 'MOONWELL_WETH',
       digits: 18,
-      boost: 5_000_000,
+      boost: 0,
       deboost: 0,
       supply: 1,
       borrow: 0,
@@ -13436,7 +13461,7 @@ export const marketConfigs = {
       nameOverride: 'DOT',
       alias: 'mxcDOT',
       digits: 10,
-      boost: 5_000_000,
+      boost: 0,
       deboost: 0,
       supply: 1,
       borrow: 0,
@@ -13542,7 +13567,7 @@ export const marketConfigs = {
       nameOverride: 'ETH',
       alias: 'MOONWELL_WETH',
       digits: 18,
-      boost: 20_000_000,
+      boost: 0,
       deboost: 0,
       supply: 0.50,
       borrow: 0.50,
@@ -13581,7 +13606,7 @@ export const marketConfigs = {
       nameOverride: 'USDC',
       alias: 'MOONWELL_USDC',
       digits: 6,
-      boost: 75_000_000,
+      boost: 0,
       deboost: 0,
       supply: 1,
       borrow: 0,
@@ -13634,7 +13659,7 @@ export const marketConfigs = {
       alias: 'MOONWELL_AERO',
       digits: 18,
       boost: 0,
-      deboost: 5_000_000,
+      deboost: 0,
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
@@ -13685,7 +13710,7 @@ export const marketConfigs = {
       nameOverride: 'WELL',
       alias: 'MOONWELL_WELL',
       digits: 18,
-      boost: 3_000_000,
+      boost: 0,
       deboost: 0,
       supply: 0.45,
       borrow: 0.55,
@@ -13737,7 +13762,7 @@ export const marketConfigs = {
       nameOverride: 'VIRTUAL',
       alias: 'MOONWELL_VIRTUAL',
       digits: 18,
-      boost: 5_000_000,
+      boost: 0,
       deboost: 0,
       supply: 0.45,
       borrow: 0.55,
@@ -13750,7 +13775,7 @@ export const marketConfigs = {
       nameOverride: 'MORPHO',
       alias: 'MOONWELL_MORPHO',
       digits: 18,
-      boost: 5_000_000,
+      boost: 0,
       deboost: 0,
       supply: 0.45,
       borrow: 0.55,
@@ -13763,7 +13788,7 @@ export const marketConfigs = {
       nameOverride: 'cbXRP',
       alias: 'MOONWELL_cbXRP',
       digits: 18,
-      boost: 5_000_000,
+      boost: 0,
       deboost: 0,
       supply: 0.45,
       borrow: 0.55,

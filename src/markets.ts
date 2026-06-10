@@ -1332,7 +1332,9 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     return totalSupplyUSD + totalBorrowsUSD;
   }
 
-  const moonbeamNetworkTotalUsd = calculateNetworkTotalUSD(
+  // A network with rewardsEnabled: false contributes 0 TVL to the cross-network split,
+  // so it receives no WELL and the remaining networks absorb its share proportionally.
+  const moonbeamNetworkTotalUsd = !config.moonbeam.rewardsEnabled ? 0 : calculateNetworkTotalUSD(
     moonbeamMarkets,
     moonbeamSupplies,
     moonbeamExchangeRates,
@@ -1344,7 +1346,7 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     moonbeamEnabled.filter((enabled): enabled is boolean => enabled !== null),
   );
 
-  const baseNetworkTotalUsd = calculateNetworkTotalUSD(
+  const baseNetworkTotalUsd = !config.base.rewardsEnabled ? 0 : calculateNetworkTotalUSD(
     baseMarkets,
     baseSupplies,
     baseExchangeRates,
@@ -1356,7 +1358,7 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     baseEnabled.filter((enabled): enabled is boolean => enabled !== null),
   );
 
-  const optimismNetworkTotalUsd = calculateNetworkTotalUSD(
+  const optimismNetworkTotalUsd = !config.optimism.rewardsEnabled ? 0 : calculateNetworkTotalUSD(
     optimismMarkets,
     optimismSupplies,
     optimismExchangeRates,
@@ -1368,7 +1370,7 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     optimismEnabled.filter((enabled): enabled is boolean => enabled !== null),
   );
 
-  const ethereumNetworkTotalUsd = calculateNetworkTotalUSD(
+  const ethereumNetworkTotalUsd = !config.ethereum.rewardsEnabled ? 0 : calculateNetworkTotalUSD(
     ethereumMarkets,
     ethereumSupplies,
     ethereumExchangeRates,
@@ -1382,13 +1384,17 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
 
   const allNetworksTotalUsd = moonbeamNetworkTotalUsd + baseNetworkTotalUsd + optimismNetworkTotalUsd + ethereumNetworkTotalUsd;
 
-  const moonbeamTotalMarketPercentage = moonbeamNetworkTotalUsd / allNetworksTotalUsd;
+  // Guard against every network being disabled (total === 0) producing NaN shares.
+  const networkShare = (networkTotalUsd: number) =>
+    allNetworksTotalUsd === 0 ? 0 : networkTotalUsd / allNetworksTotalUsd;
 
-  const baseTotalMarketPercentage = baseNetworkTotalUsd / allNetworksTotalUsd;
+  const moonbeamTotalMarketPercentage = networkShare(moonbeamNetworkTotalUsd);
 
-  const optimismTotalMarketPercentage = optimismNetworkTotalUsd / allNetworksTotalUsd;
+  const baseTotalMarketPercentage = networkShare(baseNetworkTotalUsd);
 
-  const ethereumTotalMarketPercentage = ethereumNetworkTotalUsd / allNetworksTotalUsd;
+  const optimismTotalMarketPercentage = networkShare(optimismNetworkTotalUsd);
+
+  const ethereumTotalMarketPercentage = networkShare(ethereumNetworkTotalUsd);
 
   const moonbeamNewWellSupplySpeeds = moonbeamMarkets.map((_market, index) => {
     const currentSpeed = Number(formatUnits(moonbeamWellSupplySpeeds[index], 18));

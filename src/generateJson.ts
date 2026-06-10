@@ -100,7 +100,8 @@ export async function returnJson(marketData: any, network: string) {
         .shiftedBy(18)
         .integerValue().toFixed(0)),
       newEndTime: marketData.epochEndTimestamp,
-      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isLessThanOrEqualTo(0) ? -1 :
+      // -1 = leave unchanged (MRD skip); an exact 0 must pass through to actively zero a live market
+      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isLessThan(0) ? -1 :
         new BigNumber(market.newWellSupplySpeed).isZero() ? 0 : Number(new BigNumber(market.newWellSupplySpeed)
         .shiftedBy(18)
         .integerValue().toFixed(0)),
@@ -113,7 +114,8 @@ export async function returnJson(marketData: any, network: string) {
         .shiftedBy(6)
         .integerValue().toFixed(0)),
       newEndTime: -1, // Don't update the end timestamp for USDC until new incentives are allocated
-      newSupplySpeed: new BigNumber(market.newNativeSupplySpeed).isLessThanOrEqualTo(0) ? -1 :
+      // -1 = leave unchanged (MRD skip); an exact 0 must pass through to actively zero a live market
+      newSupplySpeed: new BigNumber(market.newNativeSupplySpeed).isLessThan(0) ? -1 :
         new BigNumber(market.newNativeSupplySpeed).isZero() ? 0 : Number(new BigNumber(market.newNativeSupplySpeed)
         .shiftedBy(6)
         .integerValue().toFixed(0)),
@@ -132,7 +134,8 @@ export async function returnJson(marketData: any, network: string) {
         .shiftedBy(18)
         .integerValue().toFixed(0)),
       newEndTime: marketData.epochEndTimestamp,
-      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isLessThanOrEqualTo(0) ? -1 :
+      // -1 = leave unchanged (MRD skip); an exact 0 must pass through to actively zero a live market
+      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isLessThan(0) ? -1 :
         new BigNumber(market.newWellSupplySpeed).isZero() ? 0 : Number(new BigNumber(market.newWellSupplySpeed)
         .shiftedBy(18)
         .integerValue().toFixed(0)),
@@ -151,7 +154,8 @@ export async function returnJson(marketData: any, network: string) {
         .shiftedBy(18)
         .integerValue().toFixed(0)),
       newEndTime: marketData.epochEndTimestamp,
-      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isLessThanOrEqualTo(0) ? -1 :
+      // -1 = leave unchanged (MRD skip); an exact 0 must pass through to actively zero a live market
+      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isLessThan(0) ? -1 :
         new BigNumber(market.newWellSupplySpeed).isZero() ? 0 : Number(new BigNumber(market.newWellSupplySpeed)
         .shiftedBy(18)
         .integerValue().toFixed(0)),

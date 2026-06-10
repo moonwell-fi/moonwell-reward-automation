@@ -9,6 +9,11 @@ export interface ContractCall {
   args: readonly any[];
 }
 
+// viem's bundled Moonbeam default (moonbeam.public.blastapi.io) has been
+// decommissioned and returns HTTP 403, so fall back to the Moonbeam
+// Foundation's maintained public endpoint instead.
+const DEFAULT_MOONBEAM_RPC_URL = "https://rpc.api.moonbeam.network";
+
 // For Cloudflare Workers, environment variables are accessed through the global env object
 // We'll define these clients as functions that take the env object
 export const createClients = (env: any) => {
@@ -36,7 +41,7 @@ export const createClients = (env: any) => {
   return {
     moonbeamClient: createPublicClient({
       chain: moonbeam,
-      transport: http(moonbeamRpcUrl),
+      transport: http(moonbeamRpcUrl ?? DEFAULT_MOONBEAM_RPC_URL),
     }),
 
     baseClient: createPublicClient({
@@ -59,7 +64,7 @@ export const createClients = (env: any) => {
 // Default clients for backward compatibility
 export const moonbeamClient = createPublicClient({
   chain: moonbeam,
-  transport: http(),
+  transport: http(DEFAULT_MOONBEAM_RPC_URL),
 });
 
 export const baseClient = createPublicClient({

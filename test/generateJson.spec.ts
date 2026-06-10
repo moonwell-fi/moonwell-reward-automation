@@ -9,7 +9,7 @@ describe('generateJson', () => {
       const mockMarketData = {
         "1284": [{
           alias: "MOONWELL_WBTC",
-          totalReserves: 100,
+          reserves: 100,
           minimumReserves: 20,
           reservesEnabled: true,
           digits: 8, // WBTC has 8 decimals
@@ -21,6 +21,7 @@ describe('generateJson', () => {
         "8453": [], // Empty array for Base markets
         "10": [], // Empty array for Optimism markets
         moonbeam: {
+          wellPerEpoch: "10000",
           wellPerEpochDex: "1000",
           wellPerEpochMarkets: "5000",
           wellPerEpochSafetyModule: "4000",
@@ -56,7 +57,7 @@ describe('generateJson', () => {
       const mockMarketData = {
         "1284": [{
           alias: "MOONWELL_WBTC",
-          totalReserves: 100,
+          reserves: 100,
           minimumReserves: 20,
           reservesEnabled: false,
           digits: 8, // WBTC has 8 decimals
@@ -68,6 +69,7 @@ describe('generateJson', () => {
         "8453": [], // Empty array for Base markets
         "10": [], // Empty array for Optimism markets
         moonbeam: {
+          wellPerEpoch: "10000",
           wellPerEpochDex: "1000",
           wellPerEpochMarkets: "5000",
           wellPerEpochSafetyModule: "4000",
@@ -92,7 +94,7 @@ describe('generateJson', () => {
       const mockMarketData = {
         "8453": [{
           alias: "MOONWELL_USDBC",
-          totalReserves: 100,
+          reserves: 100,
           minimumReserves: 20,
           reservesEnabled: true,
           digits: 6, // USDC has 6 decimals
@@ -108,11 +110,13 @@ describe('generateJson', () => {
           wellPerEpochDex: "1000",
           wellPerEpochMarkets: "5000",
           wellPerEpochSafetyModule: "4000",
+          wellHolderBalance: "0",
+          vaultAmounts: { USDC: "0", WETH: "0", EURC: "0", cbBTC: "0", meUSDC: "0" },
         },
+        baseStkWELLTotalSupply: "0",
         epochEndTimestamp: 1723174200,
         epochStartTimestamp: 1723174200 - (60 * 60 * 24 * 7 * 4),
         totalSeconds: 60 * 60 * 24 * 7 * 4,
-        bridgeCost: "1000000000000000",
       };
 
       const result = await returnJson(mockMarketData, "Base");
@@ -143,7 +147,7 @@ describe('generateJson', () => {
       const mockMarketData = {
         "10": [{
           alias: "MOONWELL_WBTC",
-          totalReserves: 100,
+          reserves: 100,
           minimumReserves: 20,
           reservesEnabled: true,
           digits: 8, // WBTC has 8 decimals
@@ -159,12 +163,13 @@ describe('generateJson', () => {
           wellPerEpochDex: "1000",
           wellPerEpochMarkets: "5000",
           wellPerEpochSafetyModule: "4000",
-          nativePerEpoch: "1000",
+          wellHolderBalance: "0",
+          optimismUSDCVaultWellRewardAmount: 0,
         },
+        optimismStkWELLTotalSupply: "0",
         epochEndTimestamp: 1723174200,
         epochStartTimestamp: 1723174200 - (60 * 60 * 24 * 7 * 4),
         totalSeconds: 60 * 60 * 24 * 7 * 4,
-        bridgeCost: "1000000000000000",
       };
 
       const result = await returnJson(mockMarketData, "Optimism");
@@ -384,6 +389,99 @@ describe('generateJson', () => {
       expect(r[1].setMRDSpeeds).toHaveLength(1);
       expect(r[1].setMRDSpeeds[0].newSupplySpeed).toBe(-1);
       expect(r[1].setMRDSpeeds[0].newBorrowSpeed).toBe(-1);
+    });
+  });
+
+  describe('network rewardsEnabled wind-down', () => {
+    it('disabled Optimism emits a clean wind-down: zero-speed actions, no funding, no dust', async () => {
+      const md = {
+        "10": [
+          { // live market: markets.ts emits an exact 0 to actively zero the running speed
+            alias: "MOONWELL_USDC",
+            newWellSupplySpeed: "0",
+            newWellBorrowSpeed: "1e-18",
+            newNativeSupplySpeed: "-1e-18",
+            newNativeBorrowSpeed: "-1e-18",
+          },
+          { // already-zeroed market: the -1e-18 sentinel must stay "no change"
+            alias: "MOONWELL_WETH",
+            newWellSupplySpeed: "-1e-18",
+            newWellBorrowSpeed: "-1e-18",
+            newNativeSupplySpeed: "-1e-18",
+            newNativeBorrowSpeed: "-1e-18",
+          },
+        ],
+        "1284": [], "8453": [],
+        optimism: {
+          rewardsEnabled: false,
+          wellPerEpoch: "0",
+          wellPerEpochDex: "0",
+          wellPerEpochMarkets: "0",
+          wellPerEpochSafetyModule: "0",
+          wellHolderBalance: "0",
+          optimismUSDCVaultWellRewardAmount: 0,
+        },
+        optimismStkWELLTotalSupply: "0",
+        epochStartTimestamp: 1739577600,
+        epochEndTimestamp: 1739577600 + 30 * 86400,
+        totalSeconds: 30 * 86400,
+      };
+
+      const r = await returnJson(md, "Optimism");
+
+      // No WELL leaves Ethereum for Optimism: empty source block.
+      expect(r[1].transferFrom).toEqual([]);
+      expect(r[1].bridgeToRecipient).toEqual([]);
+
+      // No destination funding, no recycled-WELL top-up, no multiRewarder dust.
+      expect(r[10].transferFrom).toEqual([]);
+      expect(r[10].withdrawWell).toEqual([]);
+      expect(r[10].multiRewarder).toEqual([]);
+      expect(r[10].stkWellEmissionsPerSecond).toBe(0);
+
+      // The live market is actively zeroed (0 = set speed to zero, not -1 = skip);
+      // borrow winds down to the 1 wei minimum; untouched markets stay "no change".
+      const usdc = r[10].setMRDSpeeds.find((s: any) => s.market === "MOONWELL_USDC");
+      expect(usdc.newSupplySpeed).toBe(0);
+      expect(usdc.newBorrowSpeed).toBe(1);
+      const weth = r[10].setMRDSpeeds.find((s: any) => s.market === "MOONWELL_WETH");
+      expect(weth.newSupplySpeed).toBe(-1);
+      expect(weth.newBorrowSpeed).toBe(-1);
+    });
+
+    it('Base maps an exact-zero supply speed to 0 (set-to-zero), not -1 (skip)', async () => {
+      const md = {
+        "8453": [{
+          alias: "MOONWELL_USDC",
+          newWellSupplySpeed: "0",
+          newWellBorrowSpeed: "1e-18",
+          newNativeSupplySpeed: "-0.000001",
+          newNativeBorrowSpeed: "-0.000001",
+        }],
+        "1284": [], "10": [],
+        base: {
+          wellPerEpoch: "0",
+          wellPerEpochDex: "0",
+          wellPerEpochMarkets: "0",
+          wellPerEpochSafetyModule: "0",
+          wellHolderBalance: "0",
+          vaultAmounts: { USDC: "0", WETH: "0", EURC: "0", cbBTC: "0", meUSDC: "0" },
+        },
+        baseStkWELLTotalSupply: "0",
+        epochStartTimestamp: 1739577600,
+        epochEndTimestamp: 1739577600 + 30 * 86400,
+        totalSeconds: 30 * 86400,
+      };
+
+      const r = await returnJson(md, "Base");
+
+      const well = r[8453].setMRDSpeeds.find((s: any) => s.emissionToken === "xWELL_PROXY");
+      expect(well.newSupplySpeed).toBe(0);
+      expect(well.newBorrowSpeed).toBe(1);
+      // Negative native sentinels still mean "no change".
+      const usdcNative = r[8453].setMRDSpeeds.find((s: any) => s.emissionToken === "USDC");
+      expect(usdcNative.newSupplySpeed).toBe(-1);
+      expect(usdcNative.newBorrowSpeed).toBe(-1);
     });
   });
 });

@@ -60,6 +60,11 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
 
     //Breakdown
     const networkMarketData = marketData[network.toLowerCase()];
+    // Surface the config-level network disable (rewardsEnabled: false) so reviewers see why
+    // every allocation below is zero. `=== false` keeps older payloads without the field silent.
+    if (networkMarketData?.rewardsEnabled === false) {
+      markdown += `> **Note:** ${networkName} is not currently eligible for WELL rewards (\`rewardsEnabled: false\`). Its TVL is excluded from the cross-network split, so its share of this epoch's emissions is 0 and is redistributed to the remaining networks.\n\n`;
+    }
     const networkDexInfo = dexData.find(r => r.network.toString() == networkId)
     const networkSummary = Object.values(marketData[networkId]).reduce((prev, curr) => {
       return {

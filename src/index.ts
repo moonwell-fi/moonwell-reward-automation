@@ -105,7 +105,7 @@ This is an automated liquidity incentive governance proposal for the Moonwell pr
 
 `;
 				}
-				const networks = network ? [network] : ['Base', 'Optimism', 'Moonbeam', 'Ethereum'];
+				const networks = network ? [network] : ['Base', 'Ethereum', 'Optimism', 'Moonbeam'];
 
 				for (const n of networks) {
 					markdown += await generateMarkdown(marketData, proposalNumber, n, dexData);
