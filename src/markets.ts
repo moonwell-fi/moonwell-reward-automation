@@ -1099,13 +1099,15 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     const supply = moonbeamSupplies[index];
     const exchangeRate = moonbeamExchangeRates[index];
     const price = moonbeamPrices[index];
-    const digit = moonbeamDigits.filter((digit): digit is number => digit !== null)[index];
-    const boost = moonbeamBoosts.filter((boost): boost is number => boost !== null)[index];
-    const deboost = moonbeamDeboosts.filter((deboost): deboost is number => deboost !== null)[index];
-    
+    // Index directly (not filter-then-index, which misaligns every later market
+    // when an on-chain market is missing from marketConfigs); null means unconfigured.
+    const digit = moonbeamDigits[index];
+    const boost = moonbeamBoosts[index];
+    const deboost = moonbeamDeboosts[index];
+
     // Add null checks before using formatUnits
     if (supply === undefined || exchangeRate === undefined || price === undefined ||
-        digit === undefined || boost === undefined || deboost === undefined) {
+        digit == null || boost == null || deboost == null) {
       console.log(`⚠️ MISSING DATA: Moonbeam market ${index} missing data for totalSupplyUSD calculation`);
       return 0;
     }
@@ -1125,13 +1127,14 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     const supply = baseSupplies[index];
     const exchangeRate = baseExchangeRates[index];
     const price = basePrices[index];
-    const digit = baseDigits.filter((digit): digit is number => digit !== null)[index];
-    const boost = baseBoosts.filter((boost): boost is number => boost !== null)[index];
-    const deboost = baseDeboosts.filter((deboost): deboost is number => deboost !== null)[index];
-    
+    // Index directly (not filter-then-index, which misaligns on unconfigured markets).
+    const digit = baseDigits[index];
+    const boost = baseBoosts[index];
+    const deboost = baseDeboosts[index];
+
     // Add null checks before using formatUnits
     if (supply === undefined || exchangeRate === undefined || price === undefined ||
-        digit === undefined || boost === undefined || deboost === undefined) {
+        digit == null || boost == null || deboost == null) {
       console.log(`⚠️ MISSING DATA: Base market ${index} missing data for totalSupplyUSD calculation`);
       return 0;
     }
@@ -1151,13 +1154,14 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     const supply = optimismSupplies[index];
     const exchangeRate = optimismExchangeRates[index];
     const price = optimismPrices[index];
-    const digit = optimismDigits.filter((digit): digit is number => digit !== null)[index];
-    const boost = optimismBoosts.filter((boost): boost is number => boost !== null)[index];
-    const deboost = optimismDeboosts.filter((deboost): deboost is number => deboost !== null)[index];
-    
+    // Index directly (not filter-then-index, which misaligns on unconfigured markets).
+    const digit = optimismDigits[index];
+    const boost = optimismBoosts[index];
+    const deboost = optimismDeboosts[index];
+
     // Add null checks before using formatUnits
     if (supply === undefined || exchangeRate === undefined || price === undefined ||
-        digit === undefined || boost === undefined || deboost === undefined) {
+        digit == null || boost == null || deboost == null) {
       console.log(`⚠️ MISSING DATA: Optimism market ${index} missing data for totalSupplyUSD calculation`);
       return 0;
     }
@@ -1215,10 +1219,11 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     }
     const borrow = moonbeamBorrows[index];
     const price = moonbeamPrices[index];
-    const digit = moonbeamDigits.filter((digit): digit is number => digit !== null)[index];
-    
+    // Index directly (not filter-then-index, which misaligns on unconfigured markets).
+    const digit = moonbeamDigits[index];
+
     // Add null checks before using formatUnits
-    if (borrow === undefined || price === undefined || digit === undefined) {
+    if (borrow === undefined || price === undefined || digit == null) {
       console.log(`⚠️ MISSING DATA: Moonbeam market ${index} missing data for totalBorrowsUSD calculation`);
       return 0;
     }
@@ -1235,10 +1240,11 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     }
     const borrow = baseBorrows[index];
     const price = basePrices[index];
-    const digit = baseDigits.filter((digit): digit is number => digit !== null)[index];
-    
+    // Index directly (not filter-then-index, which misaligns on unconfigured markets).
+    const digit = baseDigits[index];
+
     // Add null checks before using formatUnits
-    if (borrow === undefined || price === undefined || digit === undefined) {
+    if (borrow === undefined || price === undefined || digit == null) {
       console.log(`⚠️ MISSING DATA: Base market ${index} missing data for totalBorrowsUSD calculation`);
       return 0;
     }
@@ -1255,10 +1261,11 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     }
     const borrow = optimismBorrows[index];
     const price = optimismPrices[index];
-    const digit = optimismDigits.filter((digit): digit is number => digit !== null)[index];
-    
+    // Index directly (not filter-then-index, which misaligns on unconfigured markets).
+    const digit = optimismDigits[index];
+
     // Add null checks before using formatUnits
-    if (borrow === undefined || price === undefined || digit === undefined) {
+    if (borrow === undefined || price === undefined || digit == null) {
       console.log(`⚠️ MISSING DATA: Optimism market ${index} missing data for totalBorrowsUSD calculation`);
       return 0;
     }
@@ -1290,97 +1297,24 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     );
   });
 
-  function calculateNetworkTotalUSD(
-    markets: any[],
-    supplies: bigint[],
-    exchangeRates: bigint[],
-    prices: bigint[],
-    digits: number[],
-    boosts: number[],
-    deboosts: number[],
-    borrows: bigint[],
-    enabledMarkets: boolean[]
-  ) {
-    let totalSupplyUSD = 0;
-    let totalBorrowsUSD = 0;
-
-    markets.forEach((_market, index) => {
-      const supply = supplies[index];
-      const exchangeRate = exchangeRates[index];
-      const price = prices[index];
-      const digit = digits[index];
-      const boost = boosts[index];
-      const deboost = deboosts[index];
-      const borrow = borrows[index];
-      const enabled = enabledMarkets[index];
-
-      if (enabled) { // Only include markets that are enabled
-        const supplyUSD =
-          Number(formatUnits(supply, 8)) *
-          Number(formatUnits(exchangeRate, 18 + digit - 8)) *
-          Number(formatUnits(price, 36 - digit));
-
-        const borrowUSD =
-          Number(formatUnits(borrow, digit)) *
-          Number(formatUnits(price, 36 - digit));
-
-        totalSupplyUSD += supplyUSD + boost - deboost;
-        totalBorrowsUSD += borrowUSD;
-      }
-    });
-
-    return totalSupplyUSD + totalBorrowsUSD;
-  }
+  // A network's total is the sum of its per-market supply USD (enabled-gated, boost/deboost
+  // included) and borrow USD arrays computed above — reusing them keeps the network total
+  // index-aligned with the per-market math (no separate, drift-prone re-derivation).
+  const sumUsd = (values: number[]) => values.reduce((sum, value) => sum + value, 0);
 
   // A network with rewardsEnabled: false contributes 0 TVL to the cross-network split,
   // so it receives no WELL and the remaining networks absorb its share proportionally.
-  const moonbeamNetworkTotalUsd = !config.moonbeam.rewardsEnabled ? 0 : calculateNetworkTotalUSD(
-    moonbeamMarkets,
-    moonbeamSupplies,
-    moonbeamExchangeRates,
-    moonbeamPrices,
-    moonbeamDigits.filter((digit): digit is number => digit !== null),
-    moonbeamBoosts.filter((boost): boost is number => boost !== null),
-    moonbeamDeboosts.filter((deboost): deboost is number => deboost !== null),
-    moonbeamBorrows,
-    moonbeamEnabled.filter((enabled): enabled is boolean => enabled !== null),
-  );
+  const moonbeamNetworkTotalUsd = !config.moonbeam.rewardsEnabled ? 0 :
+    sumUsd(moonbeamTotalSupplyUsd) + sumUsd(moonbeamTotalBorrowsUsd);
 
-  const baseNetworkTotalUsd = !config.base.rewardsEnabled ? 0 : calculateNetworkTotalUSD(
-    baseMarkets,
-    baseSupplies,
-    baseExchangeRates,
-    basePrices,
-    baseDigits.filter((digit): digit is number => digit !== null),
-    baseBoosts.filter((boost): boost is number => boost !== null),
-    baseDeboosts.filter((deboost): deboost is number => deboost !== null),
-    baseBorrows,
-    baseEnabled.filter((enabled): enabled is boolean => enabled !== null),
-  );
+  const baseNetworkTotalUsd = !config.base.rewardsEnabled ? 0 :
+    sumUsd(baseTotalSupplyUsd) + sumUsd(baseTotalBorrowsUsd);
 
-  const optimismNetworkTotalUsd = !config.optimism.rewardsEnabled ? 0 : calculateNetworkTotalUSD(
-    optimismMarkets,
-    optimismSupplies,
-    optimismExchangeRates,
-    optimismPrices,
-    optimismDigits.filter((digit): digit is number => digit !== null),
-    optimismBoosts.filter((boost): boost is number => boost !== null),
-    optimismDeboosts.filter((deboost): deboost is number => deboost !== null),
-    optimismBorrows,
-    optimismEnabled.filter((enabled): enabled is boolean => enabled !== null),
-  );
+  const optimismNetworkTotalUsd = !config.optimism.rewardsEnabled ? 0 :
+    sumUsd(optimismTotalSupplyUsd) + sumUsd(optimismTotalBorrowsUsd);
 
-  const ethereumNetworkTotalUsd = !config.ethereum.rewardsEnabled ? 0 : calculateNetworkTotalUSD(
-    ethereumMarkets,
-    ethereumSupplies,
-    ethereumExchangeRates,
-    ethereumPrices,
-    ethereumDigits.filter((digit): digit is number => digit !== null),
-    ethereumBoosts.filter((boost): boost is number => boost !== null),
-    ethereumDeboosts.filter((deboost): deboost is number => deboost !== null),
-    ethereumBorrows,
-    ethereumEnabled.filter((enabled): enabled is boolean => enabled !== null),
-  );
+  const ethereumNetworkTotalUsd = !config.ethereum.rewardsEnabled ? 0 :
+    sumUsd(ethereumTotalSupplyUsd) + sumUsd(ethereumTotalBorrowsUsd);
 
   const allNetworksTotalUsd = moonbeamNetworkTotalUsd + baseNetworkTotalUsd + optimismNetworkTotalUsd + ethereumNetworkTotalUsd;
 
@@ -2119,7 +2053,9 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
       1,
       ethereumNames,
       ethereumAliases,
-      ethereumDigits.filter((digit): digit is number => digit !== null),
+      // Index-aligned with the markets array; null only occurs for unconfigured
+      // markets, which are also enabled=null and skipped by every consumer.
+      ethereumDigits as number[],
       ethereumBoosts,
       ethereumDeboosts,
       ethereumSupplyRatios,
@@ -2161,7 +2097,7 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
       10,
       optimismNames,
       optimismAliases,
-      optimismDigits.filter((digit): digit is number => digit !== null),
+      optimismDigits as number[], // index-aligned; null = unconfigured (skipped)
       optimismBoosts,
       optimismDeboosts,
       optimismSupplyRatios,
@@ -2203,7 +2139,7 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
       1284,
       moonbeamNames,
       moonbeamAliases,
-      moonbeamDigits.filter((digit): digit is number => digit !== null),
+      moonbeamDigits as number[], // index-aligned; null = unconfigured (skipped)
       moonbeamBoosts,
       moonbeamDeboosts,
       moonbeamSupplyRatios,
@@ -2245,7 +2181,7 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
       8453,
       baseNames,
       baseAliases,
-      baseDigits.filter((digit): digit is number => digit !== null),
+      baseDigits as number[], // index-aligned; null = unconfigured (skipped)
       baseBoosts,
       baseDeboosts,
       baseSupplyRatios,
