@@ -120,7 +120,14 @@ export async function returnJson(marketData: any, network: string) {
         .shiftedBy(6)
         .integerValue().toFixed(0)),
     };
-    return [wellRewardSpeeds, nativeRewardSpeeds];
+    // Drop complete no-ops (-1/-1/-1 = change nothing). With USDC rewards
+    // wound down, every native entry is a no-op — omitting them keeps the
+    // governance JSON to actions that actually do something. An entry with
+    // supplySpeed 0 (actively zeroing a live market) or a real endTime is
+    // NOT a no-op and always passes through.
+    return [wellRewardSpeeds, nativeRewardSpeeds].filter(
+      (s) => !(s.newBorrowSpeed === -1 && s.newSupplySpeed === -1 && s.newEndTime === -1)
+    );
   });
 
   const optimismSetRewardSpeeds = marketData["10"]

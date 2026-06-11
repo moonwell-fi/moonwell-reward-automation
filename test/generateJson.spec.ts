@@ -478,10 +478,10 @@ describe('generateJson', () => {
       const well = r[8453].setMRDSpeeds.find((s: any) => s.emissionToken === "xWELL_PROXY");
       expect(well.newSupplySpeed).toBe(0);
       expect(well.newBorrowSpeed).toBe(1);
-      // Negative native sentinels still mean "no change".
+      // USDC rewards are wound down: a native entry that changes nothing
+      // (-1/-1/-1) is a complete no-op and must be OMITTED from the JSON.
       const usdcNative = r[8453].setMRDSpeeds.find((s: any) => s.emissionToken === "USDC");
-      expect(usdcNative.newSupplySpeed).toBe(-1);
-      expect(usdcNative.newBorrowSpeed).toBe(-1);
+      expect(usdcNative).toBeUndefined();
     });
   });
 });
