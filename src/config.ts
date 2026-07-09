@@ -74,8 +74,8 @@ export function validateSplits(config: typeof mainConfig): string | null {
 }
 
 export const mainConfig = {
-	totalWellPerEpoch: 14_471_834.68769526,
-  // Note June 9th, 2026 - temporary 2 month emissions = 14,471,834.68769526 per month
+	totalWellPerEpoch: 14_471_834.5,
+  // Note June 9th, 2026 - temporary 2 month emissions = 14,471,834.577695265574783698 per month
 	/* Note: updated to reduce by 18M from currently remaining ~293M on 11/18/2024, original schedule below
     new BigNumber(750_000_000) // 750 million
     .div(4) // 4 years emission schedule
@@ -13225,8 +13225,8 @@ export const marketConfigs = {
       digits: 18,
       boost: 10_000_000,
       deboost: 0,
-      supply: 1,
-      borrow: 0,
+      supply: 0.5,
+      borrow: 0.5,
       enabled: true,
       minimumReserves: 0,
       reservesEnabled: false,
@@ -13238,8 +13238,8 @@ export const marketConfigs = {
       digits: 6,
       boost: 10_000_000,
       deboost: 0,
-      supply: 1,
-      borrow: 0,
+      supply: 0.5,
+      borrow: 0.5,
       enabled: true,
       minimumReserves: 0,
       reservesEnabled: false,
@@ -13251,8 +13251,8 @@ export const marketConfigs = {
       digits: 6,
       boost: 10_000_000,
       deboost: 0,
-      supply: 1,
-      borrow: 0,
+      supply: 0.5,
+      borrow: 0.5,
       enabled: true,
       minimumReserves: 0,
       reservesEnabled: false,
@@ -13264,8 +13264,8 @@ export const marketConfigs = {
       digits: 8,
       boost: 5_000_000,
       deboost: 0,
-      supply: 1,
-      borrow: 0,
+      supply: 0.5,
+      borrow: 0.5,
       enabled: true,
       minimumReserves: 0,
       reservesEnabled: false,
@@ -13816,8 +13816,8 @@ export const marketConfigs = {
       digits: 18,
       boost: 0,
       deboost: 0,
-      supply: 0.45,
-      borrow: 0.55,
+      supply: 1,
+      borrow: 0,
       enabled: true,
       minimumReserves: 0,
       reservesEnabled: false,
