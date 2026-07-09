@@ -108,6 +108,7 @@ compatibility_flags = ["nodejs_compat"]
 # index_name = "my-index"
 
 [observability]
+enabled = true
 [observability.logs]
 enabled = true
 invocation_logs = true

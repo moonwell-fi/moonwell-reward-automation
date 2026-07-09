@@ -9,19 +9,53 @@ BigNumber.config({
 const TOKEN_HOLDING_CAMPAIGN = 18;
 const MORPHO_VAULT_CAMPAIGN = 56;
 const TARGET_STKWELL_APY = 0.10; // 10% APY cap for stkWELL
-const EPOCHS_PER_YEAR = 365 / 28;
+const SECONDS_PER_YEAR = 31_536_000;
 
 // Calculate capped wellHolderBalance to achieve target APY for stkWELL
 function calculateCappedWellHolderBalance(
   safetyModuleRewards: number,
   wellHolderBalance: number,
-  stkWellTotalSupply: number
+  stkWellTotalSupply: number,
+  durationSeconds: number
 ): { cappedBalance: number; remainingBalance: number } {
-  const maxRewardsPerEpoch = (TARGET_STKWELL_APY * stkWellTotalSupply) / EPOCHS_PER_YEAR;
+  const maxRewardsPerEpoch =
+    TARGET_STKWELL_APY * stkWellTotalSupply * (durationSeconds / SECONDS_PER_YEAR);
   const maxWellHolderContribution = Math.max(0, maxRewardsPerEpoch - safetyModuleRewards);
   const cappedBalance = Math.min(wellHolderBalance, maxWellHolderContribution);
   const remainingBalance = wellHolderBalance - cappedBalance;
   return { cappedBalance, remainingBalance };
+}
+
+// Convert a WELL amount (decimal value/string) to integer base units (18 decimals),
+// rounding up and adding a rounding buffer. Returns 0 for a non-positive amount so a
+// zeroed network emits no transfer/bridge (the buffer must never turn a 0 base into dust).
+function toBaseUnits(wellAmount: BigNumber.Value, buffer: number): number {
+  const amount = new BigNumber(wellAmount);
+  if (amount.isLessThanOrEqualTo(0)) return 0;
+  return Number(amount.shiftedBy(18).decimalPlaces(0, BigNumber.ROUND_CEIL).plus(buffer).toFixed(0));
+}
+
+// Build the Ethereum (chain 1) bridge-source block: fund the governor with xWELL from
+// the foundation multisig, then bridge to each destination. Centralizes the source-block
+// shape (from/to/token + zero-amount filtering) so every network branch stays consistent.
+// Each network branch is responsible only for computing its funding/bridge amounts.
+// Note: each network contributes its own slice; index.ts deep-merge concatenates them, so a
+// single-network request intentionally emits only that network's source actions.
+function buildEthereumSource(
+  fundingAmount: number,
+  bridges: { network: number; target: string; amount: number }[]
+) {
+  return {
+    transferFrom: [
+      {
+        amount: fundingAmount,
+        from: "FOUNDATION_MULTISIG",
+        to: "MULTICHAIN_GOVERNOR_V2_PROXY",
+        token: "xWELL_PROXY",
+      },
+    ].filter((transfer) => transfer.amount > 0),
+    bridgeToRecipient: bridges.filter((bridge) => bridge.amount > 0),
+  };
 }
 
 export async function returnJson(marketData: any, network: string) {
@@ -66,7 +100,8 @@ export async function returnJson(marketData: any, network: string) {
         .shiftedBy(18)
         .integerValue().toFixed(0)),
       newEndTime: marketData.epochEndTimestamp,
-      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isLessThanOrEqualTo(0) ? -1 :
+      // -1 = leave unchanged (MRD skip); an exact 0 must pass through to actively zero a live market
+      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isLessThan(0) ? -1 :
         new BigNumber(market.newWellSupplySpeed).isZero() ? 0 : Number(new BigNumber(market.newWellSupplySpeed)
         .shiftedBy(18)
         .integerValue().toFixed(0)),
@@ -79,12 +114,20 @@ export async function returnJson(marketData: any, network: string) {
         .shiftedBy(6)
         .integerValue().toFixed(0)),
       newEndTime: -1, // Don't update the end timestamp for USDC until new incentives are allocated
-      newSupplySpeed: new BigNumber(market.newNativeSupplySpeed).isLessThanOrEqualTo(0) ? -1 :
+      // -1 = leave unchanged (MRD skip); an exact 0 must pass through to actively zero a live market
+      newSupplySpeed: new BigNumber(market.newNativeSupplySpeed).isLessThan(0) ? -1 :
         new BigNumber(market.newNativeSupplySpeed).isZero() ? 0 : Number(new BigNumber(market.newNativeSupplySpeed)
         .shiftedBy(6)
         .integerValue().toFixed(0)),
     };
-    return [wellRewardSpeeds, nativeRewardSpeeds];
+    // Drop complete no-ops (-1/-1/-1 = change nothing). With USDC rewards
+    // wound down, every native entry is a no-op — omitting them keeps the
+    // governance JSON to actions that actually do something. An entry with
+    // supplySpeed 0 (actively zeroing a live market) or a real endTime is
+    // NOT a no-op and always passes through.
+    return [wellRewardSpeeds, nativeRewardSpeeds].filter(
+      (s) => !(s.newBorrowSpeed === -1 && s.newSupplySpeed === -1 && s.newEndTime === -1)
+    );
   });
 
   const optimismSetRewardSpeeds = marketData["10"]
@@ -98,7 +141,28 @@ export async function returnJson(marketData: any, network: string) {
         .shiftedBy(18)
         .integerValue().toFixed(0)),
       newEndTime: marketData.epochEndTimestamp,
-      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isLessThanOrEqualTo(0) ? -1 :
+      // -1 = leave unchanged (MRD skip); an exact 0 must pass through to actively zero a live market
+      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isLessThan(0) ? -1 :
+        new BigNumber(market.newWellSupplySpeed).isZero() ? 0 : Number(new BigNumber(market.newWellSupplySpeed)
+        .shiftedBy(18)
+        .integerValue().toFixed(0)),
+    };
+    return [wellRewardSpeeds];
+  });
+
+  const ethereumSetRewardSpeeds = (marketData["1"] ?? [])
+    .filter((market: MarketType) => market.alias !== null)
+    .flatMap((market: MarketType) => {
+    const wellRewardSpeeds = {
+      emissionToken: "xWELL_PROXY",
+      market: market.alias,
+      newBorrowSpeed: new BigNumber(market.newWellBorrowSpeed).isLessThanOrEqualTo(0) ? -1 :
+        new BigNumber(market.newWellBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? 1 : Number(new BigNumber(market.newWellBorrowSpeed)
+        .shiftedBy(18)
+        .integerValue().toFixed(0)),
+      newEndTime: marketData.epochEndTimestamp,
+      // -1 = leave unchanged (MRD skip); an exact 0 must pass through to actively zero a live market
+      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isLessThan(0) ? -1 :
         new BigNumber(market.newWellSupplySpeed).isZero() ? 0 : Number(new BigNumber(market.newWellSupplySpeed)
         .shiftedBy(18)
         .integerValue().toFixed(0)),
@@ -111,22 +175,22 @@ export async function returnJson(marketData: any, network: string) {
     const hasReservesEnabled = marketData["1284"].some((market: MarketType) => market.reservesEnabled);
 
     const result: any = {
+      // Moonbeam no longer distributes StellaSwap/dex rewards, so fund + bridge only
+      // markets + safety module (wellPerEpoch - dex). When all Moonbeam markets are
+      // disabled this is 0, so toBaseUnits emits no source actions (no dust).
+      1: (() => {
+        const moonbeamBridgeWell = new BigNumber(parseFloat(marketData.moonbeam.wellPerEpoch).toFixed(18))
+          .minus(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18));
+        return buildEthereumSource(toBaseUnits(moonbeamBridgeWell, 1e17), [
+          {
+            // On-chain Wormhole quoter resolves bridge cost at execution time (no nativeValue).
+            amount: toBaseUnits(moonbeamBridgeWell, 1e16),
+            network: 1284,
+            target: "TEMPORAL_GOVERNOR",
+          },
+        ]);
+      })(),
       1284: {
-        addRewardInfo: {
-          amount: Number(BigNumber(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18))
-            .shiftedBy(18)
-            .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
-            .plus(1e16)
-            .toFixed(0)),
-          endTimestamp: marketData.epochEndTimestamp,
-          pid: 15,
-          rewardPerSec: Number(BigNumber(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18))
-            .div(BigNumber(marketData.totalSeconds))
-            .shiftedBy(18)
-            .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
-            .toFixed(0)),
-          target: "STELLASWAP_REWARDER",
-        },
         ...(hasReservesEnabled ? {
           initSale: {
             ...mainConfig.initSale,
@@ -151,31 +215,21 @@ export async function returnJson(marketData: any, network: string) {
           .shiftedBy(18)
           .integerValue().toFixed(0)),
         transferFrom: [
-          { // Transfer StellaSwap DEX incentives from F-GLMR-LM multisig to the governor
-            amount: Number(BigNumber(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18))
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
-              .plus(1e16)
-              .toFixed(0)),
-            from: "MGLIMMER_MULTISIG",
-            to: "MULTICHAIN_GOVERNOR_PROXY",
-            token: "GOVTOKEN",
-          },
-          { // Transfer market rewards from F-GLMR-LM multisig to the Unitroller proxy
+          { // Market rewards: from the Temporal Governor to the Unitroller proxy
             amount: Number(BigNumber(marketData.moonbeam.wellPerEpochMarkets)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .toFixed(0)),
-            from: "MGLIMMER_MULTISIG",
+            from: "TEMPORAL_GOVERNOR",
             to: "UNITROLLER",
             token: "GOVTOKEN",
           },
-          { // Transfer Safety Module rewards from F-GLMR-LM multisig to the Ecosystem Reserve Proxy
+          { // Safety Module rewards: from the Temporal Governor to the Ecosystem Reserve Proxy
             amount: Number(BigNumber(marketData.moonbeam.wellPerEpochSafetyModule)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
               .toFixed(0)),
-            from: "MGLIMMER_MULTISIG",
+            from: "TEMPORAL_GOVERNOR",
             to: "ECOSYSTEM_RESERVE_PROXY",
             token: "GOVTOKEN",
           },
@@ -210,47 +264,24 @@ export async function returnJson(marketData: any, network: string) {
     const hasReservesEnabled = marketData["8453"].some((market: MarketType) => market.reservesEnabled);
 
     const result: any = {
-      1284: {
-        bridgeToRecipient: [
+      // Fund the Ethereum governor with xWELL for the Base bridge.
+      1: buildEthereumSource(
+        toBaseUnits(new BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18)), 1e17),
+        [
           {
-            // Send all Base incentives (markets + safety module + vaults - dex) to Base Temporal Governor
-            // Add extra padding (1e17) to cover rounding differences in 6 merkle campaigns + MRD transfer
-            amount: Number(new BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
-              .minus(parseFloat(marketData.base.wellPerEpochDex).toFixed(18))
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
-              .plus(1e17) // increased padding for merkle campaign rounding
-              .toFixed(0)),
-            nativeValue: Number(new BigNumber(marketData.bridgeCost * 5).toFixed(0)), // pad bridgeCost by 5x in case of price fluctuations
+            // Send all Base incentives (markets + safety module + vaults - dex) to Base Temporal Governor.
+            // On-chain Wormhole quoter resolves bridge cost at execution time (no nativeValue).
+            // Extra padding (1e17) covers rounding across 6 merkle campaigns + the MRD transfer.
+            amount: toBaseUnits(
+              new BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
+                .minus(parseFloat(marketData.base.wellPerEpochDex).toFixed(18)),
+              1e17,
+            ),
             network: 8453,
             target: "TEMPORAL_GOVERNOR",
           },
-          /* commented out until we exhaust the funds in F-AERO on Base
-          { // Send Base DEX incentives to DEX Relayer
-            amount: Number(new BigNumber(marketData.base.wellPerEpochDex)
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
-              .plus(1e16)
-              .toFixed(0)),
-              nativeValue: Number(new BigNumber(marketData.bridgeCost * 5).toFixed(0)), // pad bridgeCost by 5x in case of price fluctuations
-            network: 8453,
-            target: "DEX_RELAYER"
-          }, */
         ],
-        transferFrom: [
-          {
-            // Transfer all Base incentives (markets + safety module + vaults) from F-GLMR-LM to Multichain Governor for bridging
-            amount: Number(new BigNumber(parseFloat(marketData.base.wellPerEpoch).toFixed(18))
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
-              .plus(1e17)
-              .toFixed(0)),
-            from: "MGLIMMER_MULTISIG",
-            to: "MULTICHAIN_GOVERNOR_PROXY",
-            token: "GOVTOKEN",
-          },
-        ].filter((transfer) => transfer.amount > 0),
-      },
+      ),
       8453: {
         ...(hasReservesEnabled
           ? {
@@ -315,21 +346,22 @@ export async function returnJson(marketData: any, network: string) {
                 const { cappedBalance } = calculateCappedWellHolderBalance(
                   parseFloat(marketData.base.wellPerEpochSafetyModule),
                   parseFloat(marketData.base.wellHolderBalance) / 1e18,
-                  parseFloat(marketData.baseStkWELLTotalSupply) / 1e18
+                  parseFloat(marketData.baseStkWELLTotalSupply) / 1e18,
+                  marketData.totalSeconds
                 );
 
                 if (cappedBalance <= 0) return [];
 
-                return [
-                  {
-                    amount: Number(new BigNumber(cappedBalance)
-                      .shiftedBy(18)
-                      .decimalPlaces(0, BigNumber.ROUND_FLOOR)
-                      .minus(1e15)
-                      .toFixed(0)),
-                    to: "TEMPORAL_GOVERNOR",
-                  },
-                ];
+                // Subtract a 1e15 (0.001 WELL) safety margin; if the capped top-up is
+                // smaller than that margin the net is <= 0, so emit nothing (avoids a
+                // negative-dust withdrawWell when safety-module rewards already hit the cap).
+                const amount = Number(new BigNumber(cappedBalance)
+                  .shiftedBy(18)
+                  .decimalPlaces(0, BigNumber.ROUND_FLOOR)
+                  .minus(1e15)
+                  .toFixed(0));
+
+                return amount > 0 ? [{ amount, to: "TEMPORAL_GOVERNOR" }] : [];
               })(),
         merkleCampaigns: [
           {
@@ -339,7 +371,8 @@ export async function returnJson(marketData: any, network: string) {
               const { cappedBalance } = calculateCappedWellHolderBalance(
                 safetyModuleRewards,
                 parseFloat(marketData.base.wellHolderBalance) / 1e18,
-                parseFloat(marketData.baseStkWELLTotalSupply) / 1e18
+                parseFloat(marketData.baseStkWELLTotalSupply) / 1e18,
+                marketData.totalSeconds
               );
               const totalRewards = safetyModuleRewards + cappedBalance;
               return Number(new BigNumber(totalRewards)
@@ -349,7 +382,7 @@ export async function returnJson(marketData: any, network: string) {
             })(),
             campaignData: merkleCampaignDatas.stkWELL,
             campaignType: TOKEN_HOLDING_CAMPAIGN,
-            duration: mainConfig.secondsPerEpoch,
+            duration: marketData.totalSeconds,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
           },
@@ -360,7 +393,7 @@ export async function returnJson(marketData: any, network: string) {
               .toFixed(0)),
             campaignData: merkleCampaignDatas.USDC,
             campaignType: MORPHO_VAULT_CAMPAIGN,
-            duration: mainConfig.secondsPerEpoch,
+            duration: marketData.totalSeconds,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
           },
@@ -371,7 +404,7 @@ export async function returnJson(marketData: any, network: string) {
               .toFixed(0)),
             campaignData: merkleCampaignDatas.WETH,
             campaignType: MORPHO_VAULT_CAMPAIGN,
-            duration: mainConfig.secondsPerEpoch,
+            duration: marketData.totalSeconds,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
           },
@@ -382,7 +415,7 @@ export async function returnJson(marketData: any, network: string) {
               .toFixed(0)),
             campaignData: merkleCampaignDatas.EURC,
             campaignType: MORPHO_VAULT_CAMPAIGN,
-            duration: mainConfig.secondsPerEpoch,
+            duration: marketData.totalSeconds,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
           },
@@ -393,7 +426,7 @@ export async function returnJson(marketData: any, network: string) {
               .toFixed(0)),
             campaignData: merkleCampaignDatas.cbBTC,
             campaignType: MORPHO_VAULT_CAMPAIGN,
-            duration: mainConfig.secondsPerEpoch,
+            duration: marketData.totalSeconds,
             rewardToken: "xWELL_PROXY",
             startTimestamp: marketData.epochStartTimestamp,
           },
@@ -409,43 +442,27 @@ export async function returnJson(marketData: any, network: string) {
     const hasReservesEnabled = marketData["10"].some((market: MarketType) => market.reservesEnabled);
 
     const result: any = {
-      1284: {
-        bridgeToRecipient: [
-          { // Send total well per epoch - the DEX incentives to Optimism Temporal Governor
-            amount: Number(BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18))
-              .minus(parseFloat(marketData.optimism.wellPerEpochDex).toFixed(18))
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
-              .plus(1e16)
-              .toFixed(0)),
-              nativeValue: Number(BigNumber(marketData.bridgeCost * 5).toFixed(0)), // pad bridgeCost by 5x in case of price fluctuations
+      // Fund the Ethereum governor with xWELL for the Optimism bridge.
+      1: buildEthereumSource(
+        toBaseUnits(new BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18)), 1e17),
+        [
+          { // Send total WELL per epoch minus DEX incentives to the Optimism Temporal Governor.
+            // On-chain Wormhole quoter resolves bridge cost at execution time (no nativeValue).
+            amount: toBaseUnits(
+              new BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18))
+                .minus(parseFloat(marketData.optimism.wellPerEpochDex).toFixed(18)),
+              1e16,
+            ),
             network: 10,
             target: "TEMPORAL_GOVERNOR"
           },
-          ...(parseFloat(marketData.optimism.wellPerEpochDex) > 0 ? [{ // Send Optimism DEX incentives to DEX Relayer
-            amount: Number(BigNumber(marketData.optimism.wellPerEpochDex)
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
-              .plus(1e16)
-              .toFixed(0)),
-              nativeValue: Number(BigNumber(marketData.bridgeCost * 5).toFixed(0)), // pad bridgeCost by 5x in case of price fluctuations
+          ...(parseFloat(marketData.optimism.wellPerEpochDex) > 0 ? [{ // Optimism DEX incentives to DEX Relayer
+            amount: toBaseUnits(new BigNumber(marketData.optimism.wellPerEpochDex), 1e16),
             network: 10,
             target: "DEX_RELAYER"
           }] : []),
         ],
-        transferFrom: [
-          { // Transfer all Optimism incentives to the Multichain Governor for bridging
-            amount: Number(BigNumber(parseFloat(marketData.optimism.wellPerEpoch).toFixed(18))
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
-              .plus(1e17)
-              .toFixed(0)),
-            from: "MGLIMMER_MULTISIG",
-            to: "MULTICHAIN_GOVERNOR_PROXY",
-            token: "GOVTOKEN",
-          },
-        ].filter(transfer => transfer.amount > 0),
-      },
+      ),
       10: {
         ...(hasReservesEnabled ? {
           initSale: {
@@ -471,7 +488,8 @@ export async function returnJson(marketData: any, network: string) {
           const { cappedBalance } = calculateCappedWellHolderBalance(
             safetyModuleRewards,
             parseFloat(marketData.optimism.wellHolderBalance) / 1e18,
-            parseFloat(marketData.optimismStkWELLTotalSupply) / 1e18
+            parseFloat(marketData.optimismStkWELLTotalSupply) / 1e18,
+            marketData.totalSeconds
           );
           return Number(BigNumber(safetyModuleRewards + cappedBalance)
             .div(marketData.totalSeconds)
@@ -522,24 +540,23 @@ export async function returnJson(marketData: any, network: string) {
           const { cappedBalance } = calculateCappedWellHolderBalance(
             parseFloat(marketData.optimism.wellPerEpochSafetyModule),
             parseFloat(marketData.optimism.wellHolderBalance) / 1e18,
-            parseFloat(marketData.optimismStkWELLTotalSupply) / 1e18
+            parseFloat(marketData.optimismStkWELLTotalSupply) / 1e18,
+            marketData.totalSeconds
           );
           if (cappedBalance <= 0) return [];
-          return [
-            {
-              amount: Number(new BigNumber(cappedBalance)
-                .shiftedBy(18)
-                .decimalPlaces(0, BigNumber.ROUND_FLOOR)
-                .minus(1e15)
-                .toFixed(0)),
-              to: "ECOSYSTEM_RESERVE_PROXY"
-            }
-          ];
+          // Subtract a 1e15 (0.001 WELL) safety margin; if the capped top-up is smaller
+          // than that margin the net is <= 0, so emit nothing (avoids negative-dust withdrawWell).
+          const amount = Number(new BigNumber(cappedBalance)
+            .shiftedBy(18)
+            .decimalPlaces(0, BigNumber.ROUND_FLOOR)
+            .minus(1e15)
+            .toFixed(0));
+          return amount > 0 ? [{ amount, to: "ECOSYSTEM_RESERVE_PROXY" }] : [];
         })(),
         multiRewarder: [
           {
             distributor: "TEMPORAL_GOVERNOR",
-            duration: mainConfig.secondsPerEpoch,
+            duration: marketData.totalSeconds,
             reward: Number(new BigNumber(marketData.optimism.optimismUSDCVaultWellRewardAmount)
               .shiftedBy(18)
               .decimalPlaces(0, BigNumber.ROUND_FLOOR) // always round down
@@ -550,6 +567,33 @@ export async function returnJson(marketData: any, network: string) {
           }
         ].filter(entry => entry.reward > 0),
         merkleCampaigns: [],
+      },
+      endTimeSTamp: marketData.epochEndTimestamp,
+      startTimeStamp: marketData.epochStartTimestamp,
+    };
+
+    return result;
+  } else if (network === "Ethereum") {
+    // Ethereum is both the governance hub and a market destination. The governor
+    // executes natively here, so market rewards move by a single direct transfer
+    // from the foundation multisig to the MRD — no bridge, no governor hop. These
+    // destination actions share the chain-1 key with the bridge-source actions
+    // emitted by the other networks; index.ts deep-merge concatenates them.
+    const result: any = {
+      1: {
+        setMRDSpeeds: ethereumSetRewardSpeeds,
+        transferFrom: [
+          {
+            // Fund the Ethereum MRD directly with xWELL for market rewards.
+            amount: toBaseUnits(new BigNumber(parseFloat(marketData.ethereum.wellPerEpochMarkets).toFixed(18)), 1e16),
+            from: "FOUNDATION_MULTISIG",
+            to: "MRD_PROXY",
+            token: "xWELL_PROXY",
+          },
+        ].filter((transfer) => transfer.amount > 0),
+        withdrawWell: [],
+        merkleCampaigns: [],
+        multiRewarder: [],
       },
       endTimeSTamp: marketData.epochEndTimestamp,
       startTimeStamp: marketData.epochStartTimestamp,

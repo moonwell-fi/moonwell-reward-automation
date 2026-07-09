@@ -58,6 +58,7 @@ The system uses `viem` for all RPC interactions with separate client instances p
 
 The `config.ts` file controls all reward distribution logic:
 - **`mainConfig`**: Defines total WELL per epoch, epoch duration (4 weeks), and network-level allocation percentages (markets, safety module, DEX, vaults)
+- **`rewardsEnabled`** (per network in `mainConfig`): When `false`, the network's TVL is treated as 0 in the cross-network WELL split — it receives no rewards and the other networks absorb its share proportionally. Config-only; not settable via the `configOverrides` API param
 - **`marketConfigs`**: Array of market-specific configurations indexed by chain ID, including market addresses, names, aliases, boost/deboost multipliers, supply/borrow ratios, and minimum reserves
 - **Boost/Deboost**: Markets can have multipliers applied (e.g., `boost: 1.5` increases rewards by 50%, `deboost: 0.5` reduces by 50%)
 - **Supply/Borrow Ratios**: Control how rewards split between suppliers and borrowers (e.g., `supplyRatio: 0.7, borrowRatio: 0.3`)

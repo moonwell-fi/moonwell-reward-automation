@@ -74,7 +74,7 @@ export default {
 			if (type === 'json') {
 				const marketData = await getMarketData(Number(timestamp), env, configOverrides);
 				let json = '';
-				const networks = network ? [network] : ['Base', 'Optimism', 'Moonbeam'];
+				const networks = network ? [network] : ['Base', 'Optimism', 'Moonbeam', 'Ethereum'];
 
 				const mergedJson = await networks.reduce(async (accPromise, n) => {
 					const acc = await accPromise;
@@ -105,7 +105,7 @@ This is an automated liquidity incentive governance proposal for the Moonwell pr
 
 `;
 				}
-				const networks = network ? [network] : ['Base', 'Optimism', 'Moonbeam'];
+				const networks = network ? [network] : ['Base', 'Ethereum', 'Optimism', 'Moonbeam'];
 
 				for (const n of networks) {
 					markdown += await generateMarkdown(marketData, proposalNumber, n, dexData);

@@ -2,6 +2,7 @@ export interface ConfigOverrides {
 	moonbeam?: { markets?: number; safetyModule?: number; dex?: number };
 	base?: { markets?: number; safetyModule?: number; dex?: number; vaults?: number };
 	optimism?: { markets?: number; safetyModule?: number; dex?: number; vaults?: number };
+	ethereum?: { markets?: number; safetyModule?: number; dex?: number };
 }
 
 // Apply split overrides to mainConfig, always returning a fresh deep copy
@@ -15,6 +16,12 @@ export function applyConfigOverrides(overrides?: ConfigOverrides): typeof mainCo
 	) => {
 		if (!source) return;
 		for (const [key, value] of Object.entries(source)) {
+			// Only the split percentages are overridable via the API. Everything else on a
+			// network block (rewardsEnabled, nativePerEpoch, dexRelayerAmount, ...) is
+			// config-only and must not be reachable from a URL parameter.
+			if (!['markets', 'safetyModule', 'dex', 'vaults'].includes(key)) {
+				throw new Error(`Invalid override: unknown key "${key}" (only markets, safetyModule, dex, vaults may be overridden)`);
+			}
 			if (value !== undefined) {
 				if (typeof value !== 'number' || !isFinite(value)) {
 					throw new Error(`Invalid override: ${key} must be a finite number, got ${typeof value}`);
@@ -30,6 +37,7 @@ export function applyConfigOverrides(overrides?: ConfigOverrides): typeof mainCo
 	applyNetworkOverrides(config.moonbeam, overrides.moonbeam);
 	applyNetworkOverrides(config.base, overrides.base);
 	applyNetworkOverrides(config.optimism, overrides.optimism);
+	applyNetworkOverrides(config.ethereum, overrides.ethereum);
 	return config;
 }
 
@@ -39,33 +47,62 @@ export function validateSplits(config: typeof mainConfig): string | null {
 		{ name: 'moonbeam', sum: config.moonbeam.markets + config.moonbeam.safetyModule + config.moonbeam.dex },
 		{ name: 'base', sum: config.base.markets + config.base.safetyModule + config.base.dex + config.base.vaults },
 		{ name: 'optimism', sum: config.optimism.markets + config.optimism.safetyModule + config.optimism.dex + config.optimism.vaults },
+		{ name: 'ethereum', sum: config.ethereum.markets + config.ethereum.safetyModule + config.ethereum.dex },
 	];
 
 	for (const { name, sum } of networks) {
-		if (Math.abs(sum - 1.0) > 0.0001) {
-			return `${name} splits sum to ${(sum * 100).toFixed(2)}%, must be 100%`;
+		// A network's splits must sum to 100% (active) or 0% (fully wound down, e.g. Moonbeam).
+		if (Math.abs(sum - 1.0) > 0.0001 && Math.abs(sum) > 0.0001) {
+			return `${name} splits sum to ${(sum * 100).toFixed(2)}%, must be 100% (active) or 0% (disabled)`;
 		}
 	}
+
+	// The Ethereum JSON branch only emits market-funding actions; accepting a nonzero
+	// safetyModule/dex split would make the markdown advertise an allocation the
+	// governance JSON never funds. Reject until those flows are implemented.
+	if (config.ethereum.safetyModule > 0 || config.ethereum.dex > 0) {
+		return 'ethereum safetyModule/dex splits are not supported yet (no funding actions are emitted); only markets may be nonzero';
+	}
+
+	// With every network ineligible the cross-network split has no destination and the
+	// proposal would distribute nothing — almost certainly a misconfiguration.
+	if (!config.moonbeam.rewardsEnabled && !config.base.rewardsEnabled && !config.optimism.rewardsEnabled && !config.ethereum.rewardsEnabled) {
+		return 'at least one network must have rewardsEnabled: true';
+	}
+
 	return null;
 }
 
 export const mainConfig = {
-	totalWellPerEpoch: 13_139_447.412450949,
+	totalWellPerEpoch: 14_471_834.68769526,
+  // Note June 9th, 2026 - temporary 2 month emissions = 14,471,834.68769526 per month
 	/* Note: updated to reduce by 18M from currently remaining ~293M on 11/18/2024, original schedule below
     new BigNumber(750_000_000) // 750 million
     .div(4) // 4 years emission schedule
     .div(13) // 13 epochs per year (4 weeks per epoch)
     .integerValue(BigNumber.ROUND_DOWN)
     .toNumber(), */
-	firstEpochTimestamp: 1757683818,
-	secondsPerEpoch: 60 * 60 * 24 * 7 * 4, // 4 weeks
+	// Overwritten per-request in getMarketData() with the calendar-month epoch length
+	// (15th->15th UTC, 28-31 days) from getEpochWindow(); this default is a fallback only.
+	secondsPerEpoch: 60 * 60 * 24 * 7 * 4,
 	moonbeam: {
+		// MOONBEAM WIND-DOWN: Moonbeam incentives are fully zeroed. All splits are 0 (so the
+		// network sum is 0, which validateSplits treats as a disabled network), and every
+		// marketConfigs[1284] market has `enabled: false`, driving moonbeamTotalMarketPercentage
+		// to 0. getMarketData still emits setRewardSpeed=0 / stkWellEmissionsPerSecond=0 wind-down
+		// actions. To RE-ENABLE: set `rewardsEnabled: true`, flip the marketConfigs[1284] markets
+		// back to `enabled: true`, and set the intended split below so it sums to 1.0.
+		// rewardsEnabled: when false, this network's TVL is treated as 0 in the cross-network
+		// WELL split (it receives no WELL; the other networks absorb its share proportionally).
+		// Config-only by design — not settable via the configOverrides API param.
+		rewardsEnabled: false,
 		nativePerEpoch: 0, // GLMR grant fully spent, no more GLMR rewards
-		markets: 0.48,
-		safetyModule: 0.47,
-		dex: 0.05,
+		markets: 0,
+		safetyModule: 0,
+		dex: 0,
 	},
 	base: {
+		rewardsEnabled: true,
 		nativePerEpoch: 0,
 		markets: 0.55, // 55% - Proportionally reduced to accommodate vaults
 		safetyModule: 0.20, // 20% - Proportionally reduced to accommodate vaults
@@ -100,13 +137,29 @@ export const mainConfig = {
     3. 40,000 in June for core markets and 10,000 for the USDC vault
     4. 50,000 in July for core markets and 10,000 for the USDC vault
     5. 50,000 in August for core markets and 10,000 for the USDC vault */
+		// OPTIMISM WIND-DOWN: rewardsEnabled false treats Optimism TVL as 0 in the cross-network
+		// WELL split, so Base/Ethereum absorb its share and Optimism markets get zero-speed
+		// wind-down actions. stkWELL auction recycling (wellHolderBalance) is independent of
+		// this flag and keeps emitting. To RE-ENABLE: set `rewardsEnabled: true` (splits below
+		// already sum to 1.0).
+		rewardsEnabled: false,
 		nativePerEpoch: 0,
 		rewarderNames: ['USDC_MULTI_REWARDER'], // Names of multi-rewarders to distribute rewards to
 		vaultNativePerEpoch: 0,
 		vaults: 0.00, // 0% of the WELL allocation to the vault staking contract
-		markets: 0.95,
-		safetyModule: 0.05,
+		markets: 1.0,
+		safetyModule: 0,
 		dex: 0.0,
+	},
+	ethereum: {
+		// Ethereum mainnet markets (WETH/USDC/USDT/cbBTC). The governor executes natively
+		// here, so funds move by direct transferFrom (no bridge). 100% to markets; the
+		// Ethereum stkWELL (STK_GOVTOKEN_PROXY) is unfunded for now.
+		rewardsEnabled: true,
+		nativePerEpoch: 0, // no native reward token on mainnet
+		markets: 1.0,
+		safetyModule: 0,
+		dex: 0,
 	},
 	initSale: {
 		auctionPeriod: 1209600, // 14 days
@@ -13116,166 +13169,6 @@ export const optimismViewsContract = {
   ],
 } as const;
 
-export const xWellRouterContract = {
-  address: '0x0c87F9f6c052060b28DeA1e4aCFd24A407ac33FA' as `0x${string}`,
-  abi: [
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "_xwell",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "_well",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "_lockbox",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "_wormholeBridge",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "nonpayable",
-      "type": "constructor"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "to",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        }
-      ],
-      "name": "BridgeOutSuccess",
-      "type": "event"
-    },
-    {
-      "inputs": [],
-      "name": "baseWormholeChainId",
-      "outputs": [
-        {
-          "internalType": "uint16",
-          "name": "",
-          "type": "uint16"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "bridgeCost",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "to",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        }
-      ],
-      "name": "bridgeToBase",
-      "outputs": [],
-      "stateMutability": "payable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        }
-      ],
-      "name": "bridgeToBase",
-      "outputs": [],
-      "stateMutability": "payable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "lockbox",
-      "outputs": [
-        {
-          "internalType": "contract XERC20Lockbox",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "well",
-      "outputs": [
-        {
-          "internalType": "contract ERC20",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "wormholeBridge",
-      "outputs": [
-        {
-          "internalType": "contract WormholeBridgeAdapter",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "xwell",
-      "outputs": [
-        {
-          "internalType": "contract xWELL",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    }
-  ],
-} as const;
-
 export const baseNativeToken = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' // USDC since there is no native token on Base
 
 export const optimismNativeToken = '0x4200000000000000000000000000000000000042' // OP
@@ -13292,14 +13185,99 @@ export const moonbeamStkWELL = '0x8568a675384d761f36ec269d695d6ce4423cfab1' // M
 
 export const optimismUSDCRewarder = '0x2EED2b7d44E2cF64a41B6b3f78bE2Fdc56223d2B' // Optimism USDC vault rewarder contract
 
+// --- Ethereum (chainId 1) governance hub: bridge source ---
+// xWELL is held by FOUNDATION_MULTISIG on Ethereum and bridged out via Wormhole.
+// These names must exist in moonwell-contracts-v2 chains/1.json so the
+// RewardsDistribution template can resolve them.
+export const ethereumChainId = 1;
+export const ethereumGovernor = "MULTICHAIN_GOVERNOR_V2_PROXY"; // 0x8769B70ac7c93AF0e75de0D69877709B66d75838
+export const ethereumFoundationMultisig = "FOUNDATION_MULTISIG"; // address added to chains/1.json separately
+export const ethereumXWell = "xWELL_PROXY"; // 0xA88594D404727625A9437C3f886C7643872296AE
+
+// Ethereum mainnet market infrastructure (chains/1.json). Same v2 contracts as
+// Base/Optimism, so the Base ABIs are reused rather than duplicating ~2k-line blobs.
+export const ethereumComptroller = {
+  address: '0xdec80bB934397575594E91970b37baf65f5b21bE' as `0x${string}`, // UNITROLLER
+  abi: baseComptroller.abi,
+};
+
+export const ethereumOracleContract = {
+  address: '0x599A01297fc181558BdFa1737caFeE513694B654' as `0x${string}`, // CHAINLINK_ORACLE
+  abi: baseOracleContract.abi,
+};
+
+export const ethereumMultiRewardDistributor = {
+  address: '0x60142B8d76FaC5b88cfB422Ba1aA905d2171851c' as `0x${string}`, // MRD_PROXY
+  abi: baseMultiRewardDistributor.abi,
+};
+
+export const ethereumViewsContract = {
+  address: '0x2d85b9c48a8c582f0AA244e134e9C6f30Cf7786e' as `0x${string}`, // MOONWELL_VIEWS_PROXY
+  abi: baseViewsContract.abi,
+};
+
 export const marketConfigs = {
+  1: [
+    {
+      address: '0xb85Ca1decc4971F8094DA7676F8b71002a9590C4',
+      nameOverride: 'ETH',
+      alias: 'MOONWELL_WETH',
+      digits: 18,
+      boost: 10_000_000,
+      deboost: 0,
+      supply: 1,
+      borrow: 0,
+      enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
+    },
+    {
+      address: '0xE655790552C68F2871Eb44B2cFe3dcFE6A63e62E',
+      nameOverride: 'USDC',
+      alias: 'MOONWELL_USDC',
+      digits: 6,
+      boost: 10_000_000,
+      deboost: 0,
+      supply: 1,
+      borrow: 0,
+      enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
+    },
+    {
+      address: '0xeddC25B67D474EEEcFA4F69227b81D870C467011',
+      nameOverride: 'USDT',
+      alias: 'MOONWELL_USDT',
+      digits: 6,
+      boost: 10_000_000,
+      deboost: 0,
+      supply: 1,
+      borrow: 0,
+      enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
+    },
+    {
+      address: '0x636080eb65F1b665b646f47D31f21901cDAaeE9F',
+      nameOverride: 'cbBTC',
+      alias: 'MOONWELL_cbBTC',
+      digits: 8,
+      boost: 5_000_000,
+      deboost: 0,
+      supply: 1,
+      borrow: 0,
+      enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
+    },
+  ],
   10: [
     {
       address: '0x8E08617b0d66359D73Aa11E11017834C29155525',
       alias: 'MOONWELL_USDC',
       nameOverride: 'USDC',
       digits: 6,
-      boost: 3_000_000,
+      boost: 0,
       deboost: 0,
       supply: 1,
       borrow: 0,
@@ -13364,7 +13342,7 @@ export const marketConfigs = {
       nameOverride: 'ETH',
       alias: 'MOONWELL_WETH',
       digits: 18,
-      boost: 5_000_000,
+      boost: 0,
       deboost: 0,
       supply: 1,
       borrow: 0,
@@ -13474,7 +13452,7 @@ export const marketConfigs = {
       deboost: 0,
       supply: 0.5,
       borrow: 0.5,
-      enabled: true,
+      enabled: false,
       minimumReserves: 0,
       reservesEnabled: false,
     },
@@ -13483,11 +13461,11 @@ export const marketConfigs = {
       nameOverride: 'DOT',
       alias: 'mxcDOT',
       digits: 10,
-      boost: 5_000_000,
+      boost: 0,
       deboost: 0,
       supply: 1,
       borrow: 0,
-      enabled: true,
+      enabled: false,
       minimumReserves: 0,
       reservesEnabled: false,
     },
@@ -13500,7 +13478,7 @@ export const marketConfigs = {
       deboost: 0,
       supply: 0.5,
       borrow: 0.5,
-      enabled: true,
+      enabled: false,
       minimumReserves: 0,
       reservesEnabled: false,
     },
@@ -13539,7 +13517,7 @@ export const marketConfigs = {
       deboost: 0,
       supply: 0.50,
       borrow: 0.50,
-      enabled: true,
+      enabled: false,
       minimumReserves: 0,
       reservesEnabled: false,
     },
@@ -13552,7 +13530,7 @@ export const marketConfigs = {
       deboost: 0,
       supply: 0.50,
       borrow: 0.50,
-      enabled: true,
+      enabled: false,
       minimumReserves: 0,
       reservesEnabled: false,
     },
@@ -13565,7 +13543,7 @@ export const marketConfigs = {
       deboost: 0,
       supply: 0.50,
       borrow: 0.50,
-      enabled: true,
+      enabled: false,
       minimumReserves: 0,
       reservesEnabled: false,
     },
@@ -13589,7 +13567,7 @@ export const marketConfigs = {
       nameOverride: 'ETH',
       alias: 'MOONWELL_WETH',
       digits: 18,
-      boost: 20_000_000,
+      boost: 0,
       deboost: 0,
       supply: 0.50,
       borrow: 0.50,
@@ -13628,7 +13606,7 @@ export const marketConfigs = {
       nameOverride: 'USDC',
       alias: 'MOONWELL_USDC',
       digits: 6,
-      boost: 75_000_000,
+      boost: 0,
       deboost: 0,
       supply: 1,
       borrow: 0,
@@ -13681,7 +13659,7 @@ export const marketConfigs = {
       alias: 'MOONWELL_AERO',
       digits: 18,
       boost: 0,
-      deboost: 5_000_000,
+      deboost: 0,
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
@@ -13732,7 +13710,7 @@ export const marketConfigs = {
       nameOverride: 'WELL',
       alias: 'MOONWELL_WELL',
       digits: 18,
-      boost: 3_000_000,
+      boost: 0,
       deboost: 0,
       supply: 0.45,
       borrow: 0.55,
@@ -13784,7 +13762,7 @@ export const marketConfigs = {
       nameOverride: 'VIRTUAL',
       alias: 'MOONWELL_VIRTUAL',
       digits: 18,
-      boost: 5_000_000,
+      boost: 0,
       deboost: 0,
       supply: 0.45,
       borrow: 0.55,
@@ -13797,7 +13775,7 @@ export const marketConfigs = {
       nameOverride: 'MORPHO',
       alias: 'MOONWELL_MORPHO',
       digits: 18,
-      boost: 5_000_000,
+      boost: 0,
       deboost: 0,
       supply: 0.45,
       borrow: 0.55,
@@ -13810,13 +13788,39 @@ export const marketConfigs = {
       nameOverride: 'cbXRP',
       alias: 'MOONWELL_cbXRP',
       digits: 18,
-      boost: 5_000_000,
+      boost: 0,
       deboost: 0,
       supply: 0.45,
       borrow: 0.55,
       enabled: true,
       minimumReserves: 6_000,
       reservesEnabled: false // true,
+    },
+    {
+      address: '0x2F90Bb22eB3979f5FfAd31EA6C3F0792ca66dA32',
+      nameOverride: 'MAMO',
+      alias: 'MOONWELL_MAMO',
+      digits: 18,
+      boost: 0,
+      deboost: 0,
+      supply: 0.45,
+      borrow: 0.55,
+      enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
+    },
+    {
+      address: '0xD64BCb70C613a6D1F4D7D57Ba64bb4a0767A9682',
+      nameOverride: 'VVV',
+      alias: 'MOONWELL_VVV',
+      digits: 18,
+      boost: 0,
+      deboost: 0,
+      supply: 0.45,
+      borrow: 0.55,
+      enabled: true,
+      minimumReserves: 0,
+      reservesEnabled: false,
     },
   ],
 }

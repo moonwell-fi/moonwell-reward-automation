@@ -1,13 +1,14 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { env } from 'cloudflare:test';
 import worker from '../src/index';
 
 describe('Moonwell Reward Automation worker', () => {
+  // env carries the *_RPC_URL vars from .dev.vars (loaded by the Workers pool),
+  // which createClients() reads. Without them, viem falls back to its default
+  // public endpoints — and its Moonbeam default has been decommissioned.
   const mockEnv = {
+    ...env,
     ENVIRONMENT: 'test',
-    ETHEREUM_RPC: 'http://localhost:8545',
-    MOONBEAM_RPC: 'http://localhost:8545',
-    BASE_RPC: 'http://localhost:8545',
-    OPTIMISM_RPC: 'http://localhost:8545',
   };
 
   const mockCtx = {
@@ -20,9 +21,12 @@ describe('Moonwell Reward Automation worker', () => {
     vi.clearAllMocks();
   });
 
-  it('responds with markdown content for Moonbeam network', async () => {
-    vi.setConfig({ testTimeout: 30000 }); // Set 30 second timeout for this test
-    const mockRequest = new Request('http://example.com/?type=markdown&network=Moonbeam&timestamp=1707379200');
+  it('responds with markdown content for Moonbeam network', { timeout: 30000 }, async () => {
+    // Use a recent timestamp: at historical Moonbeam blocks (lower block gas
+    // limits), providers that inject a default eth_call gas limit (e.g.
+    // Alchemy) trip Moonbeam's 10x-block-gas-limit cap and every read reverts.
+    const timestamp = Math.floor(Date.now() / 1000) - 3600;
+    const mockRequest = new Request(`http://example.com/?type=markdown&network=Moonbeam&timestamp=${timestamp}`);
     const response = await worker.fetch(mockRequest, mockEnv, mockCtx);
     
     expect(response.status).toBe(200);

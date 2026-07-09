@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+import { env } from 'cloudflare:test';
 import { getMarketData, MarketType } from '../src/markets';
 
 describe('Markets module', () => {
@@ -7,20 +8,25 @@ describe('Markets module', () => {
     // Use a recent timestamp
     const timestamp = Math.floor(Date.now() / 1000) - 3600; // 1 hour ago to ensure block availability
     
-    // Get market data
-    const data = await getMarketData(timestamp);
+    // Get market data using the *_RPC_URL vars from .dev.vars; without env this
+    // falls back to viem's default public RPCs, whose Moonbeam endpoint is dead
+    const data = await getMarketData(timestamp, env);
     
     // Check that we have data for all networks
     expect(data[1284]).toBeDefined(); // Moonbeam
     expect(data[8453]).toBeDefined(); // Base
     expect(data[10]).toBeDefined(); // Optimism
     
-    // Check that totalSupplyUSD and totalBorrowsUSD are not zero for all markets in each network
+    // Check that totalSupplyUSD and totalBorrowsUSD are not zero for all
+    // *enabled* markets in each network. getMarketData() deliberately zeroes
+    // both values for markets that are disabled in config (or missing from
+    // it), so only enabled markets indicate a broken price/data fetch.
     // Collect markets with zero values
     const marketsWithZeroValues: { network: string, symbol: string, totalSupplyUSD: number, totalBorrowsUSD: number }[] = [];
-    
+
     // Check Moonbeam markets
     data[1284].forEach((market: MarketType) => {
+      if (!market.enabled) return;
       if (market.totalSupplyUSD === 0 || market.totalBorrowsUSD === 0) {
         marketsWithZeroValues.push({
           network: 'Moonbeam',
@@ -33,6 +39,7 @@ describe('Markets module', () => {
     
     // Check Base markets
     data[8453].forEach((market: MarketType) => {
+      if (!market.enabled) return;
       if (market.totalSupplyUSD === 0 || market.totalBorrowsUSD === 0) {
         marketsWithZeroValues.push({
           network: 'Base',
@@ -45,6 +52,7 @@ describe('Markets module', () => {
     
     // Check Optimism markets
     data[10].forEach((market: MarketType) => {
+      if (!market.enabled) return;
       if (market.totalSupplyUSD === 0 || market.totalBorrowsUSD === 0) {
         marketsWithZeroValues.push({
           network: 'Optimism',
