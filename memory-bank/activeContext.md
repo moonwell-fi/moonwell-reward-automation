@@ -4,7 +4,7 @@
 
 The Moonwell Reward Automation system is currently operational as a Cloudflare Worker providing API endpoints for calculating reward distributions across three blockchain networks. The system implements a complete pipeline from data collection to output generation with the following key components in place:
 
-1. **Market Data Collection**: The system fetches comprehensive market data from Moonbeam, Base, and Optimism networks, including supply/borrow metrics, exchange rates, and current reward speeds.
+1. **Market Data Collection**: The system fetches comprehensive market data from Base, Optimism, and Ethereum networks, including supply/borrow metrics, exchange rates, and current reward speeds.
 
 2. **Reward Calculation Engine**: Algorithms for distributing rewards based on market sizes, configured ratios, and network allocations are implemented and functional.
 
@@ -14,7 +14,7 @@ The Moonwell Reward Automation system is currently operational as a Cloudflare W
 
 The most recent developments in the codebase include:
 
-1. **Enhanced Cross-Network Logic**: Improved handling of the differences between Moonbeam's older comptroller architecture and the Multi-Reward Distributor designs on Base and Optimism.
+1. **Enhanced Cross-Network Logic**: Improved handling of the Multi-Reward Distributor designs on Base, Optimism, and Ethereum.
 
 2. **Reserves Management**: Added functionality to identify markets with excess reserves and include reserve transfer operations in the JSON output.
 
@@ -42,7 +42,6 @@ Several key decisions are currently being considered or have recently been made:
 
 1. **Minimum Reward Speed Handling**: The system uses different approaches for minimum reward speeds across networks:
    - For Base/Optimism: `-1e-18` indicates no change, `0` indicates stop rewards, `1e-18` indicates minimum non-zero speed
-   - For Moonbeam: Minimum speed is `1e-18` with different flag values
 
 2. **Rounding Strategies**: 
    - Round UP for token transfers to ensure sufficient funds are allocated

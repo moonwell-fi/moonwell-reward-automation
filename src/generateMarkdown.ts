@@ -6,16 +6,12 @@ interface MarketData {
   epochStartTimestamp: number;
   epochEndTimestamp: number;
   wellPrice: string;
-  glmrPrice: string;
   usdcPrice: string;
   opPrice: string;
   1: {
     [key: string]: any;
   };
   10: {
-    [key: string]: any;
-  };
-  1284: {
     [key: string]: any;
   };
   8453: {
@@ -48,13 +44,13 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
 
   let markdown =  '';
 
-  const networkId = network === 'Optimism' ? '10' : network === 'Moonbeam' ? '1284' : network === 'Base' ? '8453' : network === 'Ethereum' ? '1' : null;
+  const networkId = network === 'Optimism' ? '10' : network === 'Base' ? '8453' : network === 'Ethereum' ? '1' : null;
 
   if (networkId && marketData[networkId]) {
-    const networkName = networkId === '1284' ? 'Moonbeam' : networkId === '10' ? 'Optimism' : networkId === '1' ? 'Ethereum' : 'Base';
+    const networkName = networkId === '10' ? 'Optimism' : networkId === '1' ? 'Ethereum' : 'Base';
     // Ethereum has no native reward token (nativePerEpoch is 0, so the rows are gated off);
     // the explicit 'N/A' label guards against a future nonzero config mislabeling rows as USDC.
-    const nativeToken = networkId === '1284' ? 'GLMR' : networkId === '10' ? 'OP' : networkId === '1' ? 'N/A' : 'USDC';
+    const nativeToken = networkId === '10' ? 'OP' : networkId === '1' ? 'N/A' : 'USDC';
 
     markdown += `## ${networkName} Network\n\n`;
     markdown += `If successful, the proposal would automatically distribute and adjust liquidity incentives for the period beginning ${startDate} and ending on ${endDate}.
@@ -86,7 +82,7 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
       }
     }, { supplyUSD: 0, borrowUSD: 0, totalWell: 0, supplyWell: 0, borrowWell: 0, totalWellBySpeed: 0, totalNative: 0, supplyNative: 0, borrowNative: 0, totalNativeBySpeed: 0,  })
 
-    const blockNumber = networkId === '10' ? marketData.optimismBlockNumber : networkId === '1284' ? marketData.moonbeamBlockNumber : networkId === '8453' ? marketData.baseBlockNumber : networkId === '1' ? marketData.ethereumBlockNumber : null;
+    const blockNumber = networkId === '10' ? marketData.optimismBlockNumber : networkId === '8453' ? marketData.baseBlockNumber : networkId === '1' ? marketData.ethereumBlockNumber : null;
 
     markdown += `| Metric | Value |\n`;
     markdown += `| ------ | ----- |\n`;
@@ -96,24 +92,7 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
     markdown += `| Total Borrows in USD | ${formatUSD(networkSummary.borrowUSD)} |\n`;
     
     // Calculate and display Safety Module APR
-    if (networkId === '1284') {
-      const stkWellTotalSupply = parseFloat(marketData.moonbeamStkWELLTotalSupply) / 10**18;
-      if (stkWellTotalSupply > 0) {
-        const rewardsPerSecond = parseFloat(networkMarketData.wellPerEpochSafetyModule) / marketData.totalSeconds;
-        const annualRewards = rewardsPerSecond * 31536000; // seconds in a year
-        const safetyModuleAPR = (annualRewards / stkWellTotalSupply) * 100;
-        markdown += `| Safety Module APR | ${safetyModuleAPR.toFixed(2)}% |\n`;
-        
-        // Add Safety Module Boosted APR if wellHolderBalance exists and is > 0
-        if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
-          const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 10**18;
-          const totalRewardsPerSecond = (parseFloat(networkMarketData.wellPerEpochSafetyModule) + wellBalance) / marketData.totalSeconds;
-          const totalAnnualRewards = totalRewardsPerSecond * 31536000; // seconds in a year
-          const boostedSafetyModuleAPR = (totalAnnualRewards / stkWellTotalSupply) * 100;
-          markdown += `| **Safety Module Boosted APR** | **${boostedSafetyModuleAPR.toFixed(2)}%** |\n`;
-        }
-      }
-    } else if (networkId === '8453') {
+    if (networkId === '8453') {
       const stkWellTotalSupply = parseFloat(marketData.baseStkWELLTotalSupply) / 10**18;
       if (stkWellTotalSupply > 0) {
         const rewardsPerSecond = parseFloat(networkMarketData.wellPerEpochSafetyModule) / marketData.totalSeconds;
@@ -184,12 +163,12 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
       markdown += `| **Total WELL acquired in auctions (USD)** | **${formatUSD(wellUsdValue)}** |\n`;
     }
 
-    const dexWell = networkId === '10' ? networkMarketData?.wellPerEpochDex : networkId === '1284' ? networkMarketData?.wellPerEpochDex : networkId === '8453' ? mainConfig.base.dexRelayerAmount : null;
+    const dexWell = networkId === '10' ? networkMarketData?.wellPerEpochDex : networkId === '8453' ? mainConfig.base.dexRelayerAmount : null;
 
     const hasDexRewards = Number(dexWell || 0) > 0;
 
     // Only show the DEX/LP rows when the network actually has DEX incentives
-    // (skips phantom rows for networks whose DEX program is wound down, e.g. Moonbeam).
+    // (skips phantom rows for networks whose DEX program is wound down).
     if (networkDexInfo && hasDexRewards) {
       markdown += `| | |\n`;
       markdown += `| Total LP (${networkDexInfo?.symbol} on ${networkDexInfo?.dex}) | ${formatUSD(networkDexInfo?.tvl || 0)} |\n`;

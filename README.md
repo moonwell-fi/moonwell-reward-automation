@@ -1,10 +1,10 @@
 # Moonwell Reward Automation
 
-An automated liquidity incentive calculation and distribution system for the Moonwell DeFi protocol. This Cloudflare Workers application calculates optimal reward distributions across three blockchain networks (Moonbeam, Base, and Optimism) and generates outputs for governance proposals and on-chain transactions.
+An automated liquidity incentive calculation and distribution system for the Moonwell DeFi protocol. This Cloudflare Workers application calculates optimal reward distributions across three blockchain networks (Base, Optimism, and Ethereum) and generates outputs for governance proposals and on-chain transactions.
 
 ## Overview
 
-The Moonwell protocol distributes WELL tokens and native chain tokens (GLMR, USDC, OP) as liquidity mining incentives to users who supply or borrow assets. This automation system:
+The Moonwell protocol distributes WELL tokens and native chain tokens (USDC, OP) as liquidity mining incentives to users who supply or borrow assets. This automation system:
 
 - **Fetches** real-time market data from three blockchain networks
 - **Calculates** optimal reward speeds based on total value locked (TVL) and configurable parameters
@@ -14,7 +14,7 @@ The Moonwell protocol distributes WELL tokens and native chain tokens (GLMR, USD
 
 ## Features
 
-- **Multi-Chain Support**: Moonbeam (ChainID 1284), Base (ChainID 8453), Optimism (ChainID 10)
+- **Multi-Chain Support**: Base (ChainID 8453), Optimism (ChainID 10), Ethereum (ChainID 1)
 - **Dual Output Formats**: JSON for on-chain consumption, Markdown for governance proposals
 - **Configurable Parameters**: Adjust reward ratios, boosts, and allocations without code changes
 - **High Precision**: Handles 18-decimal token amounts accurately using BigNumber.js
@@ -63,7 +63,7 @@ GET /?type={json|markdown}&timestamp={unix_timestamp}[&network={network_name}][&
 |-----------|----------|--------|-------------|
 | `type` | Yes | `json`, `markdown` | Output format type |
 | `timestamp` | Yes | Unix timestamp | Historical timestamp for data snapshot |
-| `network` | No | `Moonbeam`, `Base`, `Optimism` | Filter to specific network (omit for all networks) |
+| `network` | No | `Base`, `Optimism`, `Ethereum` | Filter to specific network (omit for all networks) |
 | `proposal` | No | Integer | Proposal number for markdown output (e.g., `123` for MIP-123) |
 
 ### Response Formats
@@ -78,7 +78,7 @@ Returns structured JSON for on-chain governance consumption:
     "merkleCampaigns": [...]
   },
   "optimism": {...},
-  "moonbeam": {...}
+  "ethereum": {...}
 }
 ```
 
@@ -152,9 +152,9 @@ npm test -- --watch
 The application can use custom RPC endpoints via environment variables:
 
 ```bash
-export MOONBEAM_RPC="https://your-moonbeam-rpc.com"
-export BASE_RPC="https://your-base-rpc.com"
-export OPTIMISM_RPC="https://your-optimism-rpc.com"
+export BASE_RPC_URL="https://your-base-rpc.com"
+export OPTIMISM_RPC_URL="https://your-optimism-rpc.com"
+export ETHEREUM_RPC_URL="https://your-ethereum-rpc.com"
 ```
 
 If not set, the system uses default public RPC endpoints.
@@ -171,17 +171,16 @@ All reward distribution parameters are configured in `src/config.ts`:
 
 ### Network-Specific Settings
 
-#### Moonbeam
-- 48% to markets, 47% to safety module, 5% to DEX
-- 187,500 GLMR per epoch for native token incentives
-
 #### Base
-- 47.6% to markets, 20.4% to safety module, 32% to MetaMorpho vaults
+- Split between markets, safety module, and MetaMorpho vaults (see `mainConfig.base`)
 - Vault weight multipliers: 2x for stablecoins (USDC, EURC), 1x for non-stablecoins (WETH, cbBTC)
 
 #### Optimism
-- 85% to markets, 5% to safety module, 5% to DEX, 5% to vaults
+- 100% to markets (currently wound down via `rewardsEnabled: false`)
 - OP token incentives distributed via multi-rewarder contracts
+
+#### Ethereum
+- 100% to markets; the governor executes natively on mainnet (no bridge)
 
 ### Market-Specific Settings (`marketConfigs`)
 

@@ -1,4 +1,4 @@
-import { moonbeam, base, optimism, mainnet } from "viem/chains";
+import { base, optimism, mainnet } from "viem/chains";
 import { createPublicClient, http } from "viem";
 
 export interface ContractCall {
@@ -9,22 +9,12 @@ export interface ContractCall {
   args: readonly any[];
 }
 
-// viem's bundled Moonbeam default (moonbeam.public.blastapi.io) has been
-// decommissioned and returns HTTP 403, so fall back to the Moonbeam
-// Foundation's maintained public endpoint instead.
-const DEFAULT_MOONBEAM_RPC_URL = "https://rpc.api.moonbeam.network";
-
 // For Cloudflare Workers, environment variables are accessed through the global env object
 // We'll define these clients as functions that take the env object
 export const createClients = (env: any) => {
-  const moonbeamRpcUrl = env?.MOONBEAM_RPC_URL;
   const baseRpcUrl = env?.BASE_RPC_URL;
   const optimismRpcUrl = env?.OPTIMISM_RPC_URL;
   const ethereumRpcUrl = env?.ETHEREUM_RPC_URL;
-
-  if (!moonbeamRpcUrl) {
-    console.warn("⚠️ MOONBEAM_RPC_URL not set. Using public RPC endpoint for Moonbeam. Set MOONBEAM_RPC_URL for better reliability.");
-  }
 
   if (!baseRpcUrl) {
     console.warn("⚠️ BASE_RPC_URL not set. Using public RPC endpoint for Base. Set BASE_RPC_URL for better reliability.");
@@ -39,11 +29,6 @@ export const createClients = (env: any) => {
   }
 
   return {
-    moonbeamClient: createPublicClient({
-      chain: moonbeam,
-      transport: http(moonbeamRpcUrl ?? DEFAULT_MOONBEAM_RPC_URL),
-    }),
-
     baseClient: createPublicClient({
       chain: base,
       transport: http(baseRpcUrl),
@@ -62,11 +47,6 @@ export const createClients = (env: any) => {
 };
 
 // Default clients for backward compatibility
-export const moonbeamClient = createPublicClient({
-  chain: moonbeam,
-  transport: http(DEFAULT_MOONBEAM_RPC_URL),
-});
-
 export const baseClient = createPublicClient({
   chain: base,
   transport: http(),

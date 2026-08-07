@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Moonwell Reward Automation is a Cloudflare Workers application that automates the calculation and distribution of liquidity incentives for the Moonwell DeFi protocol across three blockchain networks: Moonbeam (ChainID 1284), Base (ChainID 8453), and Optimism (ChainID 10). The system fetches on-chain market data, computes optimal reward distributions for WELL tokens and native network tokens (GLMR, USDC, OP), and generates outputs in both JSON (for on-chain governance transactions) and Markdown (for human-readable proposals).
+Moonwell Reward Automation is a Cloudflare Workers application that automates the calculation and distribution of liquidity incentives for the Moonwell DeFi protocol across three blockchain networks: Base (ChainID 8453), Optimism (ChainID 10), and Ethereum (ChainID 1). The system fetches on-chain market data, computes optimal reward distributions for WELL tokens and native network tokens (USDC, OP), and generates outputs in both JSON (for on-chain governance transactions) and Markdown (for human-readable proposals).
 
 ## Commands
 
@@ -47,12 +47,13 @@ npm test -- --watch                # Run tests in watch mode
 
 Each blockchain network requires network-specific handling:
 - Different comptroller contracts and addresses for each chain
-- Different block times (Moonbeam ~6s, Base/Optimism ~2s) affect reward calculations
-- Network-specific token types and decimals (WELL/GLMR/OP have 18 decimals, USDC has 6)
+- Different block times (Base/Optimism ~2s, Ethereum ~12s) affect reward calculations
+- Network-specific token types and decimals (WELL/OP have 18 decimals, USDC has 6)
 - Base has MetaMorpho vault campaigns with weighted TVL multipliers
 - Optimism has multi-rewarder contracts for additional native token incentives
+- Ethereum is the bridge source: WELL funding originates from the Foundation multisig on mainnet
 
-The system uses `viem` for all RPC interactions with separate client instances per chain. The `createClients()` function in `utils.ts` can accept custom RPC URLs via environment variables (MOONBEAM_RPC, BASE_RPC, OPTIMISM_RPC).
+The system uses `viem` for all RPC interactions with separate client instances per chain. The `createClients()` function in `utils.ts` can accept custom RPC URLs via environment variables (BASE_RPC_URL, OPTIMISM_RPC_URL, ETHEREUM_RPC_URL).
 
 ### Configuration-Driven Calculations
 
@@ -77,7 +78,7 @@ All token amounts use 18 decimal precision internally. The system uses `bignumbe
 **Query Parameters:**
 - `type` (required): `json` or `markdown`
 - `timestamp` (required): UNIX timestamp for data snapshot (determines which block to query)
-- `network` (optional): Filter to specific network (`Moonbeam`, `Base`, or `Optimism`)
+- `network` (optional): Filter to specific network (`Base`, `Optimism`, or `Ethereum`); any other value returns HTTP 400
 - `proposal` (optional): Proposal number for markdown output (e.g., `MIP-123`)
 
 **Examples:**

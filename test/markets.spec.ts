@@ -9,13 +9,13 @@ describe('Markets module', () => {
     const timestamp = Math.floor(Date.now() / 1000) - 3600; // 1 hour ago to ensure block availability
     
     // Get market data using the *_RPC_URL vars from .dev.vars; without env this
-    // falls back to viem's default public RPCs, whose Moonbeam endpoint is dead
+    // falls back to viem's default public RPCs
     const data = await getMarketData(timestamp, env);
-    
+
     // Check that we have data for all networks
-    expect(data[1284]).toBeDefined(); // Moonbeam
     expect(data[8453]).toBeDefined(); // Base
     expect(data[10]).toBeDefined(); // Optimism
+    expect(data[1]).toBeDefined(); // Ethereum
     
     // Check that totalSupplyUSD and totalBorrowsUSD are not zero for all
     // *enabled* markets in each network. getMarketData() deliberately zeroes
@@ -24,19 +24,6 @@ describe('Markets module', () => {
     // Collect markets with zero values
     const marketsWithZeroValues: { network: string, symbol: string, totalSupplyUSD: number, totalBorrowsUSD: number }[] = [];
 
-    // Check Moonbeam markets
-    data[1284].forEach((market: MarketType) => {
-      if (!market.enabled) return;
-      if (market.totalSupplyUSD === 0 || market.totalBorrowsUSD === 0) {
-        marketsWithZeroValues.push({
-          network: 'Moonbeam',
-          symbol: market.name,
-          totalSupplyUSD: market.totalSupplyUSD,
-          totalBorrowsUSD: market.totalBorrowsUSD
-        });
-      }
-    });
-    
     // Check Base markets
     data[8453].forEach((market: MarketType) => {
       if (!market.enabled) return;
@@ -74,10 +61,6 @@ describe('Markets module', () => {
     
     // Log some sample values for manual verification
     console.log('Sample market data:');
-    console.log('Moonbeam market 0:', {
-      totalSupplyUSD: data[1284][0].totalSupplyUSD,
-      totalBorrowsUSD: data[1284][0].totalBorrowsUSD
-    });
     console.log('Base market 0:', {
       totalSupplyUSD: data[8453][0].totalSupplyUSD,
       totalBorrowsUSD: data[8453][0].totalBorrowsUSD

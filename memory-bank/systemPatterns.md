@@ -38,7 +38,7 @@ The Moonwell Reward Automation system follows a modular, serverless architecture
 
 3. **Cross-Chain Data Fetching**
    - Direct blockchain RPC interactions via viem library
-   - Multi-chain clients for Moonbeam, Base, and Optimism networks
+   - Multi-chain clients for Base, Optimism, and Ethereum networks
    - Blockchain-specific adapters for different contract interfaces
 
 4. **Dual Output Formats**

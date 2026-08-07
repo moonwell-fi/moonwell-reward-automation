@@ -49,6 +49,11 @@ export default {
 			return new Response('Missing required parameters: type and timestamp', { status: 400 });
 		}
 
+		const validNetworks = ['Base', 'Optimism', 'Ethereum'];
+		if (network && !validNetworks.includes(network)) {
+			return new Response(`Invalid network parameter. Use one of: ${validNetworks.join(', ')}`, { status: 400 });
+		}
+
 		// Parse and validate config overrides if provided (URL-encoded JSON)
 		let configOverrides: ConfigOverrides | undefined;
 		if (configOverridesParam) {
@@ -74,7 +79,7 @@ export default {
 			if (type === 'json') {
 				const marketData = await getMarketData(Number(timestamp), env, configOverrides);
 				let json = '';
-				const networks = network ? [network] : ['Base', 'Optimism', 'Moonbeam', 'Ethereum'];
+				const networks = network ? [network] : ['Base', 'Optimism', 'Ethereum'];
 
 				const mergedJson = await networks.reduce(async (accPromise, n) => {
 					const acc = await accPromise;
@@ -105,7 +110,7 @@ This is an automated liquidity incentive governance proposal for the Moonwell pr
 
 `;
 				}
-				const networks = network ? [network] : ['Base', 'Ethereum', 'Optimism', 'Moonbeam'];
+				const networks = network ? [network] : ['Base', 'Ethereum', 'Optimism'];
 
 				for (const n of networks) {
 					markdown += await generateMarkdown(marketData, proposalNumber, n, dexData);

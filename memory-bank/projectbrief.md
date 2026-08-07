@@ -1,16 +1,16 @@
 # Project Brief: Moonwell Reward Automation
 
 ## Purpose
-Moonwell Reward Automation is a system that automates the calculation and distribution of liquidity incentives for the Moonwell protocol across three networks: Moonbeam, Base, and Optimism. The system analyzes market data, computes optimal reward distribution, and generates proposals for governance.
+Moonwell Reward Automation is a system that automates the calculation and distribution of liquidity incentives for the Moonwell protocol across three networks: Base, Optimism, and Ethereum. The system analyzes market data, computes optimal reward distribution, and generates proposals for governance.
 
 ## Core Requirements
 
 1. **Market Data Collection**
-   - Fetch current and historical market data from all three blockchain networks (Moonbeam, Base, Optimism)
+   - Fetch current and historical market data from all three blockchain networks (Base, Optimism, Ethereum)
    - Calculate key metrics like total supply, borrows, exchange rates, prices, and APRs
 
 2. **Reward Calculation**
-   - Compute optimal reward speeds for both WELL tokens and native network tokens (GLMR, USDC, OP)
+   - Compute optimal reward speeds for both WELL tokens and native network tokens (USDC, OP)
    - Allocate rewards based on configurable ratios and market parameters
    - Support various reward types: market supply rewards, market borrow rewards, safety module rewards, DEX incentives
 
