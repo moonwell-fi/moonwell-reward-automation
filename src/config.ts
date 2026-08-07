@@ -10175,7 +10175,7 @@ export const marketConfigs = {
       deboost: 0,
       supply: 1,
       borrow: 0,
-      enabled: true,
+      enabled: false,
       minimumReserves: 0,
       reservesEnabled: false,
     },

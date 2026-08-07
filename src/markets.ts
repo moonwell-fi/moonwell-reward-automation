@@ -1,6 +1,5 @@
 import { formatUnits } from "viem";
 import { marketConfigs, applyConfigOverrides, type ConfigOverrides } from "./config";
-import { getSafetyModuleDataForAllChains } from "./safetyModule";
 import { ContractCall, createClients, baseClient as defaultBaseClient, optimismClient as defaultOptimismClient, ethereumClient as defaultEthereumClient } from "./utils";
 import { getEpochWindow } from "./epochs";
 
@@ -207,11 +206,6 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     ethereumClient,
     timestamp,
     12 // Ethereum block time is ~12 seconds
-  );
-  const safetyModuleData = await getSafetyModuleDataForAllChains(
-    BigInt(baseBlockNumber),
-    BigInt(optimismBlockNumber),
-    env
   );
   const baseMarkets = await getBaseMarkets();
   const optimismMarkets = await getOptimismMarkets();
@@ -1886,7 +1880,6 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
       wellHolderBalance: optimismWellHolderBalance.toString(),
       optimismUSDCVaultWellRewardAmount: Number((config.totalWellPerEpoch * optimismTotalMarketPercentage) * config.optimism.vaults),
     },
-    safetyModule: safetyModuleData,
     baseStkWELLTotalSupply: baseStkWELLTotalSupply.toString(),
     optimismStkWELLTotalSupply: optimismStkWELLTotalSupply.toString(),
   };
