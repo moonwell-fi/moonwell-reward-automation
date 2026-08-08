@@ -38,7 +38,6 @@ npm test -- --watch                # Run tests in watch mode
 - **`config.ts`**: Centralized configuration including epoch parameters, network allocations, market-specific settings, contract addresses, and ABIs. Modify this file to adjust reward ratios or market boosts without code changes
 - **`generateJson.ts`**: Transforms market data into JSON format for on-chain consumption, including Merkle campaign data for MetaMorpho vaults on Base
 - **`generateMarkdown.ts`**: Creates human-readable governance proposals with tables showing market metrics, reward changes, and APR calculations
-- **`safetyModule.ts`**: Handles safety module (stkWELL) reward calculations across all networks
 - **`dex.ts`**: Manages DEX-specific reward data (currently Aerodrome on Base)
 - **`utils.ts`**: Shared utilities including blockchain clients, block number resolution, and contract call batching
 - **`constants.ts`**: Contract ABIs and other constant values
@@ -63,7 +62,7 @@ The `config.ts` file controls all reward distribution logic:
 - **`marketConfigs`**: Array of market-specific configurations indexed by chain ID, including market addresses, names, aliases, boost/deboost multipliers, supply/borrow ratios, and minimum reserves
 - **Boost/Deboost**: Markets can have multipliers applied (e.g., `boost: 1.5` increases rewards by 50%, `deboost: 0.5` reduces by 50%)
 - **Supply/Borrow Ratios**: Control how rewards split between suppliers and borrowers (e.g., `supplyRatio: 0.7, borrowRatio: 0.3`)
-- **Vault Weight Multipliers**: On Base, MetaMorpho vaults receive weighted WELL allocations (stablecoins get 2x multiplier)
+- **Vault Weight Multipliers**: On Base, MetaMorpho vaults receive weighted WELL allocations (per-vault weights set in `mainConfig.base.vaultWeightMultipliers`)
 
 ### Numerical Precision
 
@@ -103,7 +102,7 @@ The system uses `getClosestBlockNumber()` to convert timestamps to block numbers
 
 Base network includes MetaMorpho vault incentives distributed via Merkle campaigns:
 - Vault addresses and weight multipliers defined in `mainConfig.base.vaultAddresses` and `vaultWeightMultipliers`
-- WELL rewards allocated based on weighted TVL (stablecoins USDC/EURC get 2x weight)
+- WELL rewards allocated based on weighted TVL (per-vault weights set in `vaultWeightMultipliers`)
 - Campaign data encoded in `merkleCampaignDatas` object with vault addresses and parameters
 - Vault campaigns use campaign type 56 (MORPHO_VAULT_CAMPAIGN) in JSON output
 - stkWELL uses campaign type 18 (TOKEN_HOLDING_CAMPAIGN) with 10% APY cap
