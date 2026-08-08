@@ -24,6 +24,15 @@ import { CHAIN_IDS, CHAIN_NAMES } from "./types/config";
 // reorder its integer-like keys numerically and put Ethereum first.)
 const SUPPORTED_NETWORKS = CHAIN_IDS.map(id => CHAIN_NAMES[id]);
 
+// Markdown proposal sections render Base first and Optimism last (wind-down).
+// Membership still derives from SUPPORTED_NETWORKS: a network missing from the
+// preferred order is appended at the end rather than silently dropped.
+const MARKDOWN_ORDER = ['Base', 'Ethereum', 'Optimism'];
+const MARKDOWN_NETWORKS = [
+	...MARKDOWN_ORDER.filter(network => SUPPORTED_NETWORKS.includes(network)),
+	...SUPPORTED_NETWORKS.filter(network => !MARKDOWN_ORDER.includes(network)),
+];
+
 // Helper function to deep merge objects
 function deepMerge(target: any, source: any) {
 	for (const key in source) {
@@ -115,7 +124,7 @@ This is an automated liquidity incentive governance proposal for the Moonwell pr
 
 `;
 				}
-				const networks = network ? [network] : SUPPORTED_NETWORKS;
+				const networks = network ? [network] : MARKDOWN_NETWORKS;
 
 				for (const n of networks) {
 					markdown += await generateMarkdown(marketData, proposalNumber, n, dexData);
