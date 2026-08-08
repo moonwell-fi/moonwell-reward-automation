@@ -49,7 +49,20 @@ describe('Markets module', () => {
         });
       }
     });
-    
+
+    // Check Ethereum markets
+    data[1].forEach((market: MarketType) => {
+      if (!market.enabled) return;
+      if (market.totalSupplyUSD === 0 || market.totalBorrowsUSD === 0) {
+        marketsWithZeroValues.push({
+          network: 'Ethereum',
+          symbol: market.name,
+          totalSupplyUSD: market.totalSupplyUSD,
+          totalBorrowsUSD: market.totalBorrowsUSD
+        });
+      }
+    });
+
     // If any markets have zero values, fail the test and output the details
     if (marketsWithZeroValues.length > 0) {
       console.error('Markets with zero values:');

@@ -9,6 +9,14 @@ export function applyConfigOverrides(overrides?: ConfigOverrides): typeof mainCo
 	const config = JSON.parse(JSON.stringify(mainConfig));
 	if (!overrides) return config;
 
+	// Reject unknown top-level network keys (e.g. the sunset "moonbeam") so stale
+	// callers get a 400 instead of a silently ignored override.
+	for (const key of Object.keys(overrides)) {
+		if (!['base', 'optimism', 'ethereum'].includes(key)) {
+			throw new Error(`Invalid override: unknown network "${key}" (only base, optimism, ethereum may be overridden)`);
+		}
+	}
+
 	const applyNetworkOverrides = (
 		target: { markets: number; safetyModule: number; dex: number; vaults?: number },
 		source?: { markets?: number; safetyModule?: number; dex?: number; vaults?: number }
@@ -72,19 +80,23 @@ export function validateSplits(config: typeof mainConfig): string | null {
 
 export const mainConfig = {
 	totalWellPerEpoch: 8_333_333.33,
-  // Note: spend 50M WELL over 6 months beginning August 10th, 2026 - 8,333,333.33 per month
+	// Note: spend 50M WELL over 6 months at 8,333,333.33 per month. Epochs are anchored
+	// to the 15th 00:00 UTC (getEpochWindow), so the first funded window of this schedule
+	// is the August 15th, 2026 epoch.
+	// Overwritten per-request in getMarketData() with the calendar-month epoch length
+	// (15th->15th UTC, 28-31 days) from getEpochWindow(); this default is a fallback only.
 	secondsPerEpoch: 60 * 60 * 24 * 7 * 4,
 	base: {
 		rewardsEnabled: true,
 		nativePerEpoch: 0,
-		markets: 0.45, // 55% - Proportionally reduced to accommodate vaults
-		safetyModule: 0.40, // 20% - Proportionally reduced to accommodate vaults
+		markets: 0.45, // 45%
+		safetyModule: 0.40, // 40%
 		dex: 0.0,
-		vaults: 0.15, // 25% - MetaMorpho vault incentives 
+		vaults: 0.15, // 15% - MetaMorpho vault incentives
 		// below is an extra manual transfer from the F-AERO multisig to the DEX relayer
 		dexRelayerAmount: 0, // 7,202,303.2655022416 WELL / 12 4-week epochs
 		// MetaMorpho vault weight multipliers - WELL distributed based on weighted TVL
-		// Stablecoins get 2.0x multiplier to incentivize stable liquidity
+		// (values below are the source of truth; e.g. USDC 2.5x, EURC 1.5x, others 1x)
 		vaultWeightMultipliers: {
 			WETH: 1.0,   // Non-stablecoin baseline
 			USDC: 2.5,   // Stablecoin 2x weight + 0.5

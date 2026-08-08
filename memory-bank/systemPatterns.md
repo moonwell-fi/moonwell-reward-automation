@@ -60,7 +60,6 @@ Each major function is isolated in its own module with clear responsibilities:
 - `generateJson.ts`: JSON output generation
 - `generateMarkdown.ts`: Markdown output generation
 - `dex.ts`: DEX-specific data handling
-- `safetyModule.ts`: Safety module calculations
 - `utils.ts`: Shared utility functions
 
 ### 2. Data Flow Pattern

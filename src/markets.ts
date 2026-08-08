@@ -2,6 +2,7 @@ import { formatUnits } from "viem";
 import { marketConfigs, applyConfigOverrides, type ConfigOverrides } from "./config";
 import { ContractCall, createClients, baseClient as defaultBaseClient, optimismClient as defaultOptimismClient, ethereumClient as defaultEthereumClient } from "./utils";
 import { getEpochWindow } from "./epochs";
+import { CHAIN_NAMES, type ChainId } from "./types/config";
 
 // These will be set in getMarketData
 let baseClient = defaultBaseClient;
@@ -192,149 +193,59 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     optimismClient = clients.optimismClient;
     ethereumClient = clients.ethereumClient;
   }
-  const baseBlockNumber = await getClosestBlockNumber(
-    baseClient,
-    timestamp,
-    2 // Base block time is ~2 seconds
-  );
-  const optimismBlockNumber = await getClosestBlockNumber(
-    optimismClient,
-    timestamp,
-    2 // Optimism block time is ~2 seconds
-  );
-  const ethereumBlockNumber = await getClosestBlockNumber(
-    ethereumClient,
-    timestamp,
-    12 // Ethereum block time is ~12 seconds
-  );
-  const baseMarkets = await getBaseMarkets();
-  const optimismMarkets = await getOptimismMarkets();
-  const ethereumMarkets = await getEthereumMarkets();
+  // The three chains are independent; resolve their block numbers (each a
+  // sequential binary search of RPC calls) and market lists concurrently.
+  const [baseBlockNumber, optimismBlockNumber, ethereumBlockNumber] = await Promise.all([
+    getClosestBlockNumber(baseClient, timestamp, 2), // Base block time is ~2 seconds
+    getClosestBlockNumber(optimismClient, timestamp, 2), // Optimism block time is ~2 seconds
+    getClosestBlockNumber(ethereumClient, timestamp, 12), // Ethereum block time is ~12 seconds
+  ]);
+  const [baseMarkets, optimismMarkets, ethereumMarkets] = await Promise.all([
+    getBaseMarkets(),
+    getOptimismMarkets(),
+    getEthereumMarkets(),
+  ]);
 
   if (!baseMarkets.length || !optimismMarkets.length || !ethereumMarkets.length) {
     throw new Error("No markets found");
   }
 
-  const baseNames = baseMarkets.map(market => {
-    const config = marketConfigs[8453].find(config => config.address === market);
-    return config ? config.nameOverride : null;
+  // Per-chain market config lookups; markets missing from marketConfigs map to null.
+  const mapConfigField = <C extends { address: string }, T>(
+    configs: readonly C[],
+    markets: string[],
+    pick: (config: C) => T,
+  ) => markets.map(market => {
+    const config = configs.find(config => config.address === market);
+    return config ? pick(config) : null;
   });
 
-  const optimismNames = optimismMarkets.map(market => {
-    const config = marketConfigs[10].find(config => config.address === market);
-    return config ? config.nameOverride : null;
-  });
+  const baseNames = mapConfigField(marketConfigs[8453], baseMarkets, config => config.nameOverride);
+  const baseAliases = mapConfigField(marketConfigs[8453], baseMarkets, config => config.alias);
+  const baseDigits = mapConfigField(marketConfigs[8453], baseMarkets, config => config.digits);
+  const baseBoosts = mapConfigField(marketConfigs[8453], baseMarkets, config => config.boost);
+  const baseDeboosts = mapConfigField(marketConfigs[8453], baseMarkets, config => config.deboost);
+  const baseSupplyRatios = mapConfigField(marketConfigs[8453], baseMarkets, config => config.supply);
+  const baseBorrowRatios = mapConfigField(marketConfigs[8453], baseMarkets, config => config.borrow);
+  const baseEnabled = mapConfigField(marketConfigs[8453], baseMarkets, config => config.enabled);
 
-  const baseAliases = baseMarkets.map(market => {
-    const config = marketConfigs[8453].find(config => config.address === market);
-    return config ? config.alias : null;
-  });
+  const optimismNames = mapConfigField(marketConfigs[10], optimismMarkets, config => config.nameOverride);
+  const optimismAliases = mapConfigField(marketConfigs[10], optimismMarkets, config => config.alias);
+  const optimismDigits = mapConfigField(marketConfigs[10], optimismMarkets, config => config.digits);
+  const optimismBoosts = mapConfigField(marketConfigs[10], optimismMarkets, config => config.boost);
+  const optimismDeboosts = mapConfigField(marketConfigs[10], optimismMarkets, config => config.deboost);
+  const optimismSupplyRatios = mapConfigField(marketConfigs[10], optimismMarkets, config => config.supply);
+  const optimismBorrowRatios = mapConfigField(marketConfigs[10], optimismMarkets, config => config.borrow);
+  const optimismEnabled = mapConfigField(marketConfigs[10], optimismMarkets, config => config.enabled);
 
-  const optimismAliases = optimismMarkets.map(market => {
-    const config = marketConfigs[10].find(config => config.address === market);
-    return config ? config.alias : null;
-  });
-
-  const baseDigits = baseMarkets.map(market => {
-    const config = marketConfigs[8453].find(config => config.address === market);
-    return config ? config.digits : null;
-  });
-
-  const optimismDigits = optimismMarkets.map(market => {
-    const config = marketConfigs[10].find(config => config.address === market);
-    return config ? config.digits : null;
-  });
-
-  const baseBoosts = baseMarkets.map(market => {
-    const config = marketConfigs[8453].find(config => config.address === market);
-    return config ? config.boost : null;
-  });
-
-  const optimismBoosts = optimismMarkets.map(market => {
-    const config = marketConfigs[10].find(config => config.address === market);
-    return config ? config.boost : null;
-  });
-
-  const baseDeboosts = baseMarkets.map(market => {
-    const config = marketConfigs[8453].find(config => config.address === market);
-    return config ? config.deboost : null;
-  });
-
-  const optimismDeboosts = optimismMarkets.map(market => {
-    const config = marketConfigs[10].find(config => config.address === market);
-    return config ? config.deboost : null;
-  });
-
-  const baseSupplyRatios = baseMarkets.map(market => {
-    const config = marketConfigs[8453].find(config => config.address === market);
-    return config ? config.supply : null;
-  });
-
-  const optimismSupplyRatios = optimismMarkets.map(market => {
-    const config = marketConfigs[10].find(config => config.address === market);
-    return config ? config.supply : null;
-  });
-
-  const baseBorrowRatios = baseMarkets.map(market => {
-    const config = marketConfigs[8453].find(config => config.address === market);
-    return config ? config.borrow : null;
-  });
-
-  const optimismBorrowRatios = optimismMarkets.map(market => {
-    const config = marketConfigs[10].find(config => config.address === market);
-    return config ? config.borrow : null;
-  });
-
-  const baseEnabled = baseMarkets.map(market => {
-    const config = marketConfigs[8453].find(config => config.address === market);
-    return config ? config.enabled : null;
-  });
-
-  const optimismEnabled = optimismMarkets.map(market => {
-    const config = marketConfigs[10].find(config => config.address === market);
-    return config ? config.enabled : null;
-  });
-
-  // Ethereum market config maps (grouped; same lookups as the per-attribute maps above)
-  const ethereumNames = ethereumMarkets.map(market => {
-    const config = marketConfigs[1].find(config => config.address === market);
-    return config ? config.nameOverride : null;
-  });
-
-  const ethereumAliases = ethereumMarkets.map(market => {
-    const config = marketConfigs[1].find(config => config.address === market);
-    return config ? config.alias : null;
-  });
-
-  const ethereumDigits = ethereumMarkets.map(market => {
-    const config = marketConfigs[1].find(config => config.address === market);
-    return config ? config.digits : null;
-  });
-
-  const ethereumBoosts = ethereumMarkets.map(market => {
-    const config = marketConfigs[1].find(config => config.address === market);
-    return config ? config.boost : null;
-  });
-
-  const ethereumDeboosts = ethereumMarkets.map(market => {
-    const config = marketConfigs[1].find(config => config.address === market);
-    return config ? config.deboost : null;
-  });
-
-  const ethereumSupplyRatios = ethereumMarkets.map(market => {
-    const config = marketConfigs[1].find(config => config.address === market);
-    return config ? config.supply : null;
-  });
-
-  const ethereumBorrowRatios = ethereumMarkets.map(market => {
-    const config = marketConfigs[1].find(config => config.address === market);
-    return config ? config.borrow : null;
-  });
-
-  const ethereumEnabled = ethereumMarkets.map(market => {
-    const config = marketConfigs[1].find(config => config.address === market);
-    return config ? config.enabled : null;
-  });
+  const ethereumNames = mapConfigField(marketConfigs[1], ethereumMarkets, config => config.nameOverride);
+  const ethereumAliases = mapConfigField(marketConfigs[1], ethereumMarkets, config => config.alias);
+  const ethereumDigits = mapConfigField(marketConfigs[1], ethereumMarkets, config => config.digits);
+  const ethereumBoosts = mapConfigField(marketConfigs[1], ethereumMarkets, config => config.boost);
+  const ethereumDeboosts = mapConfigField(marketConfigs[1], ethereumMarkets, config => config.deboost);
+  const ethereumSupplyRatios = mapConfigField(marketConfigs[1], ethereumMarkets, config => config.supply);
+  const ethereumBorrowRatios = mapConfigField(marketConfigs[1], ethereumMarkets, config => config.borrow);
+  const ethereumEnabled = mapConfigField(marketConfigs[1], ethereumMarkets, config => config.enabled);
 
   // Fetch prices from oracle for Base
   const basePricesResponse = await baseClient.multicall({
@@ -575,8 +486,16 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     } as ContractCall)),
   })).map((exchangeRate) => exchangeRate.result as bigint);
 
-  // Functions to get emissions per second
-  const baseWellSupplySpeeds = (await baseClient.multicall({
+  // Functions to get emissions per second. Each getConfigForMarket result contains
+  // both supplyEmissionsPerSec and borrowEmissionsPerSec, so fetch one multicall per
+  // (chain, reward token) pair and split the fields.
+  type EmissionsConfig = { supplyEmissionsPerSec: bigint; borrowEmissionsPerSec: bigint } | undefined;
+  const supplySpeedsOf = (configs: EmissionsConfig[]) =>
+    configs.map(result => result ? result.supplyEmissionsPerSec : BigInt(0));
+  const borrowSpeedsOf = (configs: EmissionsConfig[]) =>
+    configs.map(result => result ? result.borrowEmissionsPerSec : BigInt(0));
+
+  const baseWellConfigs = (await baseClient.multicall({
     blockNumber: BigInt(baseBlockNumber),
     contracts: baseMarkets.map(market => ({
       address: baseMultiRewardDistributor.address,
@@ -584,25 +503,11 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
       functionName: "getConfigForMarket",
       args: [market, xWellToken.address],
     } as ContractCall)),
-  })).map((supplyRewardSpeed) => {
-    const result = supplyRewardSpeed.result as { supplyEmissionsPerSec: bigint } | undefined;
-    return result ? result.supplyEmissionsPerSec : BigInt(0);
-  });
+  })).map((speedConfig) => speedConfig.result as EmissionsConfig);
+  const baseWellSupplySpeeds = supplySpeedsOf(baseWellConfigs);
+  const baseWellBorrowSpeeds = borrowSpeedsOf(baseWellConfigs);
 
-  const baseWellBorrowSpeeds = (await baseClient.multicall({
-    blockNumber: BigInt(baseBlockNumber),
-    contracts: baseMarkets.map(market => ({
-      address: baseMultiRewardDistributor.address,
-      abi: baseMultiRewardDistributor.abi,
-      functionName: "getConfigForMarket",
-      args: [market, xWellToken.address],
-    } as ContractCall)),
-  })).map((borrowRewardSpeed) => {
-    const result = borrowRewardSpeed.result as { borrowEmissionsPerSec: bigint } | undefined;
-    return result ? result.borrowEmissionsPerSec : BigInt(0);
-  });
-
-  const optimismWellSupplySpeeds = (await optimismClient.multicall({
+  const optimismWellConfigs = (await optimismClient.multicall({
     blockNumber: BigInt(optimismBlockNumber),
     contracts: optimismMarkets.map(market => ({
       address: optimismMultiRewardDistributor.address,
@@ -610,25 +515,11 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
       functionName: "getConfigForMarket",
       args: [market, xWellToken.address],
     } as ContractCall)),
-  })).map((supplyRewardSpeed) => {
-    const result = supplyRewardSpeed.result as { supplyEmissionsPerSec: bigint } | undefined;
-    return result ? result.supplyEmissionsPerSec : BigInt(0);
-  });
+  })).map((speedConfig) => speedConfig.result as EmissionsConfig);
+  const optimismWellSupplySpeeds = supplySpeedsOf(optimismWellConfigs);
+  const optimismWellBorrowSpeeds = borrowSpeedsOf(optimismWellConfigs);
 
-  const optimismWellBorrowSpeeds = (await optimismClient.multicall({
-    blockNumber: BigInt(optimismBlockNumber),
-    contracts: optimismMarkets.map(market => ({
-      address: optimismMultiRewardDistributor.address,
-      abi: optimismMultiRewardDistributor.abi,
-      functionName: "getConfigForMarket",
-      args: [market, xWellToken.address],
-    } as ContractCall)),
-  })).map((borrowRewardSpeed) => {
-    const result = borrowRewardSpeed.result as { borrowEmissionsPerSec: bigint } | undefined;
-    return result ? result.borrowEmissionsPerSec : BigInt(0);
-  });
-
-  const ethereumWellSupplySpeeds = (await ethereumClient.multicall({
+  const ethereumWellConfigs = (await ethereumClient.multicall({
     blockNumber: BigInt(ethereumBlockNumber),
     contracts: ethereumMarkets.map(market => ({
       address: ethereumMultiRewardDistributor.address,
@@ -636,30 +527,16 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
       functionName: "getConfigForMarket",
       args: [market, xWellToken.address],
     } as ContractCall)),
-  })).map((supplyRewardSpeed) => {
-    const result = supplyRewardSpeed.result as { supplyEmissionsPerSec: bigint } | undefined;
-    return result ? result.supplyEmissionsPerSec : BigInt(0);
-  });
-
-  const ethereumWellBorrowSpeeds = (await ethereumClient.multicall({
-    blockNumber: BigInt(ethereumBlockNumber),
-    contracts: ethereumMarkets.map(market => ({
-      address: ethereumMultiRewardDistributor.address,
-      abi: ethereumMultiRewardDistributor.abi,
-      functionName: "getConfigForMarket",
-      args: [market, xWellToken.address],
-    } as ContractCall)),
-  })).map((borrowRewardSpeed) => {
-    const result = borrowRewardSpeed.result as { borrowEmissionsPerSec: bigint } | undefined;
-    return result ? result.borrowEmissionsPerSec : BigInt(0);
-  });
+  })).map((speedConfig) => speedConfig.result as EmissionsConfig);
+  const ethereumWellSupplySpeeds = supplySpeedsOf(ethereumWellConfigs);
+  const ethereumWellBorrowSpeeds = borrowSpeedsOf(ethereumWellConfigs);
 
   // No native reward token on Ethereum mainnet (nativePerEpoch is 0): zero arrays
   // keep the shared formatResults shape without querying a nonexistent rewarder.
   const ethereumNativeSupplySpeeds = ethereumMarkets.map(() => BigInt(0));
   const ethereumNativeBorrowSpeeds = ethereumMarkets.map(() => BigInt(0));
 
-  const baseNativeSupplySpeeds = (await baseClient.multicall({
+  const baseNativeConfigs = (await baseClient.multicall({
     blockNumber: BigInt(baseBlockNumber),
     contracts: baseMarkets.map(market => ({
       address: baseMultiRewardDistributor.address,
@@ -667,12 +544,11 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
       functionName: "getConfigForMarket",
       args: [market, baseNativeToken],
     } as ContractCall)),
-  })).map((supplyRewardSpeed) => {
-    const result = supplyRewardSpeed.result as { supplyEmissionsPerSec: bigint } | undefined;
-    return result ? result.supplyEmissionsPerSec : BigInt(0);
-  });
+  })).map((speedConfig) => speedConfig.result as EmissionsConfig);
+  const baseNativeSupplySpeeds = supplySpeedsOf(baseNativeConfigs);
+  const baseNativeBorrowSpeeds = borrowSpeedsOf(baseNativeConfigs);
 
-  const optimismNativeSupplySpeeds = (await optimismClient.multicall({
+  const optimismNativeConfigs = (await optimismClient.multicall({
     blockNumber: BigInt(optimismBlockNumber),
     contracts: optimismMarkets.map(market => ({
       address: optimismMultiRewardDistributor.address,
@@ -680,36 +556,9 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
       functionName: "getConfigForMarket",
       args: [market, optimismNativeToken],
     } as ContractCall)),
-  })).map((supplyRewardSpeed) => {
-    const result = supplyRewardSpeed.result as { supplyEmissionsPerSec: bigint } | undefined;
-    return result ? result.supplyEmissionsPerSec : BigInt(0);
-  });
-
-  const baseNativeBorrowSpeeds = (await baseClient.multicall({
-    blockNumber: BigInt(baseBlockNumber),
-    contracts: baseMarkets.map(market => ({
-      address: baseMultiRewardDistributor.address,
-      abi: baseMultiRewardDistributor.abi,
-      functionName: "getConfigForMarket",
-      args: [market, baseNativeToken],
-    } as ContractCall)),
-  })).map((borrowRewardSpeed) => {
-    const result = borrowRewardSpeed.result as { borrowEmissionsPerSec: bigint } | undefined;
-    return result ? result.borrowEmissionsPerSec : BigInt(0);
-  });
-
-  const optimismNativeBorrowSpeeds = (await optimismClient.multicall({
-    blockNumber: BigInt(optimismBlockNumber),
-    contracts: optimismMarkets.map(market => ({
-      address: optimismMultiRewardDistributor.address,
-      abi: optimismMultiRewardDistributor.abi,
-      functionName: "getConfigForMarket",
-      args: [market, optimismNativeToken],
-    } as ContractCall)),
-  })).map((borrowRewardSpeed) => {
-    const result = borrowRewardSpeed.result as { borrowEmissionsPerSec: bigint } | undefined;
-    return result ? result.borrowEmissionsPerSec : BigInt(0);
-  });
+  })).map((speedConfig) => speedConfig.result as EmissionsConfig);
+  const optimismNativeSupplySpeeds = supplySpeedsOf(optimismNativeConfigs);
+  const optimismNativeBorrowSpeeds = borrowSpeedsOf(optimismNativeConfigs);
 
   const baseMarketInfo = (await baseClient.multicall({
     blockNumber: BigInt(baseBlockNumber),
@@ -1351,14 +1200,14 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     totalSupplyUSD: (() => {
       const value = Number(suppliesUsd[index].toFixed(2));
       if (value === 0 && enabled[index]) {
-        console.log(`⚠️ ZERO SUPPLY USD ALERT: ${chainId === 8453 ? 'Base' : chainId === 1 ? 'Ethereum' : 'Optimism'} market ${names[index]} (${market}) has totalSupplyUSD = 0`);
+        console.log(`⚠️ ZERO SUPPLY USD ALERT: ${CHAIN_NAMES[String(chainId) as ChainId]} market ${names[index]} (${market}) has totalSupplyUSD = 0`);
       }
       return value;
     })(),
     totalBorrowsUSD: (() => {
       const value = Number(borrowsUsd[index].toFixed(2));
       if (value === 0 && enabled[index]) {
-        console.log(`⚠️ ZERO BORROW USD ALERT: ${chainId === 8453 ? 'Base' : chainId === 1 ? 'Ethereum' : 'Optimism'} market ${names[index]} (${market}) has totalBorrowsUSD = 0`);
+        console.log(`⚠️ ZERO BORROW USD ALERT: ${CHAIN_NAMES[String(chainId) as ChainId]} market ${names[index]} (${market}) has totalBorrowsUSD = 0`);
       }
       return value;
     })(),
@@ -1848,7 +1697,8 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
         const cbBTCTVL_USD = Number(formatUnits(cbBTCVaultTotalAssets, 8)) * cbBTCPriceUSD;
         const meUSDCTVL_USD = Number(formatUnits(meUSDCVaultTotalAssets, 6)); // meUSDC = $1
 
-        // Apply weight multipliers from config (2.0x for stablecoins, 1.0x for others)
+        // Apply weight multipliers from config (mainConfig.base.vaultWeightMultipliers
+        // is the source of truth for per-vault weights)
         const wethWeighted = wethTVL_USD * config.base.vaultWeightMultipliers.WETH;
         const usdcWeighted = usdcTVL_USD * config.base.vaultWeightMultipliers.USDC;
         const eurcWeighted = eurcTVL_USD * config.base.vaultWeightMultipliers.EURC;

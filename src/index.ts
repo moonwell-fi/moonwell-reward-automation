@@ -16,6 +16,13 @@ import { returnJson } from "./generateJson";
 import { generateMarkdown } from "./generateMarkdown";
 import { getDexInfo } from "./dex";
 import { applyConfigOverrides, validateSplits, type ConfigOverrides } from "./config";
+import { CHAIN_IDS, CHAIN_NAMES } from "./types/config";
+
+// Single source of truth for the supported-network roster: validation and the
+// default all-networks iteration order both derive from the chain registry.
+// (CHAIN_IDS is an explicit array — Object.keys/values on CHAIN_NAMES would
+// reorder its integer-like keys numerically and put Ethereum first.)
+const SUPPORTED_NETWORKS = CHAIN_IDS.map(id => CHAIN_NAMES[id]);
 
 // Helper function to deep merge objects
 function deepMerge(target: any, source: any) {
@@ -49,9 +56,8 @@ export default {
 			return new Response('Missing required parameters: type and timestamp', { status: 400 });
 		}
 
-		const validNetworks = ['Base', 'Optimism', 'Ethereum'];
-		if (network && !validNetworks.includes(network)) {
-			return new Response(`Invalid network parameter. Use one of: ${validNetworks.join(', ')}`, { status: 400 });
+		if (network && !SUPPORTED_NETWORKS.includes(network)) {
+			return new Response(`Invalid network parameter. Use one of: ${SUPPORTED_NETWORKS.join(', ')}`, { status: 400 });
 		}
 
 		// Parse and validate config overrides if provided (URL-encoded JSON)
@@ -78,8 +84,7 @@ export default {
 		try {
 			if (type === 'json') {
 				const marketData = await getMarketData(Number(timestamp), env, configOverrides);
-				let json = '';
-				const networks = network ? [network] : ['Base', 'Optimism', 'Ethereum'];
+				const networks = network ? [network] : SUPPORTED_NETWORKS;
 
 				const mergedJson = await networks.reduce(async (accPromise, n) => {
 					const acc = await accPromise;
@@ -110,7 +115,7 @@ This is an automated liquidity incentive governance proposal for the Moonwell pr
 
 `;
 				}
-				const networks = network ? [network] : ['Base', 'Ethereum', 'Optimism'];
+				const networks = network ? [network] : SUPPORTED_NETWORKS;
 
 				for (const n of networks) {
 					markdown += await generateMarkdown(marketData, proposalNumber, n, dexData);

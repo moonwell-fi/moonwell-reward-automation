@@ -124,7 +124,6 @@ curl "http://localhost:8787/?type=markdown&timestamp=1735344000&network=Optimism
 │   ├── config.ts             # Configuration and contract definitions
 │   ├── generateJson.ts       # JSON output generation
 │   ├── generateMarkdown.ts   # Markdown output generation
-│   ├── safetyModule.ts       # Safety module calculations
 │   ├── dex.ts                # DEX incentive handling
 │   ├── utils.ts              # Shared utilities and blockchain clients
 │   └── constants.ts          # Contract ABIs and constants
@@ -173,7 +172,7 @@ All reward distribution parameters are configured in `src/config.ts`:
 
 #### Base
 - Split between markets, safety module, and MetaMorpho vaults (see `mainConfig.base`)
-- Vault weight multipliers: 2x for stablecoins (USDC, EURC), 1x for non-stablecoins (WETH, cbBTC)
+- Vault weight multipliers: per-vault weights set in `mainConfig.base.vaultWeightMultipliers` (currently USDC 2.5x, EURC 1.5x, WETH/cbBTC 1x, meUSDC disabled)
 
 #### Optimism
 - 100% to markets (currently wound down via `rewardsEnabled: false`)

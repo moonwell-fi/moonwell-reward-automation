@@ -11,8 +11,9 @@ const MORPHO_VAULT_CAMPAIGN = 56;
 const TARGET_STKWELL_APY = 0.10; // 10% APY cap for stkWELL
 const SECONDS_PER_YEAR = 31_536_000;
 
-// Calculate capped wellHolderBalance to achieve target APY for stkWELL
-function calculateCappedWellHolderBalance(
+// Calculate capped wellHolderBalance to achieve target APY for stkWELL.
+// Exported so generateMarkdown reports the same capped numbers the JSON funds.
+export function calculateCappedWellHolderBalance(
   safetyModuleRewards: number,
   wellHolderBalance: number,
   stkWellTotalSupply: number,
@@ -481,5 +482,9 @@ export async function returnJson(marketData: any, network: string) {
     };
 
     return result;
+  } else {
+    // Exhaustive dispatch: an unhandled network must fail loudly rather than
+    // silently contributing an empty object to the deep-merged response.
+    throw new Error(`returnJson: unsupported network "${network}"`);
   }
 }
