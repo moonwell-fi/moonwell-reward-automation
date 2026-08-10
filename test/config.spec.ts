@@ -1,9 +1,20 @@
 import { describe, it, expect } from 'vitest';
-import { mainConfig, applyConfigOverrides, validateSplits } from '../src/config';
+import { mainConfig, marketConfigs, applyConfigOverrides, validateSplits } from '../src/config';
+
+describe('market supply/borrow ratios', () => {
+  it('sum to exactly 1 for every market on every chain', () => {
+    // The by-speed emission total only equals the funded market bucket (keeping the
+    // grand total capped at totalWellPerEpoch) when every market's ratios sum to 1.
+    for (const [chainId, markets] of Object.entries(marketConfigs)) {
+      for (const market of markets) {
+        expect(market.supply + market.borrow, `${chainId} ${market.nameOverride}`).toBeCloseTo(1, 9);
+      }
+    }
+  });
+});
 
 describe('network rewardsEnabled flag', () => {
-  it('ships with Moonbeam and Optimism disabled, Base and Ethereum enabled', () => {
-    expect(mainConfig.moonbeam.rewardsEnabled).toBe(false);
+  it('ships with Optimism disabled, Base and Ethereum enabled', () => {
     expect(mainConfig.optimism.rewardsEnabled).toBe(false);
     expect(mainConfig.base.rewardsEnabled).toBe(true);
     expect(mainConfig.ethereum.rewardsEnabled).toBe(true);
@@ -24,7 +35,7 @@ describe('network rewardsEnabled flag', () => {
     expect(config.base.rewardsEnabled).toBe(true);
     expect(config.optimism.rewardsEnabled).toBe(false);
     // mainConfig itself is untouched (deep copy)
-    expect(mainConfig.base.markets).toBe(0.55);
+    expect(mainConfig.base.markets).toBe(0.45);
   });
 });
 
@@ -33,7 +44,7 @@ describe('validateSplits with rewardsEnabled', () => {
     expect(validateSplits(applyConfigOverrides())).toBeNull();
   });
 
-  it('rejects all four networks disabled', () => {
+  it('rejects all three networks disabled', () => {
     const config = applyConfigOverrides();
     config.base.rewardsEnabled = false;
     config.ethereum.rewardsEnabled = false;

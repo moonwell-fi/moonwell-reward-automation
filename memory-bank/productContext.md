@@ -2,7 +2,7 @@
 
 ## Problem Definition
 
-The Moonwell protocol operates across three different blockchain networks (Moonbeam, Base, and Optimism), each with its own unique market dynamics, token economics, and incentive structures. Managing liquidity incentives across these networks involves complex calculations that must:
+The Moonwell protocol operates across three different blockchain networks (Base, Optimism, and Ethereum), each with its own unique market dynamics, token economics, and incentive structures. Managing liquidity incentives across these networks involves complex calculations that must:
 
 1. **Balance rewards fairly** across all markets based on size, utilization, and strategic importance
 2. **Update regularly** as market conditions change

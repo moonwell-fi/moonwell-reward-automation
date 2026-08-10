@@ -5,15 +5,15 @@
 import { fifteenthOfMonthUTC } from '../epochs';
 
 // Chain IDs
-export type ChainId = '1284' | '8453' | '10';
+export type ChainId = '8453' | '10' | '1';
 
 export const CHAIN_NAMES: Record<ChainId, string> = {
-	'1284': 'Moonbeam',
 	'8453': 'Base',
 	'10': 'Optimism',
+	'1': 'Ethereum',
 };
 
-export const CHAIN_IDS: ChainId[] = ['1284', '8453', '10'];
+export const CHAIN_IDS: ChainId[] = ['8453', '10', '1'];
 
 // Epochs are calendar months running 15th 00:00:00 UTC -> next 15th (variable 28-31 days).
 // Epoch numbering is anchored to the first day-15 epoch.

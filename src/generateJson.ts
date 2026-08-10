@@ -11,8 +11,9 @@ const MORPHO_VAULT_CAMPAIGN = 56;
 const TARGET_STKWELL_APY = 0.10; // 10% APY cap for stkWELL
 const SECONDS_PER_YEAR = 31_536_000;
 
-// Calculate capped wellHolderBalance to achieve target APY for stkWELL
-function calculateCappedWellHolderBalance(
+// Calculate capped wellHolderBalance to achieve target APY for stkWELL.
+// Exported so generateMarkdown reports the same capped numbers the JSON funds.
+export function calculateCappedWellHolderBalance(
   safetyModuleRewards: number,
   wellHolderBalance: number,
   stkWellTotalSupply: number,
@@ -59,36 +60,6 @@ function buildEthereumSource(
 }
 
 export async function returnJson(marketData: any, network: string) {
-  const moonbeamSetRewardSpeeds = marketData["1284"]
-    .filter((market: MarketType) => market.alias !== null)
-    .flatMap((market: MarketType) => {
-    const wellRewardSpeeds = {
-      market: market.alias,
-      newBorrowSpeed: new BigNumber(market.newWellBorrowSpeed).isLessThanOrEqualTo(0) ? 1 :
-        new BigNumber(market.newWellBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? 1 : Number(new BigNumber(market.newWellBorrowSpeed)
-        .shiftedBy(18)
-        .integerValue().toFixed(0)),
-      newSupplySpeed: new BigNumber(market.newWellSupplySpeed).isLessThanOrEqualTo(0) ? 0 :
-        new BigNumber(market.newWellSupplySpeed).isZero() ? 0 : Number(new BigNumber(market.newWellSupplySpeed)
-        .shiftedBy(18)
-        .integerValue().toFixed(0)),
-      rewardType: 0, // 0 = WELL
-    };
-    const nativeRewardSpeeds = {
-      market: market.alias,
-      newBorrowSpeed: new BigNumber(market.newNativeBorrowSpeed).isLessThanOrEqualTo(0) ? 1 :
-        new BigNumber(market.newNativeBorrowSpeed).isEqualTo(new BigNumber('1e-18')) ? 1 : Number(new BigNumber(market.newNativeBorrowSpeed)
-        .shiftedBy(18)
-        .integerValue().toFixed(0)),
-      newSupplySpeed: new BigNumber(market.newNativeSupplySpeed).isLessThanOrEqualTo(0) ? 0 :
-        new BigNumber(market.newNativeSupplySpeed).isZero() ? 0 : Number(new BigNumber(market.newNativeSupplySpeed)
-        .shiftedBy(18)
-        .integerValue().toFixed(0)),
-      rewardType: 1, // 1 = GLMR
-    };
-    return [wellRewardSpeeds, nativeRewardSpeeds];
-  });
-
   const baseSetRewardSpeeds = marketData["8453"]
     .filter((market: MarketType) => market.alias !== null)
     .flatMap((market: MarketType) => {
@@ -170,96 +141,7 @@ export async function returnJson(marketData: any, network: string) {
     return [wellRewardSpeeds];
   });
 
-  if (network === "Moonbeam") {
-    // Check if any market has reservesEnabled=true
-    const hasReservesEnabled = marketData["1284"].some((market: MarketType) => market.reservesEnabled);
-
-    const result: any = {
-      // Moonbeam no longer distributes StellaSwap/dex rewards, so fund + bridge only
-      // markets + safety module (wellPerEpoch - dex). When all Moonbeam markets are
-      // disabled this is 0, so toBaseUnits emits no source actions (no dust).
-      1: (() => {
-        const moonbeamBridgeWell = new BigNumber(parseFloat(marketData.moonbeam.wellPerEpoch).toFixed(18))
-          .minus(parseFloat(marketData.moonbeam.wellPerEpochDex).toFixed(18));
-        return buildEthereumSource(toBaseUnits(moonbeamBridgeWell, 1e17), [
-          {
-            // On-chain Wormhole quoter resolves bridge cost at execution time (no nativeValue).
-            amount: toBaseUnits(moonbeamBridgeWell, 1e16),
-            network: 1284,
-            target: "TEMPORAL_GOVERNOR",
-          },
-        ]);
-      })(),
-      1284: {
-        ...(hasReservesEnabled ? {
-          initSale: {
-            ...mainConfig.initSale,
-            reserveAutomationContracts: marketData["1284"]
-              .filter((market: MarketType) => {
-                if (!market.reservesEnabled) return false;
-                const reserves = market.reserves;
-                const minimumReserves = market.minimumReserves;
-                const amount = new BigNumber(reserves)
-                  .minus(new BigNumber(minimumReserves))
-                  .shiftedBy(market.digits)
-                  .decimalPlaces(0, BigNumber.ROUND_FLOOR)
-                  .toNumber();
-                return amount > 0;
-              })
-              .map((market: MarketType) => `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`)
-          }
-        } : {}),
-        setRewardSpeed: moonbeamSetRewardSpeeds,
-        stkWellEmissionsPerSecond: Number(BigNumber(parseFloat(marketData.moonbeam.wellPerEpochSafetyModule))
-          .div(marketData.totalSeconds)
-          .shiftedBy(18)
-          .integerValue().toFixed(0)),
-        transferFrom: [
-          { // Market rewards: from the Temporal Governor to the Unitroller proxy
-            amount: Number(BigNumber(marketData.moonbeam.wellPerEpochMarkets)
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
-              .toFixed(0)),
-            from: "TEMPORAL_GOVERNOR",
-            to: "UNITROLLER",
-            token: "GOVTOKEN",
-          },
-          { // Safety Module rewards: from the Temporal Governor to the Ecosystem Reserve Proxy
-            amount: Number(BigNumber(marketData.moonbeam.wellPerEpochSafetyModule)
-              .shiftedBy(18)
-              .decimalPlaces(0, BigNumber.ROUND_CEIL) // always round up
-              .toFixed(0)),
-            from: "TEMPORAL_GOVERNOR",
-            to: "ECOSYSTEM_RESERVE_PROXY",
-            token: "GOVTOKEN",
-          },
-        ].filter(transfer => transfer.amount > 0),
-        ...(hasReservesEnabled ? {
-          transferReserves: marketData["1284"]
-            .filter((market: MarketType) => market.reservesEnabled)
-            .map((market: MarketType) => {
-              const reserves = market.reserves;
-              const minimumReserves = market.minimumReserves;
-              return {
-                amount: Number(new BigNumber(reserves)
-                  .minus(new BigNumber(minimumReserves))
-                  .shiftedBy(market.digits)
-                  .decimalPlaces(0, BigNumber.ROUND_FLOOR)
-                  .toFixed(0)),
-                market: market.alias,
-                to: `RESERVE_AUTOMATION_${market.alias.split('_')[1]}`
-              };
-            })
-            .filter((item: { amount: number; market: string; to: string }) => item.amount > 0)
-        } : {}),
-        withdrawWell: [],
-      },
-      endTimeSTamp: marketData.epochEndTimestamp,
-      startTimeStamp: marketData.epochStartTimestamp,
-    };
-
-    return result;
-  } else if (network === "Base") {
+  if (network === "Base") {
     // Check if any market has reservesEnabled=true
     const hasReservesEnabled = marketData["8453"].some((market: MarketType) => market.reservesEnabled);
 
@@ -600,5 +482,9 @@ export async function returnJson(marketData: any, network: string) {
     };
 
     return result;
+  } else {
+    // Exhaustive dispatch: an unhandled network must fail loudly rather than
+    // silently contributing an empty object to the deep-merged response.
+    throw new Error(`returnJson: unsupported network "${network}"`);
   }
 }

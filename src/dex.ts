@@ -1,7 +1,6 @@
 
 export const DEFILLAMA_URL = 'https://yields.llama.fi/chart'
 export const ETH_WELL_AERODROME_V1_POOL_ID = '1f0c0a53-577c-4dd0-97af-f1791f532f51'
-export const GLMR_WELL_STELLASWAP_POOL_ID = '40c860bb-bf33-4f35-b791-40bf9c1a4451'
 
 export interface DefiLllamaPoolResult {
   "status": "success" | "error",
@@ -38,21 +37,6 @@ export async function getDexInfo() {
       symbol: `ETH/WELL`,
       apy: aerodromeLastInfo.apy || 0,
       tvl: aerodromeLastInfo.tvlUsd || 0,
-    })
-  }
-
-
-  let stellaFetch = await fetch(`${DEFILLAMA_URL}/${GLMR_WELL_STELLASWAP_POOL_ID}`);
-  let stellaResult = await stellaFetch.json() as DefiLllamaPoolResult
-
-  if (stellaResult.status == "success") {
-    let stellaLastInfo = stellaResult.data[stellaResult.data.length - 1]
-    result.push({
-      network: 1284,
-      dex: `StellaSwap`,
-      symbol: `GLMR/WELL`,
-      apy: stellaLastInfo.apy || 0,
-      tvl: stellaLastInfo.tvlUsd || 0,
     })
   }
 

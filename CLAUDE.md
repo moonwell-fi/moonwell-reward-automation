@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Moonwell Reward Automation is a Cloudflare Workers application that automates the calculation and distribution of liquidity incentives for the Moonwell DeFi protocol across three blockchain networks: Moonbeam (ChainID 1284), Base (ChainID 8453), and Optimism (ChainID 10). The system fetches on-chain market data, computes optimal reward distributions for WELL tokens and native network tokens (GLMR, USDC, OP), and generates outputs in both JSON (for on-chain governance transactions) and Markdown (for human-readable proposals).
+Moonwell Reward Automation is a Cloudflare Workers application that automates the calculation and distribution of liquidity incentives for the Moonwell DeFi protocol across three blockchain networks: Base (ChainID 8453), Optimism (ChainID 10), and Ethereum (ChainID 1). The system fetches on-chain market data, computes optimal reward distributions for WELL tokens and native network tokens (USDC, OP), and generates outputs in both JSON (for on-chain governance transactions) and Markdown (for human-readable proposals).
 
 ## Commands
 
@@ -38,7 +38,6 @@ npm test -- --watch                # Run tests in watch mode
 - **`config.ts`**: Centralized configuration including epoch parameters, network allocations, market-specific settings, contract addresses, and ABIs. Modify this file to adjust reward ratios or market boosts without code changes
 - **`generateJson.ts`**: Transforms market data into JSON format for on-chain consumption, including Merkle campaign data for MetaMorpho vaults on Base
 - **`generateMarkdown.ts`**: Creates human-readable governance proposals with tables showing market metrics, reward changes, and APR calculations
-- **`safetyModule.ts`**: Handles safety module (stkWELL) reward calculations across all networks
 - **`dex.ts`**: Manages DEX-specific reward data (currently Aerodrome on Base)
 - **`utils.ts`**: Shared utilities including blockchain clients, block number resolution, and contract call batching
 - **`constants.ts`**: Contract ABIs and other constant values
@@ -47,12 +46,13 @@ npm test -- --watch                # Run tests in watch mode
 
 Each blockchain network requires network-specific handling:
 - Different comptroller contracts and addresses for each chain
-- Different block times (Moonbeam ~6s, Base/Optimism ~2s) affect reward calculations
-- Network-specific token types and decimals (WELL/GLMR/OP have 18 decimals, USDC has 6)
+- Different block times (Base/Optimism ~2s, Ethereum ~12s) affect reward calculations
+- Network-specific token types and decimals (WELL/OP have 18 decimals, USDC has 6)
 - Base has MetaMorpho vault campaigns with weighted TVL multipliers
 - Optimism has multi-rewarder contracts for additional native token incentives
+- Ethereum is the bridge source: WELL funding originates from the Foundation multisig on mainnet
 
-The system uses `viem` for all RPC interactions with separate client instances per chain. The `createClients()` function in `utils.ts` can accept custom RPC URLs via environment variables (MOONBEAM_RPC, BASE_RPC, OPTIMISM_RPC).
+The system uses `viem` for all RPC interactions with separate client instances per chain. The `createClients()` function in `utils.ts` can accept custom RPC URLs via environment variables (BASE_RPC_URL, OPTIMISM_RPC_URL, ETHEREUM_RPC_URL).
 
 ### Configuration-Driven Calculations
 
@@ -62,7 +62,7 @@ The `config.ts` file controls all reward distribution logic:
 - **`marketConfigs`**: Array of market-specific configurations indexed by chain ID, including market addresses, names, aliases, boost/deboost multipliers, supply/borrow ratios, and minimum reserves
 - **Boost/Deboost**: Markets can have multipliers applied (e.g., `boost: 1.5` increases rewards by 50%, `deboost: 0.5` reduces by 50%)
 - **Supply/Borrow Ratios**: Control how rewards split between suppliers and borrowers (e.g., `supplyRatio: 0.7, borrowRatio: 0.3`)
-- **Vault Weight Multipliers**: On Base, MetaMorpho vaults receive weighted WELL allocations (stablecoins get 2x multiplier)
+- **Vault Weight Multipliers**: On Base, MetaMorpho vaults receive weighted WELL allocations (per-vault weights set in `mainConfig.base.vaultWeightMultipliers`)
 
 ### Numerical Precision
 
@@ -77,7 +77,7 @@ All token amounts use 18 decimal precision internally. The system uses `bignumbe
 **Query Parameters:**
 - `type` (required): `json` or `markdown`
 - `timestamp` (required): UNIX timestamp for data snapshot (determines which block to query)
-- `network` (optional): Filter to specific network (`Moonbeam`, `Base`, or `Optimism`)
+- `network` (optional): Filter to specific network (`Base`, `Optimism`, or `Ethereum`); any other value returns HTTP 400
 - `proposal` (optional): Proposal number for markdown output (e.g., `MIP-123`)
 
 **Examples:**
@@ -102,7 +102,7 @@ The system uses `getClosestBlockNumber()` to convert timestamps to block numbers
 
 Base network includes MetaMorpho vault incentives distributed via Merkle campaigns:
 - Vault addresses and weight multipliers defined in `mainConfig.base.vaultAddresses` and `vaultWeightMultipliers`
-- WELL rewards allocated based on weighted TVL (stablecoins USDC/EURC get 2x weight)
+- WELL rewards allocated based on weighted TVL (per-vault weights set in `vaultWeightMultipliers`)
 - Campaign data encoded in `merkleCampaignDatas` object with vault addresses and parameters
 - Vault campaigns use campaign type 56 (MORPHO_VAULT_CAMPAIGN) in JSON output
 - stkWELL uses campaign type 18 (TOKEN_HOLDING_CAMPAIGN) with 10% APY cap

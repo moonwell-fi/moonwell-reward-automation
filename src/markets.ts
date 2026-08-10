@@ -1,11 +1,10 @@
 import { formatUnits } from "viem";
 import { marketConfigs, applyConfigOverrides, type ConfigOverrides } from "./config";
-import { getSafetyModuleDataForAllChains } from "./safetyModule";
-import { ContractCall, createClients, baseClient as defaultBaseClient, moonbeamClient as defaultMoonbeamClient, optimismClient as defaultOptimismClient, ethereumClient as defaultEthereumClient } from "./utils";
+import { ContractCall, createClients, baseClient as defaultBaseClient, optimismClient as defaultOptimismClient, ethereumClient as defaultEthereumClient } from "./utils";
 import { getEpochWindow } from "./epochs";
+import { CHAIN_NAMES, type ChainId } from "./types/config";
 
 // These will be set in getMarketData
-let moonbeamClient = defaultMoonbeamClient;
 let baseClient = defaultBaseClient;
 let optimismClient = defaultOptimismClient;
 let ethereumClient = defaultEthereumClient;
@@ -24,10 +23,6 @@ import {
   ethereumOracleContract,
   ethereumViewsContract,
   excludedMarkets,
-  moonbeamComptroller,
-  moonbeamOracleContract,
-  moonbeamStkWELL,
-  moonbeamViewsContract,
   optimismComptroller,
   optimismMultiRewardDistributor,
   optimismNativeToken,
@@ -38,7 +33,7 @@ import {
   xWellToken
 } from "./config";
 
-import { mTokenv1ABI, mTokenv2ABI } from "./constants";
+import { mTokenv2ABI } from "./constants";
 
 export interface MarketType {
   market: string;
@@ -154,15 +149,6 @@ async function filterExcludedMarkets(markets: string[], chainId: number): Promis
   return markets.filter(market => !excludedAddresses.includes(market));
 }
 
-async function getMoonbeamMarkets() {
-  const markets = await moonbeamClient.readContract({
-    ...moonbeamComptroller,
-    functionName: "getAllMarkets",
-    args: [],
-  } as ContractCall);
-  return await filterExcludedMarkets(markets as string[], 1284);
-}
-
 async function getBaseMarkets() {
   const markets = await baseClient.readContract({
     ...baseComptroller,
@@ -203,241 +189,63 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
   // If environment variables are provided, create clients with them
   if (env) {
     const clients = createClients(env);
-    moonbeamClient = clients.moonbeamClient;
     baseClient = clients.baseClient;
     optimismClient = clients.optimismClient;
     ethereumClient = clients.ethereumClient;
   }
-  const moonbeamBlockNumber = await getClosestBlockNumber(
-    moonbeamClient,
-    timestamp,
-    6 // Moonbeam block time is ~6 seconds
-  );
-  const baseBlockNumber = await getClosestBlockNumber(
-    baseClient,
-    timestamp,
-    2 // Base block time is ~2 seconds
-  );
-  const optimismBlockNumber = await getClosestBlockNumber(
-    optimismClient,
-    timestamp,
-    2 // Optimism block time is ~2 seconds
-  );
-  const ethereumBlockNumber = await getClosestBlockNumber(
-    ethereumClient,
-    timestamp,
-    12 // Ethereum block time is ~12 seconds
-  );
-  const safetyModuleData = await getSafetyModuleDataForAllChains(
-    BigInt(moonbeamBlockNumber),
-    BigInt(baseBlockNumber),
-    BigInt(optimismBlockNumber),
-    env
-  );
-  const moonbeamMarkets = await getMoonbeamMarkets();
-  const baseMarkets = await getBaseMarkets();
-  const optimismMarkets = await getOptimismMarkets();
-  const ethereumMarkets = await getEthereumMarkets();
+  // The three chains are independent; resolve their block numbers (each a
+  // sequential binary search of RPC calls) and market lists concurrently.
+  const [baseBlockNumber, optimismBlockNumber, ethereumBlockNumber] = await Promise.all([
+    getClosestBlockNumber(baseClient, timestamp, 2), // Base block time is ~2 seconds
+    getClosestBlockNumber(optimismClient, timestamp, 2), // Optimism block time is ~2 seconds
+    getClosestBlockNumber(ethereumClient, timestamp, 12), // Ethereum block time is ~12 seconds
+  ]);
+  const [baseMarkets, optimismMarkets, ethereumMarkets] = await Promise.all([
+    getBaseMarkets(),
+    getOptimismMarkets(),
+    getEthereumMarkets(),
+  ]);
 
-  if (!moonbeamMarkets.length || !baseMarkets.length || !optimismMarkets.length || !ethereumMarkets.length) {
+  if (!baseMarkets.length || !optimismMarkets.length || !ethereumMarkets.length) {
     throw new Error("No markets found");
   }
 
-  const moonbeamNames = moonbeamMarkets.map(market => {
-    const config = marketConfigs[1284].find(config => config.address === market);
-    return config ? config.nameOverride : null;
+  // Per-chain market config lookups; markets missing from marketConfigs map to null.
+  const mapConfigField = <C extends { address: string }, T>(
+    configs: readonly C[],
+    markets: string[],
+    pick: (config: C) => T,
+  ) => markets.map(market => {
+    const config = configs.find(config => config.address === market);
+    return config ? pick(config) : null;
   });
 
-  const baseNames = baseMarkets.map(market => {
-    const config = marketConfigs[8453].find(config => config.address === market);
-    return config ? config.nameOverride : null;
-  });
+  const baseNames = mapConfigField(marketConfigs[8453], baseMarkets, config => config.nameOverride);
+  const baseAliases = mapConfigField(marketConfigs[8453], baseMarkets, config => config.alias);
+  const baseDigits = mapConfigField(marketConfigs[8453], baseMarkets, config => config.digits);
+  const baseBoosts = mapConfigField(marketConfigs[8453], baseMarkets, config => config.boost);
+  const baseDeboosts = mapConfigField(marketConfigs[8453], baseMarkets, config => config.deboost);
+  const baseSupplyRatios = mapConfigField(marketConfigs[8453], baseMarkets, config => config.supply);
+  const baseBorrowRatios = mapConfigField(marketConfigs[8453], baseMarkets, config => config.borrow);
+  const baseEnabled = mapConfigField(marketConfigs[8453], baseMarkets, config => config.enabled);
 
-  const optimismNames = optimismMarkets.map(market => {
-    const config = marketConfigs[10].find(config => config.address === market);
-    return config ? config.nameOverride : null;
-  });
+  const optimismNames = mapConfigField(marketConfigs[10], optimismMarkets, config => config.nameOverride);
+  const optimismAliases = mapConfigField(marketConfigs[10], optimismMarkets, config => config.alias);
+  const optimismDigits = mapConfigField(marketConfigs[10], optimismMarkets, config => config.digits);
+  const optimismBoosts = mapConfigField(marketConfigs[10], optimismMarkets, config => config.boost);
+  const optimismDeboosts = mapConfigField(marketConfigs[10], optimismMarkets, config => config.deboost);
+  const optimismSupplyRatios = mapConfigField(marketConfigs[10], optimismMarkets, config => config.supply);
+  const optimismBorrowRatios = mapConfigField(marketConfigs[10], optimismMarkets, config => config.borrow);
+  const optimismEnabled = mapConfigField(marketConfigs[10], optimismMarkets, config => config.enabled);
 
-  const moonbeamAliases = moonbeamMarkets.map(market => {
-    const config = marketConfigs[1284].find(config => config.address === market);
-    return config ? config.alias : null;
-  });
-
-  const baseAliases = baseMarkets.map(market => {
-    const config = marketConfigs[8453].find(config => config.address === market);
-    return config ? config.alias : null;
-  });
-
-  const optimismAliases = optimismMarkets.map(market => {
-    const config = marketConfigs[10].find(config => config.address === market);
-    return config ? config.alias : null;
-  });
-
-  const moonbeamDigits = moonbeamMarkets.map(market => {
-    const config = marketConfigs[1284].find(config => config.address === market);
-    return config ? config.digits : null;
-  });
-
-  const baseDigits = baseMarkets.map(market => {
-    const config = marketConfigs[8453].find(config => config.address === market);
-    return config ? config.digits : null;
-  });
-
-  const optimismDigits = optimismMarkets.map(market => {
-    const config = marketConfigs[10].find(config => config.address === market);
-    return config ? config.digits : null;
-  });
-
-  const moonbeamBoosts = moonbeamMarkets.map(market => {
-    const config = marketConfigs[1284].find(config => config.address === market);
-    return config ? config.boost : null;
-  });
-
-  const baseBoosts = baseMarkets.map(market => {
-    const config = marketConfigs[8453].find(config => config.address === market);
-    return config ? config.boost : null;
-  });
-
-  const optimismBoosts = optimismMarkets.map(market => {
-    const config = marketConfigs[10].find(config => config.address === market);
-    return config ? config.boost : null;
-  });
-
-  const moonbeamDeboosts = moonbeamMarkets.map(market => {
-    const config = marketConfigs[1284].find(config => config.address === market);
-    return config ? config.deboost : null;
-  });
-
-  const baseDeboosts = baseMarkets.map(market => {
-    const config = marketConfigs[8453].find(config => config.address === market);
-    return config ? config.deboost : null;
-  });
-
-  const optimismDeboosts = optimismMarkets.map(market => {
-    const config = marketConfigs[10].find(config => config.address === market);
-    return config ? config.deboost : null;
-  });
-
-  const moonbeamSupplyRatios = moonbeamMarkets.map(market => {
-    const config = marketConfigs[1284].find(config => config.address === market);
-    return config ? config.supply : null;
-  });
-
-  const baseSupplyRatios = baseMarkets.map(market => {
-    const config = marketConfigs[8453].find(config => config.address === market);
-    return config ? config.supply : null;
-  });
-
-  const optimismSupplyRatios = optimismMarkets.map(market => {
-    const config = marketConfigs[10].find(config => config.address === market);
-    return config ? config.supply : null;
-  });
-
-  const moonbeamBorrowRatios = moonbeamMarkets.map(market => {
-    const config = marketConfigs[1284].find(config => config.address === market);
-    return config ? config.borrow : null;
-  });
-
-  const baseBorrowRatios = baseMarkets.map(market => {
-    const config = marketConfigs[8453].find(config => config.address === market);
-    return config ? config.borrow : null;
-  });
-
-  const optimismBorrowRatios = optimismMarkets.map(market => {
-    const config = marketConfigs[10].find(config => config.address === market);
-    return config ? config.borrow : null;
-  });
-
-  const moonbeamEnabled = moonbeamMarkets.map(market => {
-    const config = marketConfigs[1284].find(config => config.address === market);
-    return config ? config.enabled : null;
-  });
-
-  const baseEnabled = baseMarkets.map(market => {
-    const config = marketConfigs[8453].find(config => config.address === market);
-    return config ? config.enabled : null;
-  });
-
-  const optimismEnabled = optimismMarkets.map(market => {
-    const config = marketConfigs[10].find(config => config.address === market);
-    return config ? config.enabled : null;
-  });
-
-  // Ethereum market config maps (grouped; same lookups as the per-attribute maps above)
-  const ethereumNames = ethereumMarkets.map(market => {
-    const config = marketConfigs[1].find(config => config.address === market);
-    return config ? config.nameOverride : null;
-  });
-
-  const ethereumAliases = ethereumMarkets.map(market => {
-    const config = marketConfigs[1].find(config => config.address === market);
-    return config ? config.alias : null;
-  });
-
-  const ethereumDigits = ethereumMarkets.map(market => {
-    const config = marketConfigs[1].find(config => config.address === market);
-    return config ? config.digits : null;
-  });
-
-  const ethereumBoosts = ethereumMarkets.map(market => {
-    const config = marketConfigs[1].find(config => config.address === market);
-    return config ? config.boost : null;
-  });
-
-  const ethereumDeboosts = ethereumMarkets.map(market => {
-    const config = marketConfigs[1].find(config => config.address === market);
-    return config ? config.deboost : null;
-  });
-
-  const ethereumSupplyRatios = ethereumMarkets.map(market => {
-    const config = marketConfigs[1].find(config => config.address === market);
-    return config ? config.supply : null;
-  });
-
-  const ethereumBorrowRatios = ethereumMarkets.map(market => {
-    const config = marketConfigs[1].find(config => config.address === market);
-    return config ? config.borrow : null;
-  });
-
-  const ethereumEnabled = ethereumMarkets.map(market => {
-    const config = marketConfigs[1].find(config => config.address === market);
-    return config ? config.enabled : null;
-  });
-
-  // Fetch prices from oracle
-  const moonbeamPricesResponse = await moonbeamClient.multicall({
-    blockNumber: BigInt(moonbeamBlockNumber),
-    contracts: moonbeamMarkets.map(market => ({
-      ...moonbeamOracleContract,
-      functionName: "getUnderlyingPrice",
-      args: [market],
-    } as ContractCall)),
-  });
-  
-  // Check for zero prices and log them
-  const moonbeamPrices = moonbeamPricesResponse.map((price, index) => {
-    if (price.status === 'failure' || price.result === undefined) {
-      throw new Error(`Failed to fetch price for Moonbeam market ${moonbeamNames[index]} (${moonbeamMarkets[index]}): ${price.error || 'RPC call failed'}`);
-    }
-    const priceValue = price.result as bigint;
-    if (priceValue === BigInt(0)) {
-      console.log(`⚠️ ZERO PRICE ALERT: Moonbeam market ${moonbeamNames[index]} (${moonbeamMarkets[index]}) has price = 0`);
-    }
-    return priceValue;
-  });
-
-  const glmrIndex = moonbeamMarkets.findIndex(
-    (market) => moonbeamNames[moonbeamMarkets.indexOf(market)] === "GLMR"
-  );
-
-  if (glmrIndex === -1) {
-    throw new Error("GLMR market not found in Moonbeam markets");
-  }
-
-  const moonbeamNativePrice = formatUnits(
-    moonbeamPrices[glmrIndex],
-    (36 - 18)
-  );
+  const ethereumNames = mapConfigField(marketConfigs[1], ethereumMarkets, config => config.nameOverride);
+  const ethereumAliases = mapConfigField(marketConfigs[1], ethereumMarkets, config => config.alias);
+  const ethereumDigits = mapConfigField(marketConfigs[1], ethereumMarkets, config => config.digits);
+  const ethereumBoosts = mapConfigField(marketConfigs[1], ethereumMarkets, config => config.boost);
+  const ethereumDeboosts = mapConfigField(marketConfigs[1], ethereumMarkets, config => config.deboost);
+  const ethereumSupplyRatios = mapConfigField(marketConfigs[1], ethereumMarkets, config => config.supply);
+  const ethereumBorrowRatios = mapConfigField(marketConfigs[1], ethereumMarkets, config => config.borrow);
+  const ethereumEnabled = mapConfigField(marketConfigs[1], ethereumMarkets, config => config.enabled);
 
   // Fetch prices from oracle for Base
   const basePricesResponse = await baseClient.multicall({
@@ -569,15 +377,6 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     args: [xWellToken.address, BigInt(1e18), BigInt(1)],
   })) * BigInt(ethPrice) as bigint;
 
-  const moonbeamSupplies = (await moonbeamClient.multicall({
-    blockNumber: BigInt(moonbeamBlockNumber),
-    contracts: moonbeamMarkets.map(market => ({
-      address: market as `0x${string}`,
-      abi: mTokenv1ABI,
-      functionName: "totalSupply",
-    })),
-  })).map((supply) => supply.result as bigint);
-
   const baseSupplies = (await baseClient.multicall({
     blockNumber: BigInt(baseBlockNumber),
     contracts: baseMarkets.map(market => ({
@@ -595,15 +394,6 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
       functionName: "totalSupply",
     } as ContractCall)),
   })).map((supply) => supply.result as bigint);
-
-  const moonbeamBorrows = (await moonbeamClient.multicall({
-    blockNumber: BigInt(moonbeamBlockNumber),
-    contracts: moonbeamMarkets.map(market => ({
-      address: market as `0x${string}`,
-      abi: mTokenv1ABI,
-      functionName: "totalBorrows",
-    } as ContractCall)),
-  })).map((borrow) => borrow.result as bigint);
 
   const baseBorrows = (await baseClient.multicall({
     blockNumber: BigInt(baseBlockNumber),
@@ -640,24 +430,6 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
       functionName: "totalReserves",
     })),
   })).map((reserves) => reserves.result as bigint);
-
-  const moonbeamReserves = (await moonbeamClient.multicall({
-    blockNumber: BigInt(moonbeamBlockNumber),
-    contracts: moonbeamMarkets.map(market => ({
-      address: market as `0x${string}`,
-      abi: mTokenv1ABI,
-      functionName: "totalReserves",
-    })),
-  })).map((reserves) => reserves.result as bigint);
-
-  const moonbeamExchangeRates = (await moonbeamClient.multicall({
-    blockNumber: BigInt(moonbeamBlockNumber),
-    contracts: moonbeamMarkets.map(market => ({
-      address: market as `0x${string}`,
-      abi: mTokenv1ABI,
-      functionName: "exchangeRateStored",
-    } as ContractCall)),
-  })).map((exchangeRate) => exchangeRate.result as bigint);
 
   const baseExchangeRates = (await baseClient.multicall({
     blockNumber: BigInt(baseBlockNumber),
@@ -714,28 +486,16 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     } as ContractCall)),
   })).map((exchangeRate) => exchangeRate.result as bigint);
 
-  // Functions to get emissions per second
-  const moonbeamWellSupplySpeeds = (await moonbeamClient.multicall({
-    blockNumber: BigInt(moonbeamBlockNumber),
-    contracts: moonbeamMarkets.map(market => ({
-      address: moonbeamComptroller.address,
-      abi: moonbeamComptroller.abi,
-      functionName: "supplyRewardSpeeds",
-      args: [0, market], // 0 = WELL
-    } as ContractCall)),
-  })).map((supplyRewardSpeed) => supplyRewardSpeed.result as bigint);
+  // Functions to get emissions per second. Each getConfigForMarket result contains
+  // both supplyEmissionsPerSec and borrowEmissionsPerSec, so fetch one multicall per
+  // (chain, reward token) pair and split the fields.
+  type EmissionsConfig = { supplyEmissionsPerSec: bigint; borrowEmissionsPerSec: bigint } | undefined;
+  const supplySpeedsOf = (configs: EmissionsConfig[]) =>
+    configs.map(result => result ? result.supplyEmissionsPerSec : BigInt(0));
+  const borrowSpeedsOf = (configs: EmissionsConfig[]) =>
+    configs.map(result => result ? result.borrowEmissionsPerSec : BigInt(0));
 
-  const moonbeamWellBorrowSpeeds = (await moonbeamClient.multicall({
-    blockNumber: BigInt(moonbeamBlockNumber),
-    contracts: moonbeamMarkets.map(market => ({
-      address: moonbeamComptroller.address,
-      abi: moonbeamComptroller.abi,
-      functionName: "borrowRewardSpeeds",
-      args: [0, market], // 0 = WELL
-    } as ContractCall)),
-  })).map((borrowRewardSpeed) => borrowRewardSpeed.result as bigint);
-
-  const baseWellSupplySpeeds = (await baseClient.multicall({
+  const baseWellConfigs = (await baseClient.multicall({
     blockNumber: BigInt(baseBlockNumber),
     contracts: baseMarkets.map(market => ({
       address: baseMultiRewardDistributor.address,
@@ -743,25 +503,11 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
       functionName: "getConfigForMarket",
       args: [market, xWellToken.address],
     } as ContractCall)),
-  })).map((supplyRewardSpeed) => {
-    const result = supplyRewardSpeed.result as { supplyEmissionsPerSec: bigint } | undefined;
-    return result ? result.supplyEmissionsPerSec : BigInt(0);
-  });
+  })).map((speedConfig) => speedConfig.result as EmissionsConfig);
+  const baseWellSupplySpeeds = supplySpeedsOf(baseWellConfigs);
+  const baseWellBorrowSpeeds = borrowSpeedsOf(baseWellConfigs);
 
-  const baseWellBorrowSpeeds = (await baseClient.multicall({
-    blockNumber: BigInt(baseBlockNumber),
-    contracts: baseMarkets.map(market => ({
-      address: baseMultiRewardDistributor.address,
-      abi: baseMultiRewardDistributor.abi,
-      functionName: "getConfigForMarket",
-      args: [market, xWellToken.address],
-    } as ContractCall)),
-  })).map((borrowRewardSpeed) => {
-    const result = borrowRewardSpeed.result as { borrowEmissionsPerSec: bigint } | undefined;
-    return result ? result.borrowEmissionsPerSec : BigInt(0);
-  });
-
-  const optimismWellSupplySpeeds = (await optimismClient.multicall({
+  const optimismWellConfigs = (await optimismClient.multicall({
     blockNumber: BigInt(optimismBlockNumber),
     contracts: optimismMarkets.map(market => ({
       address: optimismMultiRewardDistributor.address,
@@ -769,25 +515,11 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
       functionName: "getConfigForMarket",
       args: [market, xWellToken.address],
     } as ContractCall)),
-  })).map((supplyRewardSpeed) => {
-    const result = supplyRewardSpeed.result as { supplyEmissionsPerSec: bigint } | undefined;
-    return result ? result.supplyEmissionsPerSec : BigInt(0);
-  });
+  })).map((speedConfig) => speedConfig.result as EmissionsConfig);
+  const optimismWellSupplySpeeds = supplySpeedsOf(optimismWellConfigs);
+  const optimismWellBorrowSpeeds = borrowSpeedsOf(optimismWellConfigs);
 
-  const optimismWellBorrowSpeeds = (await optimismClient.multicall({
-    blockNumber: BigInt(optimismBlockNumber),
-    contracts: optimismMarkets.map(market => ({
-      address: optimismMultiRewardDistributor.address,
-      abi: optimismMultiRewardDistributor.abi,
-      functionName: "getConfigForMarket",
-      args: [market, xWellToken.address],
-    } as ContractCall)),
-  })).map((borrowRewardSpeed) => {
-    const result = borrowRewardSpeed.result as { borrowEmissionsPerSec: bigint } | undefined;
-    return result ? result.borrowEmissionsPerSec : BigInt(0);
-  });
-
-  const ethereumWellSupplySpeeds = (await ethereumClient.multicall({
+  const ethereumWellConfigs = (await ethereumClient.multicall({
     blockNumber: BigInt(ethereumBlockNumber),
     contracts: ethereumMarkets.map(market => ({
       address: ethereumMultiRewardDistributor.address,
@@ -795,40 +527,16 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
       functionName: "getConfigForMarket",
       args: [market, xWellToken.address],
     } as ContractCall)),
-  })).map((supplyRewardSpeed) => {
-    const result = supplyRewardSpeed.result as { supplyEmissionsPerSec: bigint } | undefined;
-    return result ? result.supplyEmissionsPerSec : BigInt(0);
-  });
-
-  const ethereumWellBorrowSpeeds = (await ethereumClient.multicall({
-    blockNumber: BigInt(ethereumBlockNumber),
-    contracts: ethereumMarkets.map(market => ({
-      address: ethereumMultiRewardDistributor.address,
-      abi: ethereumMultiRewardDistributor.abi,
-      functionName: "getConfigForMarket",
-      args: [market, xWellToken.address],
-    } as ContractCall)),
-  })).map((borrowRewardSpeed) => {
-    const result = borrowRewardSpeed.result as { borrowEmissionsPerSec: bigint } | undefined;
-    return result ? result.borrowEmissionsPerSec : BigInt(0);
-  });
+  })).map((speedConfig) => speedConfig.result as EmissionsConfig);
+  const ethereumWellSupplySpeeds = supplySpeedsOf(ethereumWellConfigs);
+  const ethereumWellBorrowSpeeds = borrowSpeedsOf(ethereumWellConfigs);
 
   // No native reward token on Ethereum mainnet (nativePerEpoch is 0): zero arrays
   // keep the shared formatResults shape without querying a nonexistent rewarder.
   const ethereumNativeSupplySpeeds = ethereumMarkets.map(() => BigInt(0));
   const ethereumNativeBorrowSpeeds = ethereumMarkets.map(() => BigInt(0));
 
-  const moonbeamNativeSupplySpeeds = (await moonbeamClient.multicall({
-    blockNumber: BigInt(moonbeamBlockNumber),
-    contracts: moonbeamMarkets.map(market => ({
-      address: moonbeamComptroller.address,
-      abi: moonbeamComptroller.abi,
-      functionName: "supplyRewardSpeeds",
-      args: [1, market], // 1 = GLMR (native token)
-    } as ContractCall)),
-  })).map((supplyRewardSpeed) => supplyRewardSpeed.result as bigint);
-
-  const baseNativeSupplySpeeds = (await baseClient.multicall({
+  const baseNativeConfigs = (await baseClient.multicall({
     blockNumber: BigInt(baseBlockNumber),
     contracts: baseMarkets.map(market => ({
       address: baseMultiRewardDistributor.address,
@@ -836,12 +544,11 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
       functionName: "getConfigForMarket",
       args: [market, baseNativeToken],
     } as ContractCall)),
-  })).map((supplyRewardSpeed) => {
-    const result = supplyRewardSpeed.result as { supplyEmissionsPerSec: bigint } | undefined;
-    return result ? result.supplyEmissionsPerSec : BigInt(0);
-  });
+  })).map((speedConfig) => speedConfig.result as EmissionsConfig);
+  const baseNativeSupplySpeeds = supplySpeedsOf(baseNativeConfigs);
+  const baseNativeBorrowSpeeds = borrowSpeedsOf(baseNativeConfigs);
 
-  const optimismNativeSupplySpeeds = (await optimismClient.multicall({
+  const optimismNativeConfigs = (await optimismClient.multicall({
     blockNumber: BigInt(optimismBlockNumber),
     contracts: optimismMarkets.map(market => ({
       address: optimismMultiRewardDistributor.address,
@@ -849,72 +556,9 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
       functionName: "getConfigForMarket",
       args: [market, optimismNativeToken],
     } as ContractCall)),
-  })).map((supplyRewardSpeed) => {
-    const result = supplyRewardSpeed.result as { supplyEmissionsPerSec: bigint } | undefined;
-    return result ? result.supplyEmissionsPerSec : BigInt(0);
-  });
-
-  const moonbeamNativeBorrowSpeeds = (await moonbeamClient.multicall({
-    blockNumber: BigInt(moonbeamBlockNumber),
-    contracts: moonbeamMarkets.map(market => ({
-      address: moonbeamComptroller.address,
-      abi: moonbeamComptroller.abi,
-      functionName: "borrowRewardSpeeds",
-      args: [1, market], // 1 = GLMR (native token)
-    } as ContractCall)),
-  })).map((borrowRewardSpeed) => borrowRewardSpeed.result as bigint);
-
-  const baseNativeBorrowSpeeds = (await baseClient.multicall({
-    blockNumber: BigInt(baseBlockNumber),
-    contracts: baseMarkets.map(market => ({
-      address: baseMultiRewardDistributor.address,
-      abi: baseMultiRewardDistributor.abi,
-      functionName: "getConfigForMarket",
-      args: [market, baseNativeToken],
-    } as ContractCall)),
-  })).map((borrowRewardSpeed) => {
-    const result = borrowRewardSpeed.result as { borrowEmissionsPerSec: bigint } | undefined;
-    return result ? result.borrowEmissionsPerSec : BigInt(0);
-  });
-
-  const optimismNativeBorrowSpeeds = (await optimismClient.multicall({
-    blockNumber: BigInt(optimismBlockNumber),
-    contracts: optimismMarkets.map(market => ({
-      address: optimismMultiRewardDistributor.address,
-      abi: optimismMultiRewardDistributor.abi,
-      functionName: "getConfigForMarket",
-      args: [market, optimismNativeToken],
-    } as ContractCall)),
-  })).map((borrowRewardSpeed) => {
-    const result = borrowRewardSpeed.result as { borrowEmissionsPerSec: bigint } | undefined;
-    return result ? result.borrowEmissionsPerSec : BigInt(0);
-  });
-
-  const moonbeamMarketInfo = (await moonbeamClient.multicall({
-    blockNumber: BigInt(moonbeamBlockNumber),
-    contracts: moonbeamMarkets.map(market => ({
-      address: moonbeamViewsContract.address,
-      abi: moonbeamViewsContract.abi,
-      functionName: "getMarketInfo",
-      args: [market],
-    } as ContractCall)),
-  }));
-
-  const moonbeamSupplyRates = moonbeamMarketInfo.map((market, index) => {
-    if (!market || !market.result) {
-      console.log(`⚠️ UNDEFINED RESULT: Moonbeam market at index ${index} has undefined result`, moonbeamMarkets[index]);
-      return BigInt(0); // Provide a default value to prevent the error
-    }
-    return (market.result as { supplyRate: bigint }).supplyRate;
-  });
-  
-  const moonbeamBorrowRates = moonbeamMarketInfo.map((market, index) => {
-    if (!market || !market.result) {
-      console.log(`⚠️ UNDEFINED RESULT: Moonbeam market at index ${index} has undefined result`, moonbeamMarkets[index]);
-      return BigInt(0); // Provide a default value to prevent the error
-    }
-    return (market.result as { borrowRate: bigint }).borrowRate;
-  });
+  })).map((speedConfig) => speedConfig.result as EmissionsConfig);
+  const optimismNativeSupplySpeeds = supplySpeedsOf(optimismNativeConfigs);
+  const optimismNativeBorrowSpeeds = borrowSpeedsOf(optimismNativeConfigs);
 
   const baseMarketInfo = (await baseClient.multicall({
     blockNumber: BigInt(baseBlockNumber),
@@ -995,33 +639,17 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     return (market.result as { borrowRate: bigint }).borrowRate;
   });
 
-  const moonbeamWellSupplyPerDay = moonbeamWellSupplySpeeds.map((speed) => speed * BigInt(86400));
-  const moonbeamWellBorrowPerDay = moonbeamWellBorrowSpeeds.map((speed) => speed * BigInt(86400));
-
   const baseWellSupplyPerDay = baseWellSupplySpeeds.map((speed) => speed * BigInt(86400));
   const baseWellBorrowPerDay = baseWellBorrowSpeeds.map((speed) => speed * BigInt(86400));
 
   const optimismWellSupplyPerDay = optimismWellSupplySpeeds.map((speed) => speed * BigInt(86400));
   const optimismWellBorrowPerDay = optimismWellBorrowSpeeds.map((speed) => speed * BigInt(86400));
 
-  const moonbeamNativeSupplyPerDay = moonbeamNativeSupplySpeeds.map((speed) => speed * BigInt(86400));
-  const moonbeamNativeBorrowPerDay = moonbeamNativeBorrowSpeeds.map((speed) => speed * BigInt(86400));
-
   const baseNativeSupplyPerDay = baseNativeSupplySpeeds.map((speed) => speed * BigInt(86400));
   const baseNativeBorrowPerDay = baseNativeBorrowSpeeds.map((speed) => speed * BigInt(86400));
 
   const optimismNativeSupplyPerDay = optimismNativeSupplySpeeds.map((speed) => speed * BigInt(86400));
   const optimismNativeBorrowPerDay = optimismNativeBorrowSpeeds.map((speed) => speed * BigInt(86400));
-
-  const moonbeamWellSupplyPerDayUsd = moonbeamWellSupplyPerDay.map(
-    (supplyPerDay) =>
-      Number(formatUnits(supplyPerDay, 18)) * Number(formatUnits(wellPrice, 36))
-  );
-
-  const moonbeamWellBorrowPerDayUsd = moonbeamWellBorrowPerDay.map(
-    (borrowPerDay) =>
-      Number(formatUnits(borrowPerDay, 18)) * Number(formatUnits(wellPrice, 36))
-  );
 
   const baseWellSupplyPerDayUsd = baseWellSupplyPerDay.map(
     (supplyPerDay) =>
@@ -1062,16 +690,6 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
   const ethereumNativeSupplyPerDayUsd = ethereumNativeSupplyPerDay.map(() => 0);
   const ethereumNativeBorrowPerDayUsd = ethereumNativeBorrowPerDay.map(() => 0);
 
-  const moonbeamNativeSupplyPerDayUsd = moonbeamNativeSupplyPerDay.map(
-    (supplyPerDay) =>
-      Number(formatUnits(supplyPerDay, 18)) * Number(moonbeamNativePrice)
-  );
-
-  const moonbeamNativeBorrowPerDayUsd = moonbeamNativeBorrowPerDay.map(
-    (borrowPerDay) =>
-      Number(formatUnits(borrowPerDay, 18)) * Number(moonbeamNativePrice)
-  );
-
   const baseNativeSupplyPerDayUsd = baseNativeSupplyPerDay.map(
     (supplyPerDay) =>
       Number(formatUnits(supplyPerDay, 18)) * Number(baseNativePrice)
@@ -1091,34 +709,6 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     (borrowPerDay) =>
       Number(formatUnits(borrowPerDay, 18)) * Number(optimismNativePrice)
   );
-
-  const moonbeamTotalSupplyUsd = moonbeamMarkets.map((_market, index) => {
-    if (!moonbeamEnabled[index]) { // Only include markets that are enabled
-      return 0;
-    }
-    const supply = moonbeamSupplies[index];
-    const exchangeRate = moonbeamExchangeRates[index];
-    const price = moonbeamPrices[index];
-    // Index directly (not filter-then-index, which misaligns every later market
-    // when an on-chain market is missing from marketConfigs); null means unconfigured.
-    const digit = moonbeamDigits[index];
-    const boost = moonbeamBoosts[index];
-    const deboost = moonbeamDeboosts[index];
-
-    // Add null checks before using formatUnits
-    if (supply === undefined || exchangeRate === undefined || price === undefined ||
-        digit == null || boost == null || deboost == null) {
-      console.log(`⚠️ MISSING DATA: Moonbeam market ${index} missing data for totalSupplyUSD calculation`);
-      return 0;
-    }
-    
-    return ((
-      Number(formatUnits(supply, 8)) *
-      Number(formatUnits(exchangeRate, 18 + digit - 8)) *
-      Number(formatUnits(price, 36 - digit)))
-      + boost - deboost
-    );
-  });
 
   const baseTotalSupplyUsd = baseMarkets.map((_market, index) => {
     if (!baseEnabled[index]) { // Only include markets that are enabled
@@ -1208,31 +798,9 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     return totalSupplyUsd.map(value => total === 0 ? 0 : value / total);
   }
 
-  const moonbeamPercentages = calculatePercentages(moonbeamTotalSupplyUsd);
   const basePercentages = calculatePercentages(baseTotalSupplyUsd);
   const optimismPercentages = calculatePercentages(optimismTotalSupplyUsd);
   const ethereumPercentages = calculatePercentages(ethereumTotalSupplyUsd);
-
-  const moonbeamTotalBorrowsUsd = moonbeamMarkets.map((_market, index) => {
-    if (!moonbeamEnabled[index]) { // Only include markets that are enabled
-      return 0;
-    }
-    const borrow = moonbeamBorrows[index];
-    const price = moonbeamPrices[index];
-    // Index directly (not filter-then-index, which misaligns on unconfigured markets).
-    const digit = moonbeamDigits[index];
-
-    // Add null checks before using formatUnits
-    if (borrow === undefined || price === undefined || digit == null) {
-      console.log(`⚠️ MISSING DATA: Moonbeam market ${index} missing data for totalBorrowsUSD calculation`);
-      return 0;
-    }
-    
-    return (
-      Number(formatUnits(borrow, digit)) *
-      Number(formatUnits(price, 36 - digit))
-    );
-  });
 
   const baseTotalBorrowsUsd = baseMarkets.map((_market, index) => {
     if (!baseEnabled[index]) { // Only include markets that are enabled
@@ -1304,9 +872,6 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
 
   // A network with rewardsEnabled: false contributes 0 TVL to the cross-network split,
   // so it receives no WELL and the remaining networks absorb its share proportionally.
-  const moonbeamNetworkTotalUsd = !config.moonbeam.rewardsEnabled ? 0 :
-    sumUsd(moonbeamTotalSupplyUsd) + sumUsd(moonbeamTotalBorrowsUsd);
-
   const baseNetworkTotalUsd = !config.base.rewardsEnabled ? 0 :
     sumUsd(baseTotalSupplyUsd) + sumUsd(baseTotalBorrowsUsd);
 
@@ -1316,59 +881,17 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
   const ethereumNetworkTotalUsd = !config.ethereum.rewardsEnabled ? 0 :
     sumUsd(ethereumTotalSupplyUsd) + sumUsd(ethereumTotalBorrowsUsd);
 
-  const allNetworksTotalUsd = moonbeamNetworkTotalUsd + baseNetworkTotalUsd + optimismNetworkTotalUsd + ethereumNetworkTotalUsd;
+  const allNetworksTotalUsd = baseNetworkTotalUsd + optimismNetworkTotalUsd + ethereumNetworkTotalUsd;
 
   // Guard against every network being disabled (total === 0) producing NaN shares.
   const networkShare = (networkTotalUsd: number) =>
     allNetworksTotalUsd === 0 ? 0 : networkTotalUsd / allNetworksTotalUsd;
-
-  const moonbeamTotalMarketPercentage = networkShare(moonbeamNetworkTotalUsd);
 
   const baseTotalMarketPercentage = networkShare(baseNetworkTotalUsd);
 
   const optimismTotalMarketPercentage = networkShare(optimismNetworkTotalUsd);
 
   const ethereumTotalMarketPercentage = networkShare(ethereumNetworkTotalUsd);
-
-  const moonbeamNewWellSupplySpeeds = moonbeamMarkets.map((_market, index) => {
-    const currentSpeed = Number(formatUnits(moonbeamWellSupplySpeeds[index], 18));
-
-    if (!moonbeamEnabled[index]) { // Only include markets that are enabled
-      return currentSpeed === 0 ? currentSpeed : 0;
-    }
-    const totalWellPerEpochMarkets =
-      config.totalWellPerEpoch
-      * moonbeamTotalMarketPercentage
-      * config.moonbeam.markets;
-    const percentage = moonbeamPercentages[index];
-    const supplyRatio = moonbeamSupplyRatios[index] ?? 0;
-    const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * supplyRatio) / config.secondsPerEpoch);
-
-    // Return currentSpeed if the speeds are the same, otherwise return the calculated speed
-    return Math.abs(calculatedSpeed - currentSpeed) < 1e-18 ? currentSpeed : calculatedSpeed;
-  });
-
-  const moonbeamNewWellBorrowSpeeds = moonbeamMarkets.map((_market, index) => {
-    const currentSpeed = Number(formatUnits(moonbeamWellBorrowSpeeds[index], 18));
-
-    if (!moonbeamEnabled[index]) { // Only include markets that are enabled
-      return currentSpeed === 1e-18 ? currentSpeed : 1e-18;
-    }
-    const totalWellPerEpochMarkets =
-      config.totalWellPerEpoch
-      * moonbeamTotalMarketPercentage
-      * config.moonbeam.markets;
-    const percentage = moonbeamPercentages[index];
-    const borrowRatio = moonbeamBorrowRatios[index] ?? 0;
-    const calculatedSpeed = Number((totalWellPerEpochMarkets * percentage * borrowRatio) / config.secondsPerEpoch);
-    // Return currentSpeed if the speeds are the same
-    if (Math.abs(calculatedSpeed - currentSpeed) < 1e-18) {
-      return currentSpeed;
-    }
-
-    // Return 1e-18 if the calculated speed is 0
-    return calculatedSpeed === 0 ? 1e-18 : calculatedSpeed;
-  });
 
   const baseNewWellSupplySpeeds = baseMarkets.map((_market, index) => {
     const currentSpeed = Number(formatUnits(baseWellSupplySpeeds[index], 18));
@@ -1510,40 +1033,6 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
   // No native rewards on Ethereum: "no change" sentinels keep the MRD untouched.
   const ethereumNewNativeSupplySpeeds = ethereumMarkets.map(() => -1e-18);
   const ethereumNewNativeBorrowSpeeds = ethereumMarkets.map(() => -1e-18);
-
-  const moonbeamNewNativeSupplySpeeds = moonbeamMarkets.map((_market, index) => {
-    const currentSpeed = Number(formatUnits(moonbeamNativeSupplySpeeds[index], 18));
-    if (!moonbeamEnabled[index]) { // Only include markets that are enabled
-      return currentSpeed === 0 ? currentSpeed : 0;
-    }
-    const totalNativePerEpochMarkets = config.moonbeam.nativePerEpoch;
-    const percentage = moonbeamPercentages[index];
-    const supplyRatio = moonbeamSupplyRatios[index] ?? 0;
-    const calculatedSpeed = Number((totalNativePerEpochMarkets * percentage * supplyRatio) / config.secondsPerEpoch);
-
-    // Return currentSpeed if the speeds are the same, otherwise return the calculated speed
-    return Math.abs(calculatedSpeed - currentSpeed) < 1e-18 ? currentSpeed : calculatedSpeed;
-  });
-
-  const moonbeamNewNativeBorrowSpeeds = moonbeamMarkets.map((_market, index) => {
-    const currentSpeed = Number(formatUnits(moonbeamNativeBorrowSpeeds[index], 18));
-
-    if (!moonbeamEnabled[index]) { // Only include markets that are enabled
-      return currentSpeed === 1e-18 ? currentSpeed : 1e-18;
-    }
-    const totalNativePerEpochMarkets = config.moonbeam.nativePerEpoch;
-    const percentage = moonbeamPercentages[index];
-    const borrowRatio = moonbeamBorrowRatios[index] ?? 0;
-    const calculatedSpeed = Number((totalNativePerEpochMarkets * percentage * borrowRatio) / config.secondsPerEpoch);
-
-    // Return currentSpeed if the speeds are the same
-    if (Math.abs(calculatedSpeed - currentSpeed) < 1e-18) {
-      return currentSpeed;
-    }
-
-    // Special case: if speed is 0, return 1e-18 instead
-    return calculatedSpeed === 0 ? 1e-18 : calculatedSpeed;
-  });
 
   const baseNewNativeSupplySpeeds = baseMarkets.map((market, index) => {
     const currentSpeed = Number(formatUnits(baseNativeSupplySpeeds[index], 6));
@@ -1711,14 +1200,14 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     totalSupplyUSD: (() => {
       const value = Number(suppliesUsd[index].toFixed(2));
       if (value === 0 && enabled[index]) {
-        console.log(`⚠️ ZERO SUPPLY USD ALERT: ${chainId === 1284 ? 'Moonbeam' : chainId === 8453 ? 'Base' : chainId === 1 ? 'Ethereum' : 'Optimism'} market ${names[index]} (${market}) has totalSupplyUSD = 0`);
+        console.log(`⚠️ ZERO SUPPLY USD ALERT: ${CHAIN_NAMES[String(chainId) as ChainId]} market ${names[index]} (${market}) has totalSupplyUSD = 0`);
       }
       return value;
     })(),
     totalBorrowsUSD: (() => {
       const value = Number(borrowsUsd[index].toFixed(2));
       if (value === 0 && enabled[index]) {
-        console.log(`⚠️ ZERO BORROW USD ALERT: ${chainId === 1284 ? 'Moonbeam' : chainId === 8453 ? 'Base' : chainId === 1 ? 'Ethereum' : 'Optimism'} market ${names[index]} (${market}) has totalBorrowsUSD = 0`);
+        console.log(`⚠️ ZERO BORROW USD ALERT: ${CHAIN_NAMES[String(chainId) as ChainId]} market ${names[index]} (${market}) has totalBorrowsUSD = 0`);
       }
       return value;
     })(),
@@ -1740,29 +1229,17 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
           18 // WELL is 18 decimals
         )).toFixed(18),
     nativeSupplyPerDay:
-      chainId === 1284 // Moonbeam
-        ? Number(
-          formatUnits(
-            nativeSupplyPerDay[index],
-            18 // GLMR is 18 decimals
-          )).toFixed(18)
-        : Number(
-          formatUnits(
-            nativeSupplyPerDay[index],
-            digits[index] as number
-          )).toFixed(18),
+      Number(
+        formatUnits(
+          nativeSupplyPerDay[index],
+          digits[index] as number
+        )).toFixed(18),
     nativeBorrowPerDay:
-      chainId === 1284 // Moonbeam
-        ? Number(
-          formatUnits(
-            nativeBorrowPerDay[index],
-            18 // GLMR is 18 decimals
-          )).toFixed(18)
-        : Number(
-          formatUnits(
-            nativeBorrowPerDay[index],
-            digits[index] as number
-          )).toFixed(18),
+      Number(
+        formatUnits(
+          nativeBorrowPerDay[index],
+          digits[index] as number
+        )).toFixed(18),
     wellSupplyPerDayUsd: Number(wellSupplyPerDayUsd[index].toFixed(2)),
     wellBorrowPerDayUsd: Number(wellBorrowPerDayUsd[index].toFixed(2)),
     nativeSupplyPerDayUsd: Number(nativeSupplyPerDayUsd[index].toFixed(2)),
@@ -2040,13 +1517,6 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     blockNumber: BigInt(optimismBlockNumber),
   }) as bigint;
 
-  const moonbeamStkWELLTotalSupply = await moonbeamClient.readContract({
-    address: moonbeamStkWELL,
-    abi: erc20TotalSupplyAbi,
-    functionName: "totalSupply",
-    blockNumber: BigInt(moonbeamBlockNumber),
-  }) as bigint;
-
   return {
     1: formatResults(
       ethereumMarkets,
@@ -2134,48 +1604,6 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
       optimismNativePrice,
       Number(config.optimism.nativePerEpoch),
     ),
-    1284: formatResults(
-      moonbeamMarkets,
-      1284,
-      moonbeamNames,
-      moonbeamAliases,
-      moonbeamDigits as number[], // index-aligned; null = unconfigured (skipped)
-      moonbeamBoosts,
-      moonbeamDeboosts,
-      moonbeamSupplyRatios,
-      moonbeamBorrowRatios,
-      moonbeamEnabled,
-      moonbeamPrices,
-      moonbeamSupplies,
-      moonbeamBorrows,
-      moonbeamReserves,
-      moonbeamTotalSupplyUsd,
-      moonbeamTotalBorrowsUsd,
-      moonbeamExchangeRates,
-      moonbeamSupplyRates,
-      moonbeamBorrowRates,
-      moonbeamWellSupplySpeeds,
-      moonbeamWellBorrowSpeeds,
-      moonbeamNativeSupplySpeeds,
-      moonbeamNativeBorrowSpeeds,
-      moonbeamWellSupplyPerDay,
-      moonbeamWellBorrowPerDay,
-      moonbeamNativeSupplyPerDay,
-      moonbeamNativeBorrowPerDay,
-      moonbeamWellSupplyPerDayUsd,
-      moonbeamWellBorrowPerDayUsd,
-      moonbeamNativeSupplyPerDayUsd,
-      moonbeamNativeBorrowPerDayUsd,
-      moonbeamPercentages,
-      Number((config.totalWellPerEpoch * moonbeamTotalMarketPercentage) * config.moonbeam.markets),
-      moonbeamNewWellSupplySpeeds,
-      moonbeamNewWellBorrowSpeeds,
-      moonbeamNewNativeSupplySpeeds,
-      moonbeamNewNativeBorrowSpeeds,
-      formatUnits(wellPrice, 36),
-      moonbeamNativePrice,
-      Number(config.moonbeam.nativePerEpoch),
-    ),
     8453: formatResults(
       baseMarkets,
       8453,
@@ -2219,7 +1647,6 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
       Number(config.base.nativePerEpoch),
     ),
     wellPrice: formatUnits(wellPrice, 36),
-    glmrPrice: moonbeamNativePrice,
     usdcPrice: baseNativePrice,
     opPrice: optimismNativePrice,
     epochStartTimestamp: epochWindow.start,
@@ -2227,7 +1654,6 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
     totalSeconds: epochWindow.durationSeconds,
     wellPerEpoch: config.totalWellPerEpoch,
     timestamp: timestamp,
-    moonbeamBlockNumber: moonbeamBlockNumber,
     baseBlockNumber: baseBlockNumber,
     optimismBlockNumber: optimismBlockNumber,
     ethereumBlockNumber: ethereumBlockNumber,
@@ -2240,16 +1666,6 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
       wellPerEpochMarkets: Number((config.totalWellPerEpoch * ethereumTotalMarketPercentage) * config.ethereum.markets).toFixed(18),
       wellPerEpochSafetyModule: Number((config.totalWellPerEpoch * ethereumTotalMarketPercentage) * config.ethereum.safetyModule).toFixed(18),
       wellPerEpochDex: Number((config.totalWellPerEpoch * ethereumTotalMarketPercentage) * config.ethereum.dex).toFixed(18),
-    },
-    moonbeam: {
-      ...config.moonbeam,
-      networkTotalUsd: moonbeamNetworkTotalUsd,
-      totalMarketPercentage: moonbeamTotalMarketPercentage,
-      wellPerEpoch: Number(config.totalWellPerEpoch * moonbeamTotalMarketPercentage).toFixed(18),
-      nativePerEpoch: config.moonbeam.nativePerEpoch,
-      wellPerEpochMarkets: Number((config.totalWellPerEpoch * moonbeamTotalMarketPercentage) * config.moonbeam.markets).toFixed(18),
-      wellPerEpochSafetyModule: Number((config.totalWellPerEpoch * moonbeamTotalMarketPercentage) * config.moonbeam.safetyModule).toFixed(18),
-      wellPerEpochDex: Number((config.totalWellPerEpoch * moonbeamTotalMarketPercentage) * config.moonbeam.dex).toFixed(18),
     },
     base: {
       ...config.base,
@@ -2281,7 +1697,8 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
         const cbBTCTVL_USD = Number(formatUnits(cbBTCVaultTotalAssets, 8)) * cbBTCPriceUSD;
         const meUSDCTVL_USD = Number(formatUnits(meUSDCVaultTotalAssets, 6)); // meUSDC = $1
 
-        // Apply weight multipliers from config (2.0x for stablecoins, 1.0x for others)
+        // Apply weight multipliers from config (mainConfig.base.vaultWeightMultipliers
+        // is the source of truth for per-vault weights)
         const wethWeighted = wethTVL_USD * config.base.vaultWeightMultipliers.WETH;
         const usdcWeighted = usdcTVL_USD * config.base.vaultWeightMultipliers.USDC;
         const eurcWeighted = eurcTVL_USD * config.base.vaultWeightMultipliers.EURC;
@@ -2313,9 +1730,7 @@ export async function getMarketData(timestamp: number, env?: any, configOverride
       wellHolderBalance: optimismWellHolderBalance.toString(),
       optimismUSDCVaultWellRewardAmount: Number((config.totalWellPerEpoch * optimismTotalMarketPercentage) * config.optimism.vaults),
     },
-    safetyModule: safetyModuleData,
     baseStkWELLTotalSupply: baseStkWELLTotalSupply.toString(),
     optimismStkWELLTotalSupply: optimismStkWELLTotalSupply.toString(),
-    moonbeamStkWELLTotalSupply: moonbeamStkWELLTotalSupply.toString(),
   };
 }

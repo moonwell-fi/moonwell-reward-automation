@@ -9,7 +9,7 @@
 - **BigNumber.js**: Library for precise numeric calculations, essential for blockchain token amounts.
 
 ### Blockchain Integration
-- **Moonbeam Network Client**: Interface for Moonbeam blockchain (ChainID: 1284).
+- **Ethereum Network Client**: Interface for Ethereum mainnet (ChainID: 1).
 - **Base Network Client**: Interface for Base blockchain (ChainID: 8453).
 - **Optimism Network Client**: Interface for Optimism blockchain (ChainID: 10).
 - **Smart Contract ABIs**: Definitions for interacting with on-chain contracts.
@@ -43,11 +43,10 @@ npm run deploy
 ## Technical Constraints
 
 ### Blockchain Limitations
-- **Block Time Differences**: Each network has different block times (Moonbeam ~6s, Base ~2s, Optimism ~2s).
+- **Block Time Differences**: Each network has different block times (Base ~2s, Optimism ~2s, Ethereum ~12s).
 - **Contract Interface Variations**: Different reward distribution mechanisms across networks.
 - **Token Decimal Precision**: Varying token decimal places require careful handling:
   - WELL: 18 decimals
-  - GLMR: 18 decimals
   - OP: 18 decimals
   - USDC (Base): 6 decimals
 
@@ -83,7 +82,7 @@ npm run deploy
 ### Request Parameters
 - **type**: Output format (`json` or `markdown`).
 - **timestamp**: UNIX timestamp for data snapshot.
-- **network**: Optional network filter (`Moonbeam`, `Base`, or `Optimism`).
+- **network**: Optional network filter (`Base`, `Optimism`, or `Ethereum`).
 - **proposal**: Optional proposal number for markdown format.
 
 ### Response Formats
@@ -150,18 +149,17 @@ export const mainConfig = {
   firstEpochTimestamp: 1651881600, // Start of first epoch
   
   // Network-specific configurations
-  moonbeam: {
-    markets: 0.8,               // 80% to markets
-    safetyModule: 0.1,          // 10% to safety module
-    dex: 0.1,                   // 10% to DEX incentives
-    nativePerEpoch: 100000      // GLMR tokens per epoch
+  base: {
+    markets: 0.45,              // % to markets
+    safetyModule: 0.40,         // % to safety module
+    vaults: 0.15                // % to MetaMorpho vaults
   },
-  // Similar configs for Base and Optimism
+  // Similar configs for Optimism and Ethereum
 }
 
 // Market-specific configurations (boosts, ratios, etc.)
 export const marketConfigs = {
-  1284: [ /* Moonbeam market configs */ ],
+  1: [ /* Ethereum market configs */ ],
   8453: [ /* Base market configs */ ],
   10: [ /* Optimism market configs */ ]
 }

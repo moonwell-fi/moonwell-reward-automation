@@ -1,21 +1,19 @@
 import { mainConfig } from "./config";
 import { DexPoolInfo } from "./dex";
+import { calculateCappedWellHolderBalance } from "./generateJson";
+import { CHAIN_NAMES, type ChainId } from "./types/config";
 
 interface MarketData {
   [key: string]: any;
   epochStartTimestamp: number;
   epochEndTimestamp: number;
   wellPrice: string;
-  glmrPrice: string;
   usdcPrice: string;
   opPrice: string;
   1: {
     [key: string]: any;
   };
   10: {
-    [key: string]: any;
-  };
-  1284: {
     [key: string]: any;
   };
   8453: {
@@ -42,19 +40,41 @@ function formatUSD(value: number): string {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(nonNegativeValue);
 }
 
+// Total WELL the stkWELL merkle campaign is funded with this epoch: the safety-module
+// share plus the 10%-APY-capped auction top-up — the same math the JSON emits.
+function cappedStkWellTotal(
+  safetyModuleRewards: number,
+  networkMarketData: { [key: string]: any },
+  stkWellTotalSupplyRaw: string,
+  totalSeconds: number
+): number {
+  if (!(networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0)) {
+    return safetyModuleRewards;
+  }
+  const stkWellTotalSupply = parseFloat(stkWellTotalSupplyRaw) / 1e18;
+  const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 1e18;
+  const { cappedBalance } = calculateCappedWellHolderBalance(
+    safetyModuleRewards,
+    wellBalance,
+    stkWellTotalSupply,
+    totalSeconds
+  );
+  return safetyModuleRewards + cappedBalance;
+}
+
 export function generateMarkdown(marketData: MarketData, proposal: string, network: string, dexData: DexPoolInfo[]): string {
   const startDate = formatDate(marketData.epochStartTimestamp);
   const endDate = formatDate(marketData.epochEndTimestamp);
 
   let markdown =  '';
 
-  const networkId = network === 'Optimism' ? '10' : network === 'Moonbeam' ? '1284' : network === 'Base' ? '8453' : network === 'Ethereum' ? '1' : null;
+  const networkId = (Object.keys(CHAIN_NAMES) as ChainId[]).find(id => CHAIN_NAMES[id] === network) ?? null;
 
   if (networkId && marketData[networkId]) {
-    const networkName = networkId === '1284' ? 'Moonbeam' : networkId === '10' ? 'Optimism' : networkId === '1' ? 'Ethereum' : 'Base';
+    const networkName = CHAIN_NAMES[networkId];
     // Ethereum has no native reward token (nativePerEpoch is 0, so the rows are gated off);
     // the explicit 'N/A' label guards against a future nonzero config mislabeling rows as USDC.
-    const nativeToken = networkId === '1284' ? 'GLMR' : networkId === '10' ? 'OP' : networkId === '1' ? 'N/A' : 'USDC';
+    const nativeToken = networkId === '10' ? 'OP' : networkId === '1' ? 'N/A' : 'USDC';
 
     markdown += `## ${networkName} Network\n\n`;
     markdown += `If successful, the proposal would automatically distribute and adjust liquidity incentives for the period beginning ${startDate} and ending on ${endDate}.
@@ -86,7 +106,7 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
       }
     }, { supplyUSD: 0, borrowUSD: 0, totalWell: 0, supplyWell: 0, borrowWell: 0, totalWellBySpeed: 0, totalNative: 0, supplyNative: 0, borrowNative: 0, totalNativeBySpeed: 0,  })
 
-    const blockNumber = networkId === '10' ? marketData.optimismBlockNumber : networkId === '1284' ? marketData.moonbeamBlockNumber : networkId === '8453' ? marketData.baseBlockNumber : networkId === '1' ? marketData.ethereumBlockNumber : null;
+    const blockNumber = networkId === '10' ? marketData.optimismBlockNumber : networkId === '8453' ? marketData.baseBlockNumber : networkId === '1' ? marketData.ethereumBlockNumber : null;
 
     markdown += `| Metric | Value |\n`;
     markdown += `| ------ | ----- |\n`;
@@ -95,74 +115,28 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
     markdown += `| Total Supply in USD for incentivized markets | ${formatUSD(networkSummary.supplyUSD)} |\n`;
     markdown += `| Total Borrows in USD | ${formatUSD(networkSummary.borrowUSD)} |\n`;
     
-    // Calculate and display Safety Module APR
-    if (networkId === '1284') {
-      const stkWellTotalSupply = parseFloat(marketData.moonbeamStkWELLTotalSupply) / 10**18;
-      if (stkWellTotalSupply > 0) {
-        const rewardsPerSecond = parseFloat(networkMarketData.wellPerEpochSafetyModule) / marketData.totalSeconds;
-        const annualRewards = rewardsPerSecond * 31536000; // seconds in a year
-        const safetyModuleAPR = (annualRewards / stkWellTotalSupply) * 100;
-        markdown += `| Safety Module APR | ${safetyModuleAPR.toFixed(2)}% |\n`;
-        
-        // Add Safety Module Boosted APR if wellHolderBalance exists and is > 0
-        if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
-          const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 10**18;
-          const totalRewardsPerSecond = (parseFloat(networkMarketData.wellPerEpochSafetyModule) + wellBalance) / marketData.totalSeconds;
-          const totalAnnualRewards = totalRewardsPerSecond * 31536000; // seconds in a year
-          const boostedSafetyModuleAPR = (totalAnnualRewards / stkWellTotalSupply) * 100;
-          markdown += `| **Safety Module Boosted APR** | **${boostedSafetyModuleAPR.toFixed(2)}%** |\n`;
-        }
-      }
-    } else if (networkId === '8453') {
-      const stkWellTotalSupply = parseFloat(marketData.baseStkWELLTotalSupply) / 10**18;
-      if (stkWellTotalSupply > 0) {
-        const rewardsPerSecond = parseFloat(networkMarketData.wellPerEpochSafetyModule) / marketData.totalSeconds;
-        const annualRewards = rewardsPerSecond * 31536000; // seconds in a year
-        const safetyModuleAPR = (annualRewards / stkWellTotalSupply) * 100;
-        markdown += `| Safety Module APR (Base) | ${safetyModuleAPR.toFixed(2)}% |\n`;
-
-        // Add Safety Module Boosted APR if wellHolderBalance exists and is > 0
-        if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
-          const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 10**18;
-          const baseSafetyModuleRewards = parseFloat(networkMarketData.wellPerEpochSafetyModule);
-          const epochsPerYear = 31536000 / marketData.totalSeconds;
-          const targetAPY = 0.10; // 10% max APY cap
-
-          // Calculate capped distribution
-          const maxRewardsPerEpoch = (targetAPY * stkWellTotalSupply) / epochsPerYear;
-          const maxWellHolderContribution = Math.max(0, maxRewardsPerEpoch - baseSafetyModuleRewards);
-          const cappedWellHolderBalance = Math.min(wellBalance, maxWellHolderContribution);
-          const totalCappedRewards = baseSafetyModuleRewards + cappedWellHolderBalance;
-          const remainingWellHolder = wellBalance - cappedWellHolderBalance;
-
-          // Calculate capped APR
-          const cappedRewardsPerSecond = totalCappedRewards / marketData.totalSeconds;
-          const cappedAnnualRewards = cappedRewardsPerSecond * 31536000;
-          const cappedSafetyModuleAPR = (cappedAnnualRewards / stkWellTotalSupply) * 100;
-
-          markdown += `| Safety Module APR (Capped at 10%) | ${cappedSafetyModuleAPR.toFixed(2)}% |\n`;
-          markdown += `| WELL from auctions (this epoch) | ${cappedWellHolderBalance.toLocaleString()} WELL |\n`;
-          markdown += `| WELL from auctions (reserved for future) | ${remainingWellHolder.toLocaleString()} WELL |\n`;
-        }
-      }
-    } else if (networkId === '10') {
-      const stkWellTotalSupply = parseFloat(marketData.optimismStkWELLTotalSupply) / 10**18;
+    // Calculate and display Safety Module APR (Base and Optimism have a funded stkWELL;
+    // Ethereum's is unfunded, so it has no row). One block for both networks — the only
+    // per-network input is which stkWELL total supply to read.
+    const stkWellTotalSupplyRaw = networkId === '8453'
+      ? marketData.baseStkWELLTotalSupply
+      : networkId === '10'
+        ? marketData.optimismStkWELLTotalSupply
+        : null;
+    if (stkWellTotalSupplyRaw !== null) {
+      const stkWellTotalSupply = parseFloat(stkWellTotalSupplyRaw) / 10**18;
       if (stkWellTotalSupply > 0) {
         const safetyModuleRewards = parseFloat(networkMarketData.wellPerEpochSafetyModule);
         const rewardsPerSecond = safetyModuleRewards / marketData.totalSeconds;
-        const annualRewards = rewardsPerSecond * 31536000;
+        const annualRewards = rewardsPerSecond * 31536000; // seconds in a year
         const safetyModuleAPR = (annualRewards / stkWellTotalSupply) * 100;
-        markdown += `| Safety Module APR (Base) | ${safetyModuleAPR.toFixed(2)}% |\n`;
+        markdown += `| Safety Module APR (${networkName}) | ${safetyModuleAPR.toFixed(2)}% |\n`;
 
-        // Calculate capped APY (10% cap) if wellHolderBalance exists and is > 0
+        // Add Safety Module Boosted APR if wellHolderBalance exists and is > 0
         if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
           const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 10**18;
-          const epochsPerYear = 31536000 / marketData.totalSeconds;
-          const targetAPY = 0.10;
-          const maxRewardsPerEpoch = (targetAPY * stkWellTotalSupply) / epochsPerYear;
-          const maxWellHolderContribution = Math.max(0, maxRewardsPerEpoch - safetyModuleRewards);
-          const cappedWellHolderBalance = Math.min(wellBalance, maxWellHolderContribution);
-          const remainingWellHolder = wellBalance - cappedWellHolderBalance;
+          const { cappedBalance: cappedWellHolderBalance, remainingBalance: remainingWellHolder } =
+            calculateCappedWellHolderBalance(safetyModuleRewards, wellBalance, stkWellTotalSupply, marketData.totalSeconds);
 
           const cappedRewardsPerSecond = (safetyModuleRewards + cappedWellHolderBalance) / marketData.totalSeconds;
           const cappedAnnualRewards = cappedRewardsPerSecond * 31536000;
@@ -184,12 +158,12 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
       markdown += `| **Total WELL acquired in auctions (USD)** | **${formatUSD(wellUsdValue)}** |\n`;
     }
 
-    const dexWell = networkId === '10' ? networkMarketData?.wellPerEpochDex : networkId === '1284' ? networkMarketData?.wellPerEpochDex : networkId === '8453' ? mainConfig.base.dexRelayerAmount : null;
+    const dexWell = networkId === '10' ? networkMarketData?.wellPerEpochDex : networkId === '8453' ? mainConfig.base.dexRelayerAmount : null;
 
     const hasDexRewards = Number(dexWell || 0) > 0;
 
     // Only show the DEX/LP rows when the network actually has DEX incentives
-    // (skips phantom rows for networks whose DEX program is wound down, e.g. Moonbeam).
+    // (skips phantom rows for networks whose DEX program is wound down).
     if (networkDexInfo && hasDexRewards) {
       markdown += `| | |\n`;
       markdown += `| Total LP (${networkDexInfo?.symbol} on ${networkDexInfo?.dex}) | ${formatUSD(networkDexInfo?.tvl || 0)} |\n`;
@@ -293,20 +267,12 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
 
       // stkWELL Merkle Campaign (Safety Module + Capped Auctions)
       if (networkMarketData?.wellPerEpochSafetyModule) {
-        const safetyModuleRewards = parseFloat(networkMarketData.wellPerEpochSafetyModule);
-        let stkWellTotal = safetyModuleRewards;
-
-        // Add capped wellHolderBalance if available
-        if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
-          const stkWellTotalSupply = parseFloat(marketData.baseStkWELLTotalSupply) / 1e18;
-          const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 1e18;
-          const epochsPerYear = 31536000 / marketData.totalSeconds;
-          const targetAPY = 0.10;
-          const maxRewardsPerEpoch = (targetAPY * stkWellTotalSupply) / epochsPerYear;
-          const maxWellHolderContribution = Math.max(0, maxRewardsPerEpoch - safetyModuleRewards);
-          const cappedWellHolderBalance = Math.min(wellBalance, maxWellHolderContribution);
-          stkWellTotal = safetyModuleRewards + cappedWellHolderBalance;
-        }
+        const stkWellTotal = cappedStkWellTotal(
+          parseFloat(networkMarketData.wellPerEpochSafetyModule),
+          networkMarketData,
+          marketData.baseStkWELLTotalSupply,
+          marketData.totalSeconds
+        );
         markdown += `| stkWELL (Safety Module) | ${Math.max(0, stkWellTotal).toLocaleString()} WELL |\n`;
       }
 
@@ -330,19 +296,12 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
         const totalVaultRewards = Number(vaultAmounts.USDC || 0) + Number(vaultAmounts.WETH || 0) + Number(vaultAmounts.EURC || 0) + Number(vaultAmounts.cbBTC || 0);
         let totalMerkleRewards = totalVaultRewards;
         if (networkMarketData?.wellPerEpochSafetyModule) {
-          const safetyModuleRewards = parseFloat(networkMarketData.wellPerEpochSafetyModule);
-          let stkWellTotal = safetyModuleRewards;
-          if (networkMarketData?.wellHolderBalance && Number(networkMarketData.wellHolderBalance) > 0) {
-            const stkWellTotalSupply = parseFloat(marketData.baseStkWELLTotalSupply) / 1e18;
-            const wellBalance = parseFloat(networkMarketData.wellHolderBalance) / 1e18;
-            const epochsPerYear = 31536000 / marketData.totalSeconds;
-            const targetAPY = 0.10;
-            const maxRewardsPerEpoch = (targetAPY * stkWellTotalSupply) / epochsPerYear;
-            const maxWellHolderContribution = Math.max(0, maxRewardsPerEpoch - safetyModuleRewards);
-            const cappedWellHolderBalance = Math.min(wellBalance, maxWellHolderContribution);
-            stkWellTotal = safetyModuleRewards + cappedWellHolderBalance;
-          }
-          totalMerkleRewards += stkWellTotal;
+          totalMerkleRewards += cappedStkWellTotal(
+            parseFloat(networkMarketData.wellPerEpochSafetyModule),
+            networkMarketData,
+            marketData.baseStkWELLTotalSupply,
+            marketData.totalSeconds
+          );
         }
         markdown += `| **Total Merkle Campaigns** | **${Math.max(0, totalMerkleRewards).toLocaleString()} WELL** |\n`;
       }
@@ -351,8 +310,21 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
     markdown += `\n`;
     // Iterate over the markets for the specific network, but only include enabled markets
     for (const market of Object.values(marketData[networkId])) {
-      // Skip markets that are not enabled
+      // Skip markets that are not enabled — but a disabled market whose current speeds
+      // sit above the zero/dust floor still gets a real reward-removal action in the
+      // governance JSON, so surface that action here instead of silently omitting it.
+      // For disabled markets the new speeds are either a negative "leave unchanged"
+      // sentinel (-1e-18, emitted as the MRD skip value) or a real value (0 supply /
+      // 1e-18 borrow) that zeroes remaining rewards; long-disabled markets already at
+      // the floor are all-sentinel and stay hidden.
       if (!market.enabled) {
+        if (
+          market.newWellSupplySpeed >= 0 || market.newWellBorrowSpeed >= 0 ||
+          market.newNativeSupplySpeed >= 0 || market.newNativeBorrowSpeed >= 0
+        ) {
+          markdown += `### ${market.name} (${market.alias})\n\n`;
+          markdown += `This market is disabled in this epoch's configuration. If successful, the proposal will set its remaining reward speeds to zero, removing its WELL${Number(networkMarketData?.nativePerEpoch) !== 0 ? ` and ${nativeToken}` : ''} liquidity incentives.\n\n`;
+        }
         continue;
       }
       
