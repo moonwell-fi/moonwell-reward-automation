@@ -95,13 +95,14 @@ export const mainConfig = {
 		vaults: 0.15, // 15% - MetaMorpho vault incentives
 		// below is an extra manual transfer from the F-AERO multisig to the DEX relayer
 		dexRelayerAmount: 0, // 7,202,303.2655022416 WELL / 12 4-week epochs
-		// MetaMorpho vault weight multipliers - WELL distributed based on weighted TVL
-		// (values below are the source of truth; e.g. USDC 2.5x, EURC 1.5x, others 1x)
+		// MetaMorpho vault weight multipliers - WELL distributed based on weighted TVL.
+		// August 2026: all vaults weighted 1x so the vault pool is allocated purely
+		// pro-rata by USD deposited (borrow-weighted allocation doc).
 		vaultWeightMultipliers: {
-			WETH: 1.0,   // Non-stablecoin baseline
-			USDC: 2.5,   // Stablecoin 2x weight + 0.5
-			EURC: 1.5,   // Stablecoin 2x weight - 0.5
-			cbBTC: 1,  // Non-stablecoin baseline
+			WETH: 1.0,
+			USDC: 1.0,
+			EURC: 1.0,
+			cbBTC: 1.0,
 			meUSDC: 0,   // Disabled
 		},
 		// MetaMorpho vault addresses on Base
@@ -9691,6 +9692,22 @@ export const ethereumViewsContract = {
   abi: baseViewsContract.abi,
 };
 
+// August 2026 borrow-weighted allocation (see MOO-718): each network's market pool
+// is split 33.6980% to suppliers / 66.3020% to borrowers, with each side distributed
+// pro-rata by that side's eligible USD balances. The engine allocates by supply-USD
+// share (pool * supplyShare_i * ratio), so that model maps onto per-market ratios as:
+//   supply_i = 0.336980
+//   borrow_i = 0.663020 * (borrowUSD_i / supplyUSD_i) * (Σ eligible supplyUSD / Σ eligible borrowUSD)
+// Borrow ratios below are frozen from the August 10th, 2026 snapshot balances, so
+// per-market ratios need not sum to 1 and the realized side split drifts slightly
+// as live balances move from that snapshot.
+//
+// Ethereum boosts: flat USD added to each market's supply weight. They exist to hold
+// the cross-network WELL split at the August pools (Base 2,572,157.3365 / Ethereum
+// 2,617,428.1377 WELL) — without them Ethereum's ~$5.8M real TVL would collapse its
+// share. Each boost is proportional to that market's snapshot supply (×7.4493), which
+// cancels out of the intra-network percentages, keeping per-market allocation
+// pro-rata by real balances.
 export const marketConfigs = {
   1: [
     {
@@ -9698,10 +9715,10 @@ export const marketConfigs = {
       nameOverride: 'ETH',
       alias: 'MOONWELL_WETH',
       digits: 18,
-      boost: 10_000_000,
+      boost: 14_775_582,
       deboost: 0,
-      supply: 0.5,
-      borrow: 0.5,
+      supply: 0.336980,
+      borrow: 0.620321,
       enabled: true,
       minimumReserves: 0,
       reservesEnabled: false,
@@ -9711,10 +9728,10 @@ export const marketConfigs = {
       nameOverride: 'USDC',
       alias: 'MOONWELL_USDC',
       digits: 6,
-      boost: 10_000_000,
+      boost: 4_342_582,
       deboost: 0,
-      supply: 0.5,
-      borrow: 0.5,
+      supply: 0.336980,
+      borrow: 0.987301,
       enabled: true,
       minimumReserves: 0,
       reservesEnabled: false,
@@ -9724,10 +9741,10 @@ export const marketConfigs = {
       nameOverride: 'USDT',
       alias: 'MOONWELL_USDT',
       digits: 6,
-      boost: 10_000_000,
+      boost: 3_970_654,
       deboost: 0,
-      supply: 0.5,
-      borrow: 0.5,
+      supply: 0.336980,
+      borrow: 0.829571,
       enabled: true,
       minimumReserves: 0,
       reservesEnabled: false,
@@ -9737,10 +9754,10 @@ export const marketConfigs = {
       nameOverride: 'cbBTC',
       alias: 'MOONWELL_cbBTC',
       digits: 8,
-      boost: 5_000_000,
+      boost: 6_553_820,
       deboost: 0,
-      supply: 0.5,
-      borrow: 0.5,
+      supply: 0.336980,
+      borrow: 0.443509,
       enabled: true,
       minimumReserves: 0,
       reservesEnabled: false,
@@ -9938,8 +9955,8 @@ export const marketConfigs = {
       digits: 18,
       boost: 0,
       deboost: 0,
-      supply: 0.50,
-      borrow: 0.50,
+      supply: 0.336980,
+      borrow: 1.112390,
       enabled: true,
       minimumReserves: 320,
       reservesEnabled: false,
@@ -9977,8 +9994,8 @@ export const marketConfigs = {
       digits: 6,
       boost: 0,
       deboost: 0,
-      supply: 1,
-      borrow: 0,
+      supply: 0.336980,
+      borrow: 1.226759,
       enabled: true,
       minimumReserves: 430_000,
       reservesEnabled: false // true,
@@ -10029,8 +10046,8 @@ export const marketConfigs = {
       digits: 18,
       boost: 0,
       deboost: 0,
-      supply: 0.45,
-      borrow: 0.55,
+      supply: 0.336980,
+      borrow: 0.400680,
       enabled: true,
       minimumReserves: 130_000,
       reservesEnabled: false // true,
@@ -10042,8 +10059,8 @@ export const marketConfigs = {
       digits: 8,
       boost: 0,
       deboost: 0,
-      supply: 0.5,
-      borrow: 0.5,
+      supply: 0.336980,
+      borrow: 0.219039,
       enabled: true,
       minimumReserves: 3,
       reservesEnabled: false // true,
@@ -10057,7 +10074,7 @@ export const marketConfigs = {
       deboost: 0,
       supply: 0.5,
       borrow: 0.5,
-      enabled: true,
+      enabled: false, // excluded from the August 2026 allocation (0 WELL both sides)
       minimumReserves: 84_000,
       reservesEnabled: false // true,
     },
@@ -10083,7 +10100,7 @@ export const marketConfigs = {
       deboost: 0,
       supply: 0.45,
       borrow: 0.55,
-      enabled: true,
+      enabled: false, // excluded from the August 2026 allocation (0 WELL both sides)
       minimumReserves: 1_200_000,
       reservesEnabled: false,
     },
@@ -10109,7 +10126,7 @@ export const marketConfigs = {
       deboost: 0,
       supply: 0.5,
       borrow: 0.5,
-      enabled: true,
+      enabled: false, // excluded from the August 2026 allocation (0 WELL both sides)
       minimumReserves: 0.216,
       reservesEnabled: false // true,
     },
@@ -10120,8 +10137,8 @@ export const marketConfigs = {
       digits: 8,
       boost: 0,
       deboost: 0,
-      supply: 0.5,
-      borrow: 0.5,
+      supply: 0.336980,
+      borrow: 0, // supply rewards only; borrow side excluded from the August allocation
       enabled: true,
       minimumReserves: 0.228,
       reservesEnabled: false // true,
@@ -10133,8 +10150,8 @@ export const marketConfigs = {
       digits: 18,
       boost: 0,
       deboost: 0,
-      supply: 1,
-      borrow: 0,
+      supply: 0.336980,
+      borrow: 0, // supply rewards only; borrow side excluded from the August allocation
       enabled: true,
       minimumReserves: 6_000,
       reservesEnabled: false // true,
@@ -10148,7 +10165,7 @@ export const marketConfigs = {
       deboost: 0,
       supply: 1,
       borrow: 0,
-      enabled: true,
+      enabled: false, // excluded from the August 2026 allocation (0 WELL both sides)
       minimumReserves: 18_000,
       reservesEnabled: false // true,
     },
@@ -10159,8 +10176,8 @@ export const marketConfigs = {
       digits: 18,
       boost: 0,
       deboost: 0,
-      supply: 1,
-      borrow: 0,
+      supply: 0.336980,
+      borrow: 0.429395,
       enabled: true,
       minimumReserves: 6_000,
       reservesEnabled: false // true,
@@ -10174,7 +10191,7 @@ export const marketConfigs = {
       deboost: 0,
       supply: 0.45,
       borrow: 0.55,
-      enabled: true,
+      enabled: false, // excluded from the August 2026 allocation (0 WELL both sides)
       minimumReserves: 0,
       reservesEnabled: false,
     },
@@ -10185,9 +10202,9 @@ export const marketConfigs = {
       digits: 18,
       boost: 0,
       deboost: 0,
-      supply: 1,
-      borrow: 0,
-      enabled: false,
+      supply: 0.336980,
+      borrow: 0, // supply rewards only; borrow side excluded from the August allocation
+      enabled: true,
       minimumReserves: 0,
       reservesEnabled: false,
     },
