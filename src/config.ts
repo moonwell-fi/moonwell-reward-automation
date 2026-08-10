@@ -9694,20 +9694,22 @@ export const ethereumViewsContract = {
 
 // August 2026 borrow-weighted allocation (see MOO-718): each network's market pool
 // is split 33.6980% to suppliers / 66.3020% to borrowers, with each side distributed
-// pro-rata by that side's eligible USD balances. The engine allocates by supply-USD
-// share (pool * supplyShare_i * ratio), so that model maps onto per-market ratios as:
-//   supply_i = 0.336980
-//   borrow_i = 0.663020 * (borrowUSD_i / supplyUSD_i) * (Σ eligible supplyUSD / Σ eligible borrowUSD)
-// Borrow ratios below are frozen from the August 10th, 2026 snapshot balances, so
-// per-market ratios need not sum to 1 and the realized side split drifts slightly
-// as live balances move from that snapshot.
+// pro-rata by that side's eligible USD balances (August 10th, 2026 snapshot).
 //
-// Ethereum boosts: flat USD added to each market's supply weight. They exist to hold
-// the cross-network WELL split at the August pools (Base 2,572,157.3365 / Ethereum
-// 2,617,428.1377 WELL) — without them Ethereum's ~$5.8M real TVL would collapse its
-// share. Each boost is proportional to that market's snapshot supply (×7.4493), which
-// cancels out of the intra-network percentages, keeping per-market allocation
-// pro-rata by real balances.
+// INVARIANT: every market's supply + borrow ratios sum to exactly 1. This guarantees
+// the emitted reward speeds always total exactly the funded market bucket (and the
+// grand total stays capped at totalWellPerEpoch) regardless of balance drift.
+//
+// With that invariant, a market's TOTAL reward share is set entirely by its supply
+// weight, so the doc's targets are encoded as:
+//   supply_i = docSupplyWELL_i / docTotalWELL_i, borrow_i = 1 - supply_i
+//   boost_i  = the flat USD amount that makes the market's weight (supplyUSD + boost)
+//              proportional to its doc total WELL
+// On Base that reduces to boost_i = 3.8712 * borrowUSD_i (= (0.66302/0.33698) *
+// (ΣS/ΣB) at the snapshot), with zero boost for supply-only markets. On Ethereum the
+// boosts are scaled up further so the cross-network TVL split holds the August pools
+// (Base 2,572,157.3365 / Ethereum 2,617,428.1377 WELL) — without them Ethereum's
+// ~$5.8M real TVL would collapse its share. No deboosts: weights can never go negative.
 export const marketConfigs = {
   1: [
     {
@@ -9715,10 +9717,10 @@ export const marketConfigs = {
       nameOverride: 'ETH',
       alias: 'MOONWELL_WETH',
       digits: 18,
-      boost: 14_775_582,
+      boost: 35_844_335,
       deboost: 0,
-      supply: 0.336980,
-      borrow: 0.620321,
+      supply: 0.352011,
+      borrow: 0.647989,
       enabled: true,
       minimumReserves: 0,
       reservesEnabled: false,
@@ -9728,10 +9730,10 @@ export const marketConfigs = {
       nameOverride: 'USDC',
       alias: 'MOONWELL_USDC',
       digits: 6,
-      boost: 4_342_582,
+      boost: 14_796_700,
       deboost: 0,
-      supply: 0.336980,
-      borrow: 0.987301,
+      supply: 0.254463,
+      borrow: 0.745537,
       enabled: true,
       minimumReserves: 0,
       reservesEnabled: false,
@@ -9741,10 +9743,10 @@ export const marketConfigs = {
       nameOverride: 'USDT',
       alias: 'MOONWELL_USDT',
       digits: 6,
-      boost: 3_970_654,
+      boost: 11_854_489,
       deboost: 0,
-      supply: 0.336980,
-      borrow: 0.829571,
+      supply: 0.288869,
+      borrow: 0.711131,
       enabled: true,
       minimumReserves: 0,
       reservesEnabled: false,
@@ -9754,10 +9756,10 @@ export const marketConfigs = {
       nameOverride: 'cbBTC',
       alias: 'MOONWELL_cbBTC',
       digits: 8,
-      boost: 6_553_820,
+      boost: 12_800_008,
       deboost: 0,
-      supply: 0.336980,
-      borrow: 0.443509,
+      supply: 0.431755,
+      borrow: 0.568245,
       enabled: true,
       minimumReserves: 0,
       reservesEnabled: false,
@@ -9953,10 +9955,10 @@ export const marketConfigs = {
       nameOverride: 'ETH',
       alias: 'MOONWELL_WETH',
       digits: 18,
-      boost: 0,
+      boost: 28_476_182,
       deboost: 0,
-      supply: 0.336980,
-      borrow: 1.112390,
+      supply: 0.232501,
+      borrow: 0.767499,
       enabled: true,
       minimumReserves: 320,
       reservesEnabled: false,
@@ -9992,10 +9994,10 @@ export const marketConfigs = {
       nameOverride: 'USDC',
       alias: 'MOONWELL_USDC',
       digits: 6,
-      boost: 0,
+      boost: 50_109_965,
       deboost: 0,
-      supply: 0.336980,
-      borrow: 1.226759,
+      supply: 0.215496,
+      borrow: 0.784504,
       enabled: true,
       minimumReserves: 430_000,
       reservesEnabled: false // true,
@@ -10044,10 +10046,10 @@ export const marketConfigs = {
       nameOverride: 'AERO',
       alias: 'MOONWELL_AERO',
       digits: 18,
-      boost: 0,
+      boost: 10_272_473,
       deboost: 0,
-      supply: 0.336980,
-      borrow: 0.400680,
+      supply: 0.456823,
+      borrow: 0.543177,
       enabled: true,
       minimumReserves: 130_000,
       reservesEnabled: false // true,
@@ -10057,10 +10059,10 @@ export const marketConfigs = {
       nameOverride: 'cbBTC',
       alias: 'MOONWELL_cbBTC',
       digits: 8,
-      boost: 0,
+      boost: 7_713_288,
       deboost: 0,
-      supply: 0.336980,
-      borrow: 0.219039,
+      supply: 0.606058,
+      borrow: 0.393942,
       enabled: true,
       minimumReserves: 3,
       reservesEnabled: false // true,
@@ -10137,7 +10139,7 @@ export const marketConfigs = {
       digits: 8,
       boost: 0,
       deboost: 0,
-      supply: 0.336980,
+      supply: 1,
       borrow: 0, // supply rewards only; borrow side excluded from the August allocation
       enabled: true,
       minimumReserves: 0.228,
@@ -10150,7 +10152,7 @@ export const marketConfigs = {
       digits: 18,
       boost: 0,
       deboost: 0,
-      supply: 0.336980,
+      supply: 1,
       borrow: 0, // supply rewards only; borrow side excluded from the August allocation
       enabled: true,
       minimumReserves: 6_000,
@@ -10174,10 +10176,10 @@ export const marketConfigs = {
       nameOverride: 'cbXRP',
       alias: 'MOONWELL_cbXRP',
       digits: 18,
-      boost: 0,
+      boost: 3_124_283,
       deboost: 0,
-      supply: 0.336980,
-      borrow: 0.429395,
+      supply: 0.439706,
+      borrow: 0.560294,
       enabled: true,
       minimumReserves: 6_000,
       reservesEnabled: false // true,
@@ -10202,7 +10204,7 @@ export const marketConfigs = {
       digits: 18,
       boost: 0,
       deboost: 0,
-      supply: 0.336980,
+      supply: 1,
       borrow: 0, // supply rewards only; borrow side excluded from the August allocation
       enabled: true,
       minimumReserves: 0,
