@@ -484,6 +484,20 @@ export async function returnJson(marketData: any, network: string) {
         } : {}),
         setMRDSpeeds: optimismSetRewardSpeeds,
         stkWellEmissionsPerSecond: (() => {
+          // OPTIMISM WIND-DOWN: safety-module incentives are deprecated, so emit a
+          // flat 0. Without this, stkWELL auction recycling (wellHolderBalance)
+          // keeps producing a dust rate even though the safetyModule split is 0 —
+          // e.g. 373357228 wei/s (~0.001 WELL over a 31-day epoch), which puts a
+          // pointless configureAssets action on Optimism every epoch.
+          //
+          // The key stays present rather than being omitted: the proposal template
+          // parses `.10.stkWellEmissionsPerSecond` unconditionally and reverts on a
+          // missing path. A 0 is what it wants — both the build and validate paths
+          // guard on `> 0`, so a zero emits no action and asserts nothing.
+          //
+          // Re-enabling `optimism.rewardsEnabled` restores the computed rate.
+          if (!mainConfig.optimism.rewardsEnabled) return 0;
+
           const safetyModuleRewards = parseFloat(marketData.optimism.wellPerEpochSafetyModule);
           const { cappedBalance } = calculateCappedWellHolderBalance(
             safetyModuleRewards,

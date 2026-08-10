@@ -139,9 +139,10 @@ export const mainConfig = {
     5. 50,000 in August for core markets and 10,000 for the USDC vault */
 		// OPTIMISM WIND-DOWN: rewardsEnabled false treats Optimism TVL as 0 in the cross-network
 		// WELL split, so Base/Ethereum absorb its share and Optimism markets get zero-speed
-		// wind-down actions. stkWELL auction recycling (wellHolderBalance) is independent of
-		// this flag and keeps emitting. To RE-ENABLE: set `rewardsEnabled: true` (splits below
-		// already sum to 1.0).
+		// wind-down actions. The safety module winds down with it: generateJson emits
+		// stkWellEmissionsPerSecond 0 for chain 10 while this flag is false, so stkWELL auction
+		// recycling (wellHolderBalance) no longer leaks a dust emission rate. To RE-ENABLE: set
+		// `rewardsEnabled: true` (splits below already sum to 1.0).
 		rewardsEnabled: false,
 		nativePerEpoch: 0,
 		rewarderNames: ['USDC_MULTI_REWARDER'], // Names of multi-rewarders to distribute rewards to
