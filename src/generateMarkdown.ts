@@ -308,22 +308,18 @@ export function generateMarkdown(marketData: MarketData, proposal: string, netwo
     }
 
     markdown += `\n`;
-    // Iterate over the markets for the specific network, but only include enabled markets
+    // Include disabled markets so reviewers can see their reward status too.
     for (const market of Object.values(marketData[networkId])) {
-      // Skip markets that are not enabled — but a disabled market whose current speeds
-      // sit above the zero/dust floor still gets a real reward-removal action in the
-      // governance JSON, so surface that action here instead of silently omitting it.
-      // For disabled markets the new speeds are either a negative "leave unchanged"
-      // sentinel (-1e-18, emitted as the MRD skip value) or a real value (0 supply /
-      // 1e-18 borrow) that zeroes remaining rewards; long-disabled markets already at
-      // the floor are all-sentinel and stay hidden.
+      if (market.alias === null) continue;
       if (!market.enabled) {
+        markdown += `### ${market.name} (${market.alias})\n\n`;
         if (
           market.newWellSupplySpeed >= 0 || market.newWellBorrowSpeed >= 0 ||
           market.newNativeSupplySpeed >= 0 || market.newNativeBorrowSpeed >= 0
         ) {
-          markdown += `### ${market.name} (${market.alias})\n\n`;
           markdown += `This market is disabled in this epoch's configuration. If successful, the proposal will set its remaining reward speeds to zero, removing its WELL${Number(networkMarketData?.nativePerEpoch) !== 0 ? ` and ${nativeToken}` : ''} liquidity incentives.\n\n`;
+        } else {
+          markdown += `This market is disabled in this epoch's configuration. Its reward speeds are already at the zero supply / minimum borrow levels, so no reward-speed changes are proposed.\n\n`;
         }
         continue;
       }
